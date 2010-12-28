@@ -1,10 +1,20 @@
-#!/usr/bin/env python
+import logging
+import os
+
 from google.appengine.ext import webapp
+from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp import util
 
-class MainHandler(webapp.RequestHandler):
+class BaseHandler(webapp.RequestHandler):
+    def _render_template(self, template_file_name, template_values={}):
+        template_path = os.path.join(
+            os.path.dirname(__file__), 'templates', template_file_name)
+        self.response.out.write(template.render(template_path, template_values))
+        
+
+class MainHandler(BaseHandler):
     def get(self):
-        self.response.out.write('Hello world!')
+        self._render_template('index.html')
 
 
 def main():

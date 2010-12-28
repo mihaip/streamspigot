@@ -1,0 +1,100 @@
+div,table {
+  margin: 0;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  text-align: center;
+  background: #8AA7FF;
+  font-family: sans-serif;
+  font-size: 10pt;
+}
+
+a {
+  color: #2DB300;
+}
+
+h1 {
+  text-align: center;
+  margin: 0 auto 1em auto;
+  background: #7094FF;
+  width: 550px;
+  padding: 0.5em 0.3em;
+  color: #666;
+}
+
+#usernames-table {
+  margin: 0 auto;
+}
+
+button {
+  border: solid 1px #bbb;
+  background: #eee;
+  font-weight: bold;
+  width: 1.6em;
+  text-align: center;
+  height: 1.7em;
+  padding: 0 0.1em 0.1em 0.1em;
+  color: #8AA7FF;
+  cursor: pointer;
+}
+
+button[disabled] {
+  border: solid 1px #698bef;
+  background: #7094FF;
+  cursor: default;
+}
+
+.hidden {
+  display: none;
+}
+
+#digest-links,
+#digest-empty {
+  margin-top: 1em;
+}
+
+#intro .inner,
+#footer .inner {
+  text-align: left;
+}
+
+#intro .symbol {
+  margin-top: 0.5em;
+  color: #333;
+}
+
+.inner {
+  background: #f6f6f6;
+  width: 550px;
+  padding: 0.5em;
+  margin: 0 auto;
+}
+
+.feed-icon {
+  vertical-align: text-bottom;
+}
+
+.symbol {
+  font-weight: bold;
+  font-size: 200%;
+  margin: 0;
+  padding: .1em;
+  height: 1.5em;
+}	  
+
+#digest-links .symbol {
+  color: #333;
+}
+
+#digest-empty .symbol {
+  color: red;
+}
+
+#footer {
+  margin-top: 2em;
+}

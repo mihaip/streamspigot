@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<title>Twitter Digest</title>
+	<link rel="stylesheet" type="text/css" href="static/main.css">
+	<script type="text/javascript" src="static/main.js"></script>
+</head>
+<body onload="init();">
+
+<h1>Twitter Digest</h1>
+
+<div id="intro">
+  <div class="inner">
+    <p>Twitter Digest lets you read <a href="http://twitter.com">Twitter</a> 
+    updates in a more manageable fashion. Just pick the usernames you'd like
+    to generate a digest for, and you will see all updates made by them during 
+    the past full day (GMT). At midnight, a new set of updates rolls over.</p>
+    
+    <p>The digest is available as both a webpage that you can 
+    visit periodically, or as an Atom feed that you subscribe to get updates
+    (grouped as one feed item) in your favorite feed reader.</p>
+    
+    <p>To get started, enter one of more Twitter usernames below (one username
+    per line) and use the links that will appear at the bottom.</p>
+  </div>
+  
+  <div class="symbol">&#8675;</div>
+
+</div>
+
+<table id="usernames-table">
+  <tr>
+    <td><input type="text" class="username"></td>
+    <td><button class="remove">-</button></td>
+    <td><button class="add">+</button></td>
+  </tr>
+</table>
+
+<div id="digest-links" class="hidden">
+  <div class="symbol">&#8675;</div>
+
+  <div class="inner">
+    Your digest is available as both 
+    <a href="" id="digest-html-link" target="_blank">a web page</a>
+    and as 
+    <img src="static/feed-icon.png" width="14" height="14" alt="Feed icon" class="feed-icon">
+    <a href="" id="digest-feed-link" target="_blank">a feed</a>.
+  </div>
+</div>
+
+<div id="digest-empty">
+  <div class="symbol">&empty;</div>
+
+  <div class="inner">
+    You must select at least one Twitter user to create a digest for.
+  </div>
+</div>
+
+<div id="footer">
+  <div class="inner">
+    Twitter Digest was created by <a href="http://blog.persistent.info">Mihai
+    Parparita</a>, email me at <script type="text/javascript">printEmail();
+    </script> with feedback.
+  </div>
+</div>
+
+</body>
+</html>
