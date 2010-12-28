@@ -24,6 +24,7 @@ import base64
 import calendar
 import datetime
 import httplib
+import logging
 import os
 import rfc822
 import sys
@@ -62,7 +63,11 @@ try:
 except ImportError:
   from md5 import md5
 
-import oauth2 as oauth
+try:
+  import oauth2 as oauth
+except ImportError:
+  logging.warning('Unable to load OAuth library, authenticated requests will '
+      'fail.')
 
 
 CHARACTER_LIMIT = 140
