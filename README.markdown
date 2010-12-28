@@ -4,4 +4,4 @@ TODO(mihaip)
 
 ## Code Organization and Design
 
-TODO(mihaip)
+`twitter.py` is the Python wrapper for the Twitter API provided by http://code.google.com/p/python-twitter/ with some small local modifications.
