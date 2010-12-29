@@ -7,34 +7,36 @@ from google.appengine.ext.webapp import util
 
 import twitterdigest
 
-APP_NAME = 'Stream Spigot'
-
-class BaseHandler(webapp.RequestHandler):
-    GLOBAL_TEMPLATE_VALUES = {
-        'BACKGROUND_COLOR': '#8aa7ff',
-        'BACKGROUND_DARKER_COLOR': '#7094ff',
-        'ANCHOR_COLOR': '#2db300',
-        
-        'USER_LINK_COLOR': '#333',
-        'BUBBLE_COLOR': '#f6f6f6',
-        'BUBBLE_REPLY_COLOR': '#e6e6e6',
-        'BUBBLE_TEXT_COLOR': '#41419b',
-        'BUBBLE_SEPARATOR_COLOR': '#d6E0ff',
-        'HEADER_COLOR': '#666',
-        
-        'APP_NAME': APP_NAME
-    }
+CONSTANTS = {
+    'BACKGROUND_COLOR': '#8aa7ff',
+    'BACKGROUND_DARKER_COLOR': '#7094ff',
+    'ANCHOR_COLOR': '#2db300',
     
+    'USER_LINK_COLOR': '#333',
+    'BUBBLE_COLOR': '#f6f6f6',
+    'BUBBLE_REPLY_COLOR': '#e6e6e6',
+    'BUBBLE_TEXT_COLOR': '#41419b',
+    'BUBBLE_SEPARATOR_COLOR': '#d6E0ff',
+    'HEADER_COLOR': '#666',
+    
+    'APP_NAME': 'Stream Spigot',
+}
+    
+class BaseHandler(webapp.RequestHandler):
     def _render_template(self, template_file_name, template_values={}):
         template_path = os.path.join(
             os.path.dirname(__file__), 'templates', template_file_name)
-        template_values.update(BaseHandler.GLOBAL_TEMPLATE_VALUES)
+        template_values.update(CONSTANTS)
         return template.render(template_path, template_values)
 
     def _write_template(self, template_file_name, template_values={}):
         self.response.out.write(
             self._render_template(template_file_name, template_values))
-        
+
+class LinkFormatter(object):
+    def get_attributes(self):
+        return 'style="color:%s"' % CONSTANTS['ANCHOR_COLOR']
+LINK_FORMATTER = LinkFormatter()
 
 class MainHandler(BaseHandler):
     def get(self):
@@ -49,7 +51,7 @@ class TwitterDigestHandler(BaseHandler):
         
         # Generate digest
         (grouped_statuses, start_date, error_usernames) = \
-            twitterdigest.get_digest(usernames)
+            twitterdigest.get_digest(usernames, LINK_FORMATTER)
 
         # Template parameters
         homepage_url = 'http://' + os.environ.get('SERVER_NAME', '')
@@ -63,7 +65,7 @@ class TwitterDigestHandler(BaseHandler):
             'grouped_statuses': grouped_statuses, 
             
             'title': '%s: Twitter Digest for %s (GMT)' % (
-                APP_NAME, start_date.strftime('%A, %B %d, %Y')),
+                CONSTANTS['APP_NAME'], start_date.strftime('%A, %B %d, %Y')),
             'homepage_url': homepage_url,
             'feed_url': base_digest_url + '&output=html',
             'html_url': base_digest_url + '&output=atom',

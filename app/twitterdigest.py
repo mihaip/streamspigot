@@ -27,7 +27,7 @@ class StatusGroup(object):
         self.user = user
         self.statuses = statuses
 
-def get_status_text_as_html(status):
+def get_status_text_as_html(status, link_formatter):
     text_as_html = []
     entities = list(status.hashtags + status.urls + status.user_mentions)
     entities = [
@@ -58,7 +58,7 @@ def get_status_text_as_html(status):
       if entity_url:
           add_raw_chunk('<a href="')
           add_escaped_chunk(entity_url)
-          add_raw_chunk('">')
+          add_raw_chunk('" %s>' % link_formatter.get_attributes())
           add_escaped_chunk(entity_anchor_text)
           add_raw_chunk('</a>')
       else:
@@ -70,7 +70,7 @@ def get_status_text_as_html(status):
     
     return ''.join(text_as_html)
 
-def get_digest(usernames):
+def get_digest(usernames, link_formatter):
     # From the current time
     now = time.gmtime()
   
@@ -131,7 +131,7 @@ def get_digest(usernames):
     
     # Decorate them with the HTML representatin of the text
     for s in digest_statuses:
-        s.text_as_html = get_status_text_as_html(s)
+        s.text_as_html = get_status_text_as_html(s, link_formatter)
     
     # Order them in chronological order
     digest_statuses.sort(
