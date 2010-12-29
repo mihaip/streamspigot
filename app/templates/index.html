@@ -2,17 +2,17 @@
 <html>
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8">
-	<title>Stream Spigot</title>
+	<title>{{ APP_NAME|escape }}</title>
 	<link rel="stylesheet" type="text/css" href="static/main.css">
 	<script src="static/main.js"></script>
 </head>
 <body onload="init();">
 
-<h1>Stream Spigot</h1>
+<h1>{{ APP_NAME|escape }}</h1>
 
 <div id="intro">
   <div class="inner">
-    <p>Stream Spigot lets you read <a href="http://twitter.com">Twitter</a> 
+    <p>{{ APP_NAME|escape }} lets you read <a href="http://twitter.com">Twitter</a> 
     updates in a more manageable fashion. Just pick the usernames you'd like
     to generate a digest for, and you will see all updates made by them during 
     the past full day (GMT). At midnight, a new set of updates rolls over.</p>
@@ -26,7 +26,6 @@
   </div>
   
   <div class="symbol">&#8675;</div>
-
 </div>
 
 <table id="usernames-table">
@@ -59,7 +58,7 @@
 
 <div id="footer">
   <div class="inner">
-    Stream Spigot was created by <a href="http://blog.persistent.info">Mihai
+    {{ APP_NAME|escape }} was created by <a href="http://blog.persistent.info">Mihai
     Parparita</a>, who can be reached at <script>printEmail();</script>. The app
     was formerly known as "Twitter Digest" but was renamed due to plans to
     increase its scope and to comply with Twitter's

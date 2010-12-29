@@ -1,0 +1,33 @@
+<table style="border-spacing:0;border-collapse:collapse;font-family:sans-serif;color:{{ BUBBLE_TEXT_COLOR }}" cellpadding="0">
+  {% if grouped_statuses %}
+    {% for status_group in grouped_statuses %}
+      <tr>
+        <td style="text-align:right;padding:0 0.2em 0 0" valign="top">
+          <div style="margin:0 0 1.5em 0">
+              <a href="/{{ status_group.user.screen_name|escape }}"
+                 title="{{ status_group.user.name|escape }}"
+                 style="color:{{ USER_LINK_COLOR }};text-decoration:none"><img src="{{ status_group.user.profile_image_url|escape }}" width="48" height="48" style="border:solid 0.5em {{ BUBBLE_COLOR }};background:{{ BUBBLE_COLOR }};" /><br />{{ status_group.user.screen_name|escape }}</a>
+           </div>
+        </td>
+        <td valign="top">
+          <div style="margin-top:0.3em;width:1px;height:1px;border:solid;border-color:transparent {{ BUBBLE_COLOR }} transparent transparent;border-width:7px 15px 15px 0"></div>
+        </td>
+        <td valign="top">
+          <div style="background: {{ BUBBLE_COLOR }};margin:0 0 1.5em 0">
+            {% for status in status_group.statuses %}
+              <div style="padding:0.5em;{% if not forloop.first %} border-top:solid 1px {{ BUBBLE_SEPARATOR_COLOR }} {% endif %}">
+                {{ status.text|escape }}
+              </div>
+            {% endfor %}
+          </div>
+        </td>
+      </tr>    
+    {% endfor %}
+  {% else %}
+    <tr>
+      <td style="padding:0.5em">
+        No updates for this day. All your digestees must be sick of Twittering.
+      </td>
+    </tr>
+  {% endif %}
+</table>

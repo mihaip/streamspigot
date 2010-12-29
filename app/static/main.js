@@ -91,7 +91,7 @@ function updateLinks(ev) {
     emptyNode.className = "hidden";
     linksNode.className = "";
     
-    var baseUrl = 'generate?usernames=' + usernames.join("+");
+    var baseUrl = 'twitter/digest?usernames=' + usernames.join("+");
     
     var htmlLinkNode = document.getElementById("digest-html-link");
     var feedLinkNode = document.getElementById("digest-feed-link");

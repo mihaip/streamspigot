@@ -1,0 +1,5 @@
+{% spaceless %}
+  {% for username in usernames %}
+      <a href="http://twitter.com/{{ username|escape }}">{{ username|escape }}</a>{% if not forloop.last %}, {% endif %}
+  {% endfor %}
+{% endspaceless %}
