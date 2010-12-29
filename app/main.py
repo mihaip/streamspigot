@@ -52,7 +52,7 @@ class TwitterDigestHandler(BaseHandler):
         'html': OutputTemplate(
             'twitter-digest.html', 'text/html', True),
         'atom': OutputTemplate(
-            'twitter-digest.atom', 'application/atom+xml', False),
+            'twitter-digest.atom', 'text/xml', False),
     }
     def get(self):
         # Extract parameters
@@ -70,6 +70,8 @@ class TwitterDigestHandler(BaseHandler):
         homepage_url = 'http://' + os.environ.get('SERVER_NAME', '')
         base_digest_url = homepage_url + '/twitter/digest?usernames=' + \
             '+'.join(usernames)
+        digest_id = '+'.join(usernames)
+        digest_entry_id = digest_id + '-' + start_date.date().isoformat()
 
         self.response.headers['Content-Type'] = output_template.content_type
         self._write_template(output_template.template_file, {
@@ -79,16 +81,21 @@ class TwitterDigestHandler(BaseHandler):
                 'usernames.snippet', {'usernames': error_usernames}) or '',
             'grouped_statuses': grouped_statuses, 
             
-            'title': '%s: Twitter Digest for %s (GMT)' % (
-                CONSTANTS['APP_NAME'], start_date.strftime('%A, %B %d, %Y')),
+            'title': 'Twitter Digest for %s (GMT)' %
+                start_date.strftime('%A, %B %d, %Y'),
             'homepage_url': homepage_url,
-            'feed_url': base_digest_url + '&output=html',
-            'html_url': base_digest_url + '&output=atom',
+            'feed_url': base_digest_url + '&output=atom',
+            'html_url': base_digest_url + '&output=html',
+            'digest_id': digest_id,
+            'digest_entry_id': digest_entry_id,
+            'start_date_iso': start_date.isoformat(),
             
             'digest_contents': self._render_template(
                 'twitter-digest-contents.snippet', {
                     'grouped_statuses': grouped_statuses,
                     'use_relative_dates': output_template.use_relative_dates,
+
+
                 }),
         })
 
