@@ -634,7 +634,9 @@ class User(object):
                favourites_count=None,
                url=None,
                status=None,
-               geo_enabled=None):
+               geo_enabled=None,
+               start_index=-1,
+               end_index=-1):
     self.id = id
     self.name = name
     self.screen_name = screen_name
@@ -657,6 +659,8 @@ class User(object):
     self.url = url
     self.status = status
     self.geo_enabled = geo_enabled
+    self.start_index = start_index
+    self.end_index = end_index
 
   def GetId(self):
     '''Get the unique id of this user.
@@ -1144,7 +1148,9 @@ class User(object):
                 time_zone = data.get('time_zone', None),
                 url=data.get('url', None),
                 status=status,
-                geo_enabled=data.get('geo_enabled', None))
+                geo_enabled=data.get('geo_enabled', None),
+                start_index=data.get('indices', [-1, -1])[0],
+                end_index=data.get('indices', [-1, -1])[1])
 
 class List(object):
   '''A class representing the List structure used by the twitter API.
@@ -1793,8 +1799,12 @@ class Hashtag(object):
   ''' A class represeinting a twitter hashtag
   '''
   def __init__(self,
-               text=None):
+               text=None,
+               start_index=-1,
+               end_index=-1):
     self.text = text
+    self.start_index = start_index
+    self.end_index = end_index
 
   @staticmethod
   def NewFromJsonDict(data):
@@ -1807,7 +1817,9 @@ class Hashtag(object):
     Returns:
       A twitter.Hashtag instance
     '''
-    return Hashtag(text = data.get('text', None))
+    return Hashtag(text=data.get('text', None),
+                   start_index=data.get('indices', [-1, -1])[0],
+                   end_index=data.get('indices', [-1, -1])[1])
 
 class Trend(object):
   ''' A class representing a trending topic
@@ -1841,9 +1853,15 @@ class Url(object):
   '''A class representing an URL contained in a tweet'''
   def __init__(self,
                url=None,
-               expanded_url=None):
+               expanded_url=None,
+               display_url=None,
+               start_index=-1,
+               end_index=-1):
     self.url = url
     self.expanded_url = expanded_url
+    self.display_url = display_url
+    self.start_index = start_index
+    self.end_index = end_index
 
   @staticmethod
   def NewFromJsonDict(data):
@@ -1857,7 +1875,10 @@ class Url(object):
       A twitter.Url instance
     '''
     return Url(url=data.get('url', None),
-               expanded_url=data.get('expanded_url', None))
+               expanded_url=data.get('expanded_url', None),
+               display_url=data.get('display_url', None),
+               start_index=data.get('indices', [-1, -1])[0],
+               end_index=data.get('indices', [-1, -1])[1])
 
 class Api(object):
   '''A python interface into the Twitter API
