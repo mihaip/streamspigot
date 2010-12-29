@@ -3,9 +3,10 @@ import os
 
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
-from google.appengine.ext.webapp import util
+from google.appengine.ext.webapp import util as webapp_util
 
 import twitterdigest
+import util
 
 CONSTANTS = {
     'BACKGROUND_COLOR': '#8aa7ff',
@@ -90,13 +91,11 @@ class TwitterDigestHandler(BaseHandler):
             'digest_entry_id': digest_entry_id,
             'start_date_iso': start_date.isoformat(),
             
-            'digest_contents': self._render_template(
+            'digest_contents': util.strip_html_whitespace(self._render_template(
                 'twitter-digest-contents.snippet', {
                     'grouped_statuses': grouped_statuses,
                     'use_relative_dates': output_template.use_relative_dates,
-
-
-                }),
+                })),
         })
 
 
@@ -106,7 +105,7 @@ def main():
             ('/', MainHandler),
         ],
         debug=True)
-    util.run_wsgi_app(application)
+    webapp_util.run_wsgi_app(application)
 
 
 if __name__ == '__main__':

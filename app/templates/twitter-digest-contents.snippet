@@ -28,7 +28,7 @@
                     {% if use_relative_dates %}{{ status.relative_created_at|escape }}{% else %}at {{ status.created_at_formatted_gmt|escape }} GMT{% endif %}</a>
                   from {{ status.source|striptags }}
                   {%if status.in_reply_to_status_id %}
-                    <a href="{{ status.in_reply_to_screen_name|escape }}/status/ {{ status.in_reply_to_status_id }}" style="color:{{ ANCHOR_COLOR }}">in reply to {{ status.in_reply_to_screen_name|escape }}</a>
+                    <a href="{{ status.in_reply_to_screen_name|escape }}/status/{{ status.in_reply_to_status_id }}" style="color:{{ ANCHOR_COLOR }}">in reply to {{ status.in_reply_to_screen_name|escape }}</a>
                   {% endif %}
                 </div>
                 
