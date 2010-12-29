@@ -129,9 +129,11 @@ def get_digest(usernames, link_formatter):
             s.created_at_in_seconds > digest_start_time
     ]
     
-    # Decorate them with the HTML representatin of the text
+    # Decorate them with the HTML representation of the text and formatted dates
     for s in digest_statuses:
         s.text_as_html = get_status_text_as_html(s, link_formatter)
+        s.created_at_formatted_gmt = datetime.datetime.utcfromtimestamp(
+            s.created_at_in_seconds).strftime("%I:%M %p")
     
     # Order them in chronological order
     digest_statuses.sort(

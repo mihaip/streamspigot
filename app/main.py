@@ -43,11 +43,24 @@ class MainHandler(BaseHandler):
         self._write_template('index.html')
 
 class TwitterDigestHandler(BaseHandler):
+    class OutputTemplate(object):
+        def __init__(self, template_file, content_type, use_relative_dates):
+            self.template_file = template_file
+            self.content_type = content_type
+            self.use_relative_dates = use_relative_dates
+    OUTPUT_TEMPLATES = {
+        'html': OutputTemplate(
+            'twitter-digest.html', 'text/html', True),
+        'atom': OutputTemplate(
+            'twitter-digest.atom', 'application/atom+xml', False),
+    }
     def get(self):
         # Extract parameters
         usernames = self.request.get('usernames').split(' ')
         usernames = [u.strip().lower() for u in usernames if u.strip()]
-        output = self.request.get('output') == 'html' and 'html' or 'atom'
+        output_template = TwitterDigestHandler.OUTPUT_TEMPLATES.get(
+            self.request.get('output'),
+            TwitterDigestHandler.OUTPUT_TEMPLATES['html'])
         
         # Generate digest
         (grouped_statuses, start_date, error_usernames) = \
@@ -55,9 +68,11 @@ class TwitterDigestHandler(BaseHandler):
 
         # Template parameters
         homepage_url = 'http://' + os.environ.get('SERVER_NAME', '')
-        base_digest_url = homepage_url + '/twitter/digest?usernames=' + '+'.join(usernames)
+        base_digest_url = homepage_url + '/twitter/digest?usernames=' + \
+            '+'.join(usernames)
 
-        self._write_template('twitter-digest.html', {
+        self.response.headers['Content-Type'] = output_template.content_type
+        self._write_template(output_template.template_file, {
             'usernames': self._render_template(
                 'usernames.snippet', {'usernames': usernames}),
             'error_usernames': error_usernames and self._render_template(
@@ -71,8 +86,10 @@ class TwitterDigestHandler(BaseHandler):
             'html_url': base_digest_url + '&output=atom',
             
             'digest_contents': self._render_template(
-                'twitter-digest-contents.snippet',
-                {'grouped_statuses': grouped_statuses}),
+                'twitter-digest-contents.snippet', {
+                    'grouped_statuses': grouped_statuses,
+                    'use_relative_dates': output_template.use_relative_dates,
+                }),
         })
 
 
