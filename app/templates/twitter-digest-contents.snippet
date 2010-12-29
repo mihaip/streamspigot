@@ -16,7 +16,7 @@
           <div style="background: {{ BUBBLE_COLOR }};margin:0 0 1.5em 0">
             {% for status in status_group.statuses %}
               <div style="padding:0.5em;{% if not forloop.first %} border-top:solid 1px {{ BUBBLE_SEPARATOR_COLOR }} {% endif %}">
-                {{ status.text|escape }}
+                {{ status.text_as_html }}
               </div>
             {% endfor %}
           </div>

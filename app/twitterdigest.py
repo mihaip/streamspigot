@@ -4,6 +4,7 @@ import itertools
 import logging
 import os
 import time
+import xml.sax.saxutils
 
 from google.appengine.api import urlfetch
 
@@ -25,6 +26,49 @@ class StatusGroup(object):
     def __init__(self, user, statuses):
         self.user = user
         self.statuses = statuses
+
+def get_status_text_as_html(status):
+    text_as_html = []
+    entities = list(status.hashtags + status.urls + status.user_mentions)
+    entities = [
+        e for e in entities if e.start_index != -1 and e.end_index != -1]
+    entities.sort(cmp=lambda e1,e2: e1.start_index - e2.start_index)
+    last_entity_end = 0
+    
+    def add_raw_chunk(chunk):
+        text_as_html.append(chunk)
+    
+    def add_escaped_chunk(chunk):
+        add_raw_chunk(xml.sax.saxutils.escape(chunk))
+    
+    for e in entities:
+      add_escaped_chunk(status.text[last_entity_end:e.start_index])
+
+      entity_anchor_text = status.text[e.start_index:e.end_index]
+      entity_url = None
+      
+      if isinstance(e, twitter.Hashtag):
+          entity_url = 'search?q=%23' + e.text
+      elif isinstance(e, twitter.Url):
+          entity_url = e.url
+          entity_anchor_text = e.display_url or e.expanded_url or e.url or entity_anchor_text
+      elif isinstance(e, twitter.User):
+          entity_url = e.screen_name
+      
+      if entity_url:
+          add_raw_chunk('<a href="')
+          add_escaped_chunk(entity_url)
+          add_raw_chunk('">')
+          add_escaped_chunk(entity_anchor_text)
+          add_raw_chunk('</a>')
+      else:
+          add_escaped_chunk(entity_anchor_text)
+      
+      last_entity_end = e.end_index
+    
+    add_escaped_chunk(status.text[last_entity_end:])
+    
+    return ''.join(text_as_html)
 
 def get_digest(usernames):
     # From the current time
@@ -60,7 +104,11 @@ def get_digest(usernames):
   
     for username in usernames:
         try:
-            statuses.extend(api.GetUserTimeline(username, count=40))
+            statuses.extend(api.GetUserTimeline(
+                username,
+                count=40,
+                include_rts=True,
+                include_entities=True))
         except twitter.TwitterError, err:
             logging.warning('Twitter error "%s" for user "%s"', err, username)
             error_usernames.append(username)
@@ -80,6 +128,10 @@ def get_digest(usernames):
         if s.created_at_in_seconds <= digest_end_time and
             s.created_at_in_seconds > digest_start_time
     ]
+    
+    # Decorate them with the HTML representatin of the text
+    for s in digest_statuses:
+        s.text_as_html = get_status_text_as_html(s)
     
     # Order them in chronological order
     digest_statuses.sort(
