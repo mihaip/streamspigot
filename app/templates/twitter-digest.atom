@@ -12,7 +12,7 @@
     <id>tag:persistent.info,2007:/twitter-digest/{{ digest_entry_id|escape }}</id>
     <title type="text">{{ title|escape }}</title>
     <updated>{{ start_date_iso }}Z</updated>
-    <link rel="alternate" type="text/html" href="{{ html_url|escape }"/>
+    <link rel="alternate" type="text/html" href="{{ html_url|escape }}"/>
     <content type="xhtml" xml:base="http://twitter.com/">
       <div xmlns="http://www.w3.org/1999/xhtml">
         {{ digest_contents }}
