@@ -74,7 +74,8 @@ class TwitterDigestHandler(BaseHandler):
         digest_id = '+'.join(usernames)
         digest_entry_id = digest_id + '-' + start_date.date().isoformat()
 
-        self.response.headers['Content-Type'] = output_template.content_type
+        self.response.headers['Content-Type'] = \
+            '%s; charset=utf-8' % output_template.content_type
         self._write_template(output_template.template_file, {
             'usernames': self._render_template(
                 'usernames.snippet', {'usernames': usernames}),
