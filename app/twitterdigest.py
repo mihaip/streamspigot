@@ -42,7 +42,7 @@ def get_status_text_as_html(status, link_formatter):
         add_raw_chunk(xml.sax.saxutils.escape(chunk))
     
     for e in entities:
-      add_escaped_chunk(status.text[last_entity_end:e.start_index])
+      add_raw_chunk(status.text[last_entity_end:e.start_index])
 
       entity_anchor_text = status.text[e.start_index:e.end_index]
       entity_url = None
@@ -51,7 +51,9 @@ def get_status_text_as_html(status, link_formatter):
           entity_url = 'search?q=%23' + e.text
       elif isinstance(e, twitter.Url):
           entity_url = e.url
-          entity_anchor_text = e.display_url or e.expanded_url or e.url or entity_anchor_text
+          entity_url_anchor_text = e.display_url or e.expanded_url or e.url
+          if entity_url_anchor_text:
+              entity_anchor_text = xml.sax.saxutils.escape(entity_url_anchor_text)
       elif isinstance(e, twitter.User):
           entity_url = e.screen_name
       
@@ -59,14 +61,14 @@ def get_status_text_as_html(status, link_formatter):
           add_raw_chunk('<a href="')
           add_escaped_chunk(entity_url)
           add_raw_chunk('" %s>' % link_formatter.get_attributes())
-          add_escaped_chunk(entity_anchor_text)
+          add_raw_chunk(entity_anchor_text)
           add_raw_chunk('</a>')
       else:
           add_escaped_chunk(entity_anchor_text)
       
       last_entity_end = e.end_index
     
-    add_escaped_chunk(status.text[last_entity_end:])
+    add_raw_chunk(status.text[last_entity_end:])
     
     return ''.join(text_as_html)
 
