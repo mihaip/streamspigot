@@ -33,6 +33,11 @@ class BaseHandler(webapp.RequestHandler):
     def _write_template(self, template_file_name, template_values={}):
         self.response.out.write(
             self._render_template(template_file_name, template_values))
+    
+    def _write_input_error(self, error_message):
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.set_status(400)
+        self.response.out.write('Input error: %s' % error_message)
 
 class LinkFormatter(object):
     def get_attributes(self):
@@ -57,15 +62,42 @@ class TwitterDigestHandler(BaseHandler):
     }
     def get(self):
         # Extract parameters
-        usernames = self.request.get('usernames').split(' ')
-        usernames = [u.strip().lower() for u in usernames if u.strip()]
+        usernames = []
+        list_owner = None
+        list_id = None
+        
+        if self.request.get('usernames'):
+            usernames = self.request.get('usernames').strip().split(' ')
+            usernames = [u.strip().lower() for u in usernames if u.strip()]
+        if self.request.get('list'):
+            list = self.request.get('list').strip().lower()
+            if '/' not in list:
+                self._write_input_error('Malformed "list" parameter')
+                return
+            list_owner, list_id = list.split('/', 1)
         output_template = TwitterDigestHandler.OUTPUT_TEMPLATES.get(
             self.request.get('output'),
             TwitterDigestHandler.OUTPUT_TEMPLATES['html'])
         
+        if not usernames and not list_owner:
+            self._write_input_error(
+                'Must provide either a "usernames" or "list" parameter')
+            return
+        
+        if usernames and list_owner:
+            self._write_input_error(
+                'Must provide only one of the "usernames" or "list" parameters')
+            return
+        
         # Generate digest
-        (grouped_statuses, start_date, error_usernames) = \
-            twitterdigest.get_digest(usernames, LINK_FORMATTER)
+        if usernames:
+            (grouped_statuses, start_date, error_usernames) = \
+                twitterdigest.get_digest_for_usernames(
+                    usernames, LINK_FORMATTER)
+        else:
+            (grouped_statuses, start_date, had_error) = \
+                twitterdigest.get_digest_for_list(
+                    list_owner, list_id, LINK_FORMATTER)
 
         # Template parameters
         homepage_url = 'http://' + os.environ.get('SERVER_NAME', '')
@@ -73,14 +105,29 @@ class TwitterDigestHandler(BaseHandler):
             '+'.join(usernames)
         digest_id = '+'.join(usernames)
         digest_entry_id = digest_id + '-' + start_date.date().isoformat()
+        
+        digest_errors = None
+        if usernames:
+            digest_source = self._render_template(
+                'usernames.snippet', {'usernames': usernames})
+            if error_usernames:
+                digest_errors = 'Errors were encountered for: %s ' \
+                    '(most likely their Tweets are private).' % \
+                        self._render_template(
+                            'usernames.snippet', {'usernames': error_usernames})
+        else:
+            digest_source = self._render_template(
+                'twitter-list.snippet',
+                {'list_owner': list_owner, 'list_id': list_id})
+            if had_error:
+                digest_errors = 'Errors were encountered when fetching ' \
+                    'the list (it may be private)'
 
         self.response.headers['Content-Type'] = \
             '%s; charset=utf-8' % output_template.content_type
         self._write_template(output_template.template_file, {
-            'usernames': self._render_template(
-                'usernames.snippet', {'usernames': usernames}),
-            'error_usernames': error_usernames and self._render_template(
-                'usernames.snippet', {'usernames': error_usernames}) or '',
+            'digest_source': digest_source,
+            'digest_errors': digest_errors,
             'grouped_statuses': grouped_statuses, 
             
             'title': 'Twitter Digest for %s (GMT)' %

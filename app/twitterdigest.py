@@ -72,7 +72,7 @@ def get_status_text_as_html(status, link_formatter):
     
     return ''.join(text_as_html)
 
-def get_digest(usernames, link_formatter):
+def _get_digest_timestamps():
     # From the current time
     now = time.gmtime()
   
@@ -92,38 +92,15 @@ def get_digest(usernames, link_formatter):
     digest_start_time = digest_end_time - DIGEST_LENGTH
   
     # Twitter data can be as stale as the digest end time, since we don't care
-    # about anything more recent
+    # about anything more recent (there may be some concurrency issues with
+    # parallell invocations, but they're unlikely to actually matter at the load
+    # we're expecting.
     max_cache_age = calendar.timegm(now) - digest_end_time
-  
-    # There may be some concurrency issues with parallell invocations, but they're
-    # unlikely to actually matter at the load we're expecting
-  
-    # Now fetch the statuses
-    statuses = []
-    error_usernames = []
+    
+    return digest_start_time, digest_end_time, max_cache_age
 
-    api = _get_digest_twitter_api(max_cache_age)
-  
-    for username in usernames:
-        try:
-            statuses.extend(api.GetUserTimeline(
-                username,
-                count=40,
-                include_rts=True,
-                include_entities=True))
-        except twitter.TwitterError, err:
-            logging.warning('Twitter error "%s" for user "%s"', err, username)
-            error_usernames.append(username)
-            pass
-        except urlfetch.DownloadError, err:
-            logging.warning('HTTP fetch error "%s" for user "%s"', err, username)
-            error_usernames.append(username)
-            pass
-        except ValueError, err:
-            logging.warning('JSON error "%s" for user "%s"', err, username)
-            error_usernames.append(username)
-            pass
-  
+def _process_digest_statuses(
+    statuses, digest_start_time, digest_end_time, link_formatter, error_info):
     # Filter them for the ones that fall in the window
     digest_statuses = [
         s for s in statuses
@@ -152,4 +129,68 @@ def get_digest(usernames, link_formatter):
   
     return (status_groups,
             datetime.datetime.fromtimestamp(digest_start_time),
-            error_usernames)
+            error_info)
+
+def get_digest_for_list(list_owner, list_id, link_formatter):
+    digest_start_time, digest_end_time, max_cache_age = _get_digest_timestamps()
+
+    api = _get_digest_twitter_api(max_cache_age)
+    
+    had_error = False
+    
+    # TODO(mihaip): fix duplication of try-catch blocks (c.f. 
+    # get_digest_for_usernames).
+    # TODO(mihaip): keep fetching tweets if we haven't gotten enough to go
+    # to digest_start_time
+    try:
+        statuses = api.GetListTimeline(
+            list_owner,
+            list_id,
+            per_page=40,
+            include_entities=True)
+    except twitter.TwitterError, err:
+        logging.warning('Twitter error "%s" for list "%s/%s"', err, list_owner, list_id)
+        had_error = True
+        statuses = []
+    except urlfetch.DownloadError, err:
+        logging.warning('HTTP fetch error "%s" for list "%s/%s"', err, list_owner, list_id)
+        had_error = True
+        statuses = []
+    except ValueError, err:
+        logging.warning('JSON error "%s" for list "%s/%s"', err, list_owner, list_id)
+        had_error = True
+        statuses = []
+  
+    return _process_digest_statuses(
+        statuses, digest_start_time, digest_end_time, link_formatter, had_error)    
+    
+def get_digest_for_usernames(usernames, link_formatter):
+    digest_start_time, digest_end_time, max_cache_age = _get_digest_timestamps()
+  
+    statuses = []
+    error_usernames = []
+
+    api = _get_digest_twitter_api(max_cache_age)
+  
+    for username in usernames:
+        try:
+            statuses.extend(api.GetUserTimeline(
+                username,
+                count=40,
+                include_rts=True,
+                include_entities=True))
+        except twitter.TwitterError, err:
+            logging.warning('Twitter error "%s" for user "%s"', err, username)
+            error_usernames.append(username)
+            pass
+        except urlfetch.DownloadError, err:
+            logging.warning('HTTP fetch error "%s" for user "%s"', err, username)
+            error_usernames.append(username)
+            pass
+        except ValueError, err:
+            logging.warning('JSON error "%s" for user "%s"', err, username)
+            error_usernames.append(username)
+            pass
+  
+    return _process_digest_statuses(
+        statuses, digest_start_time, digest_end_time, link_formatter, error_usernames)

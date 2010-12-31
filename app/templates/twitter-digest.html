@@ -65,12 +65,12 @@
   </div>
   <div id="footer">
     <p>
-      This is a digest for: {{ usernames }}
+      This is a digest of {{ digest_source }}.
     </p>
-    {% if error_usernames %}
+    {% if digest_errors %}
       <p class="errors">
-        Errors were encountered for: {{ error_usernames }}
-        (most likely their Tweets are private).
+        {{ digest_errors }}
+      </p>
     {% endif %}
     <p>To create a new digest, see the
     <a href="{{ homepage_url|escape }}">{{ APP_NAME|escape }} homepage</a>.</p>

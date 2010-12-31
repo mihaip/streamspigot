@@ -4,7 +4,7 @@ from django.utils import simplejson
 from google.appengine.ext import db
 
 class _DbCacheEntry(db.Model):
-    value = db.TextProperty(required=True)
+    value = db.BlobProperty(required=True)
     timestamp = db.DateTimeProperty(required=True, auto_now=True)
 
 class DbCache(object):
