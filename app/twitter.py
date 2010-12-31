@@ -3252,6 +3252,83 @@ class Api(object):
     self._CheckForTwitterError(data)
     return [List.NewFromJsonDict(x) for x in data['lists']]
 
+  def GetListTimeline(self,
+                      owner,
+                      id,
+                      since_id=None,
+                      max_id=None,
+                      per_page=None,
+                      page=None,
+                      include_entities=None):
+    '''Fetch the sequence of public Status messages for members of a list.
+
+    The twitter.Api instance must be authenticated if the user is private.
+
+    Args:
+      owner:
+        The user that owns the list.
+      id:
+        The slug or id of the list to fetch.
+      since_id:
+        Returns results with an ID greater than (that is, more recent
+        than) the specified ID. There are limits to the number of
+        Tweets which can be accessed through the API. If the limit of
+        Tweets has occured since the since_id, the since_id will be
+        forced to the oldest ID available. [Optional]
+      max_id:
+        Returns only statuses with an ID less than (that is, older
+        than) or equal to the specified ID. [Optional]
+      per_page:
+        Specifies the number of statuses to retrieve. May not be
+        greater than 200.  [Optional]
+      page:
+        Specifies the page of results to retrieve.
+        Note: there are pagination limits. [Optional]
+      include_entities:
+        If True, each tweet will include a node called "entities,".
+        This node offers a variety of metadata about the tweet in a
+        discreet structure, including: user_mentions, urls, and
+        hashtags. [Optional]
+
+    Returns:
+      A sequence of Status instances, one for each message up to count
+    '''
+    parameters = {}
+
+    url = '%s/%s/lists/%s/statuses.json' % (self.base_url, owner, id)
+
+    if since_id:
+      try:
+        parameters['since_id'] = long(since_id)
+      except:
+        raise TwitterError("since_id must be an integer")
+
+    if max_id:
+      try:
+        parameters['max_id'] = long(max_id)
+      except:
+        raise TwitterError("max_id must be an integer")
+
+    if per_page:
+      try:
+        parameters['per_page'] = int(per_page)
+      except:
+        raise TwitterError("per_page must be an integer")
+
+    if page:
+      try:
+        parameters['page'] = int(page)
+      except:
+        raise TwitterError("page must be an integer")
+
+    if include_entities:
+      parameters['include_entities'] = 1
+
+    json = self._FetchUrl(url, parameters=parameters)
+    data = simplejson.loads(json)
+    self._CheckForTwitterError(data)
+    return [Status.NewFromJsonDict(x) for x in data]
+
   def GetUserByEmail(self, email):
     '''Returns a single user by email address.
 
