@@ -1,0 +1,4 @@
+cron:
+- description: Daily exception report
+  url: /_ereporter?sender=mihai.parparita@gmail.com
+  schedule: every day 00:00

@@ -1,6 +1,7 @@
 import logging
 import os
 
+from google.appengine.ext import ereporter
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp import util as webapp_util
@@ -127,7 +128,6 @@ class TwitterDigestHandler(BaseHandler):
 
         digest_entry_id = digest_id + '-' + start_date.date().isoformat()
                     
-
         self.response.headers['Content-Type'] = \
             '%s; charset=utf-8' % output_template.content_type
         self._write_template(output_template.template_file, {
@@ -153,6 +153,7 @@ class TwitterDigestHandler(BaseHandler):
 
 
 def main():
+    ereporter.register_logger()
     application = webapp.WSGIApplication([
             ('/twitter/digest', TwitterDigestHandler),
             ('/', MainHandler),
