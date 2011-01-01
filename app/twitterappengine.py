@@ -1,6 +1,7 @@
 import time
 
 from django.utils import simplejson
+from google.appengine.api import memcache
 from google.appengine.ext import db
 
 class _DbCacheEntry(db.Model):
@@ -8,7 +9,7 @@ class _DbCacheEntry(db.Model):
     timestamp = db.DateTimeProperty(required=True, auto_now=True)
 
 class DbCache(object):
-    '''Simple cache on top of Google App engine's datastore'''
+    '''Simple cache on top of Google App Engine's datastore'''
     def Get(self, key):
         entry = _DbCacheEntry.get_by_key_name(key)
         if entry:
@@ -43,3 +44,21 @@ class DbCache(object):
             return None
     
         return None
+
+class MemcacheCache(object):
+    '''Simple cache on top of Google App Engine's memcache service'''
+    def Get(self, key):
+        values = memcache.get(key)
+        if values:
+            return values[1]
+        return None
+
+    def Set(self, key, data):
+        memcache.set(key, [time.time(), data])
+
+    def GetCachedTime(self, key):
+        values = memcache.get(key)
+        if values:
+            return values[0]
+        return None
+    

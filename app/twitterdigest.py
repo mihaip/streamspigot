@@ -14,7 +14,7 @@ import twitterappengine
 DIGEST_LENGTH = 60 * 60 * 24
 
 def _get_digest_twitter_api(max_cache_age):
-    api = twitter.Api(cache=twitterappengine.DbCache())
+    api = twitter.Api(cache=twitterappengine.MemcacheCache())
     api.SetCacheTimeout(max_cache_age)
     api.SetUserAgent('StreamSpigot/%s (+http://%s)' % (
         os.environ.get('CURRENT_VERSION_ID', '1'),
@@ -145,19 +145,26 @@ class TwitterFetcher(object):
         return [], True
         
 class ListTwitterFetcher(TwitterFetcher):
-    def __init__(self, api, list_owner, list_id):
+    def __init__(self, api, list_owner, list_id, digest_start_time):
         self._api = api
         self._list_owner = list_owner
         self._list_id = list_id
+        self._digest_start_time = digest_start_time
 
     def _fetch(self):
-        # TODO(mihaip): keep fetching tweets if we haven't gotten enough to go
-        # to digest_start_time    
-        return self._api.GetListTimeline(
-            self._list_owner,
-            self._list_id,
-            per_page=40,
-            include_entities=True)
+        statuses = []
+        while True:
+            max_id = len(statuses) and statuses[-1].id or None
+            chunk = self._api.GetListTimeline(
+                self._list_owner,
+                self._list_id,
+                max_id=max_id,
+                per_page=40,
+                include_entities=True)
+            statuses.extend(chunk)
+            if chunk[-1].created_at_in_seconds < self._digest_start_time:
+                break
+        return statuses
             
     def _id(self):
         return 'list "%s/%s"' % (self._list_owner, self._list_id)
@@ -182,7 +189,7 @@ def get_digest_for_list(list_owner, list_id, link_formatter):
 
     api = _get_digest_twitter_api(max_cache_age)
     
-    fetcher = ListTwitterFetcher(api, list_owner, list_id)
+    fetcher = ListTwitterFetcher(api, list_owner, list_id, digest_start_time)
     statuses, had_error = fetcher.fetch()
     
     return _process_digest_statuses(
