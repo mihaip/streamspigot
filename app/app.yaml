@@ -3,6 +3,9 @@ version: 1
 runtime: python
 api_version: 1
 
+builtins:
+- appstats: on
+
 handlers:
 - url: /static
   static_dir: static
@@ -13,3 +16,4 @@ handlers:
 
 - url: .*
   script: main.py
+
