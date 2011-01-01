@@ -98,3 +98,11 @@ button[disabled] {
 #footer {
   margin-top: 2em;
 }
+
+#footer p {
+  margin: 0;
+}
+
+#footer p:first-child {
+  margin-bottom: 1em;
+}
