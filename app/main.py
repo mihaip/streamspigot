@@ -101,10 +101,6 @@ class TwitterDigestHandler(BaseHandler):
 
         # Template parameters
         homepage_url = 'http://' + os.environ.get('SERVER_NAME', '')
-        base_digest_url = homepage_url + '/twitter/digest?usernames=' + \
-            '+'.join(usernames)
-        digest_id = '+'.join(usernames)
-        digest_entry_id = digest_id + '-' + start_date.date().isoformat()
         
         digest_errors = None
         if usernames:
@@ -115,6 +111,9 @@ class TwitterDigestHandler(BaseHandler):
                     '(most likely their Tweets are private).' % \
                         self._render_template(
                             'usernames.snippet', {'usernames': error_usernames})
+            base_digest_url = homepage_url + '/twitter/digest?usernames=' + \
+                '+'.join(usernames)
+            digest_id = '+'.join(usernames)
         else:
             digest_source = self._render_template(
                 'twitter-list.snippet',
@@ -122,6 +121,12 @@ class TwitterDigestHandler(BaseHandler):
             if had_error:
                 digest_errors = 'Errors were encountered when fetching ' \
                     'the list (it may be private)'
+            base_digest_url = homepage_url + '/twitter/digest?list=%s/%s' % (
+                list_owner, list_id)
+            digest_id = '%s/%s' % (list_owner, list_id)
+
+        digest_entry_id = digest_id + '-' + start_date.date().isoformat()
+                    
 
         self.response.headers['Content-Type'] = \
             '%s; charset=utf-8' % output_template.content_type
