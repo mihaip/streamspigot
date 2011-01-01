@@ -131,36 +131,60 @@ def _process_digest_statuses(
             datetime.datetime.fromtimestamp(digest_start_time),
             error_info)
 
+class TwitterFetcher(object):
+    def fetch(self):
+        try:
+            return self._fetch(), False
+        except twitter.TwitterError, err:
+            logging.warning('Twitter error "%s" for %s"', err, self._id())
+        except urlfetch.DownloadError, err:
+            logging.warning('HTTP fetch error "%s" for %s', err, self._id())
+        except ValueError, err:
+            logging.warning('JSON error "%s" for %s', err, self._id())
+
+        return [], True
+        
+class ListTwitterFetcher(TwitterFetcher):
+    def __init__(self, api, list_owner, list_id):
+        self._api = api
+        self._list_owner = list_owner
+        self._list_id = list_id
+
+    def _fetch(self):
+        # TODO(mihaip): keep fetching tweets if we haven't gotten enough to go
+        # to digest_start_time    
+        return self._api.GetListTimeline(
+            self._list_owner,
+            self._list_id,
+            per_page=40,
+            include_entities=True)
+            
+    def _id(self):
+        return 'list "%s/%s"' % (self._list_owner, self._list_id)
+
+class UserTwitterFetcher(TwitterFetcher):
+    def __init__(self, api, username):
+        self._api = api
+        self._username = username
+ 
+    def _fetch(self):
+        return self._api.GetUserTimeline(
+            self._username,
+            count=40,
+            include_rts=True,
+            include_entities=True)
+
+    def _id(self):
+        return 'user "%s"' % self._username
+
 def get_digest_for_list(list_owner, list_id, link_formatter):
     digest_start_time, digest_end_time, max_cache_age = _get_digest_timestamps()
 
     api = _get_digest_twitter_api(max_cache_age)
     
-    had_error = False
+    fetcher = ListTwitterFetcher(api, list_owner, list_id)
+    statuses, had_error = fetcher.fetch()
     
-    # TODO(mihaip): fix duplication of try-catch blocks (c.f. 
-    # get_digest_for_usernames).
-    # TODO(mihaip): keep fetching tweets if we haven't gotten enough to go
-    # to digest_start_time
-    try:
-        statuses = api.GetListTimeline(
-            list_owner,
-            list_id,
-            per_page=40,
-            include_entities=True)
-    except twitter.TwitterError, err:
-        logging.warning('Twitter error "%s" for list "%s/%s"', err, list_owner, list_id)
-        had_error = True
-        statuses = []
-    except urlfetch.DownloadError, err:
-        logging.warning('HTTP fetch error "%s" for list "%s/%s"', err, list_owner, list_id)
-        had_error = True
-        statuses = []
-    except ValueError, err:
-        logging.warning('JSON error "%s" for list "%s/%s"', err, list_owner, list_id)
-        had_error = True
-        statuses = []
-  
     return _process_digest_statuses(
         statuses, digest_start_time, digest_end_time, link_formatter, had_error)    
     
@@ -173,24 +197,12 @@ def get_digest_for_usernames(usernames, link_formatter):
     api = _get_digest_twitter_api(max_cache_age)
   
     for username in usernames:
-        try:
-            statuses.extend(api.GetUserTimeline(
-                username,
-                count=40,
-                include_rts=True,
-                include_entities=True))
-        except twitter.TwitterError, err:
-            logging.warning('Twitter error "%s" for user "%s"', err, username)
+        fetcher = UserTwitterFetcher(api, username)
+        user_statuses, had_error = fetcher.fetch()
+        if had_error:
             error_usernames.append(username)
-            pass
-        except urlfetch.DownloadError, err:
-            logging.warning('HTTP fetch error "%s" for user "%s"', err, username)
-            error_usernames.append(username)
-            pass
-        except ValueError, err:
-            logging.warning('JSON error "%s" for user "%s"', err, username)
-            error_usernames.append(username)
-            pass
-  
+        else:
+            statuses.extend(user_statuses)
+
     return _process_digest_statuses(
         statuses, digest_start_time, digest_end_time, link_formatter, error_usernames)
