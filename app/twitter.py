@@ -3224,11 +3224,9 @@ class Api(object):
   def GetLists(self, user, cursor=-1):
     '''Fetch the sequence of lists for a user.
 
-    The twitter.Api instance must be authenticated.
-
     Args:
       user:
-        The twitter name or id of the user whose friends you are fetching.
+        The twitter name or id of the user whose lists you are fetching.
         If the passed in user is the same as the authenticated user
         then you will also receive private list data.
       cursor:
@@ -3240,9 +3238,6 @@ class Api(object):
     Returns:
       A sequence of twitter.List instances, one for each list
     '''
-    if not self._oauth_consumer:
-      raise TwitterError("twitter.Api instance must be authenticated")
-
     url = '%s/%s/lists.json' % (self.base_url, user)
     parameters = {}
     parameters['cursor'] = cursor
