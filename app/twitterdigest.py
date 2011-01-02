@@ -8,8 +8,7 @@ import xml.sax.saxutils
 
 from google.appengine.api import urlfetch
 
-from datasources import twitter
-import twitterappengine
+from datasources import twitter, twitterappengine
 
 DIGEST_LENGTH = 60 * 60 * 24
 

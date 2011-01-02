@@ -1,3 +1,5 @@
+'''Helper code for running python-twitter on top of Google App Engine'''
+
 import time
 
 from django.utils import simplejson
