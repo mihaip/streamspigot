@@ -1,6 +1,7 @@
 import logging
 import os
 
+from django.utils import simplejson
 from google.appengine.ext import ereporter
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
@@ -39,6 +40,10 @@ class BaseHandler(webapp.RequestHandler):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.set_status(400)
         self.response.out.write('Input error: %s' % error_message)
+        
+    def _write_json(self, obj):
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(simplejson.dumps(obj))
 
 class LinkFormatter(object):
     def get_attributes(self):
@@ -48,6 +53,16 @@ LINK_FORMATTER = LinkFormatter()
 class MainHandler(BaseHandler):
     def get(self):
         self._write_template('index.html')
+
+class TwitterListsHandler(BaseHandler):
+    def get(self):
+        username = self.request.get('username').strip()
+        if not username:
+            self._write_input_error('Missing "username" parameter')
+            return
+    
+        lists = twitterdigest.get_lists(username)
+        self._write_json([l.slug for l in lists])
 
 class TwitterDigestHandler(BaseHandler):
     class OutputTemplate(object):
@@ -155,6 +170,7 @@ class TwitterDigestHandler(BaseHandler):
 def main():
     ereporter.register_logger()
     application = webapp.WSGIApplication([
+            ('/twitter/lists', TwitterListsHandler),
             ('/twitter/digest', TwitterDigestHandler),
             ('/', MainHandler),
         ],

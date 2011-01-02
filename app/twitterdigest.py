@@ -213,3 +213,8 @@ def get_digest_for_usernames(usernames, link_formatter):
 
     return _process_digest_statuses(
         statuses, digest_start_time, digest_end_time, link_formatter, error_usernames)
+
+def get_lists(username):
+    api = _get_digest_twitter_api(3600)
+    return api.GetLists(username)
+    
