@@ -27,12 +27,36 @@ h1 {
   color: #666;
 }
 
-#usernames-table {
+#setup-table {
   margin: 0 auto;
 }
 
-button {
-  border: solid 1px #bbb;
+#setup-table #list-column,
+#setup-table #usernames-column {
+  width: 250px;
+  vertical-align: top;
+}
+
+#setup-table #or-column {
+  padding-left: 1em;
+  padding-right: 1em;
+  font-weight: bold;
+  color: #272e40;
+}
+
+#setup-table fieldset {
+  border-width: 1px 0 0 0;
+  border-color: #6c80b2;
+  border-style: solid;
+}
+
+#setup-table legend {
+  color: #333;
+  padding: 0 1em;
+}
+
+#usernames button {
+  border: 0;
   background: #eee;
   font-weight: bold;
   width: 1.6em;
@@ -43,8 +67,7 @@ button {
   cursor: pointer;
 }
 
-button[disabled] {
-  border: solid 1px #698bef;
+#usernames button[disabled] {
   background: #7094FF;
   cursor: default;
 }
@@ -97,6 +120,10 @@ button[disabled] {
 
 #footer {
   margin-top: 2em;
+}
+
+#footer .inner {
+  background: #cad8fb;
 }
 
 #footer p {

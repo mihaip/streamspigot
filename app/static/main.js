@@ -1,17 +1,68 @@
 function init() {
-  var tableNode = document.getElementById("usernames-table");
-  
-  var templateRowNode = tableNode.getElementsByTagName("tr")[0];
-  
-  initRow(templateRowNode);
-  templateRowNode.getElementsByTagName("input")[0].focus();
+  initList();
+  initUsernames();
   
   updateLinks();
 }
 
-function initRow(rowNode) {
-  var inputNode = rowNode.getElementsByTagName("input")[0];
-  inputNode.value = "";
+function initList() {
+  var listOwnerNode = document.getElementById('twitter-list-owner');
+  var fetchTwitterListsTimeout = null;
+  listOwnerNode.onkeyup = function() {
+      if (fetchTwitterListsTimeout) {
+        window.clearTimeout(fetchTwitterListsTimeout);
+      }
+      fetchTwitterListsTimeout = window.setTimeout(function() {
+          fetchTwitterListsTimeout = null;
+          fetchTwitterLists();
+      }, 500);
+  };
+  
+  var listsNode = document.getElementById('twitter-lists');
+  listsNode.onchange = updateLinks;
+}
+
+function fetchTwitterLists() {
+  var listOwnerNode = document.getElementById('twitter-list-owner');
+  var listsNode = document.getElementById('twitter-lists');
+  for (var i = listsNode.options.length - 1; i >= 1; i--) {
+    listsNode.removeChild(listsNode.options[i]);
+  }
+  listsNode.disabled = true;
+  var listOwner = listOwnerNode.value;
+  
+  if (!listOwner) return;
+  
+  var xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4 && xhr.status == 200) {
+      var lists = eval('(' + xhr.responseText + ')');
+      for (var i = 0; i < lists.length; i++) {
+        var listOptionNode = document.createElement('option');
+        listOptionNode.value = lists[i];
+        listOptionNode.appendChild(document.createTextNode(lists[i]));
+        listsNode.appendChild(listOptionNode);
+      }
+      if (lists.length) {
+        listsNode.disabled = false;
+      }
+    }
+  };
+  xhr.open('GET', '/twitter/lists?username=' + encodeURIComponent(listOwner), true);
+  xhr.send(null);
+
+  console.log('fetching twitter lists for ' + listOwnerNode.value);
+}
+
+function initUsernames() {
+  var usernamesNode = document.getElementById('usernames');
+  var templateRowNode = usernamesNode.getElementsByTagName('div')[0];
+  initUsernameRow(templateRowNode);
+}
+
+function initUsernameRow(rowNode) {
+  var inputNode = rowNode.getElementsByTagName('input')[0];
+  inputNode.value = '';
   inputNode.onkeyup = function(ev) {
     var e = ev || window.event;
     
@@ -28,15 +79,15 @@ function initRow(rowNode) {
     updateLinks();
   };
   
-  var buttonNodes = rowNode.getElementsByTagName("button");
+  var buttonNodes = rowNode.getElementsByTagName('button');
   
   buttonNodes[0].disabled = buttonNodes[1].disabled = false;
   
   buttonNodes[0].onclick = function() {
-    removeRow(rowNode);
+    removeUsernameRow(rowNode);
   };
   buttonNodes[1].onclick = function() {
-    addRow(rowNode);
+    addUsernameRow(rowNode);
   };
   
   // Prevent focusing of buttons (to remove dotted border outline, which
@@ -50,34 +101,44 @@ function initRow(rowNode) {
   };
 }
 
-function removeRow(currentRow) {
+function removeUsernameRow(currentRow) {
   currentRow.parentNode.removeChild(currentRow);
   
   updateLinks();
 }
 
-function addRow(currentRow) {
+function addUsernameRow(currentRow) {
   var newRow = currentRow.cloneNode(true);
-  initRow(newRow);
+  initUsernameRow(newRow);
   
   currentRow.parentNode.insertBefore(newRow, currentRow.nextSibling);
   
-  newRow.getElementsByTagName("input")[0].focus();
+  newRow.getElementsByTagName('input')[0].focus();
   
   updateLinks();
 }
 
 function updateLinks(ev) {
-  var tableNode = document.getElementById("usernames-table");
+  // See if a list was selected
+  var listOwnerNode = document.getElementById('twitter-list-owner');
+  var listOwner = listOwnerNode.value;
+  var listId = null;
+  if (listOwner) {
+    var listsNode = document.getElementById('twitter-lists');
+    if (listsNode.selectedIndex > 0) {
+      listId = listsNode.options[listsNode.selectedIndex].value;
+    }
+  }
   
   // Collect all usernames
-  var usernameNodes = tableNode.getElementsByTagName("input");
+  var usernamesNode = document.getElementById('usernames');
+  var usernameNodes = usernamesNode.getElementsByTagName('input');
   var usernames = [];
   
   for (var i = 0, usernameNode; usernameNode = usernameNodes[i]; i++) {
     var username = usernameNode.value;
-    username = username.replace(/^\s*/, "");
-    username = username.replace(/\s*$/, "");
+    username = username.replace(/^\s*/, '');
+    username = username.replace(/\s*$/, '');
     
     if (username) {
       usernames.push(username);
@@ -85,27 +146,32 @@ function updateLinks(ev) {
   }
   
   // Update links
-  var linksNode = document.getElementById("digest-links");
-  var emptyNode = document.getElementById("digest-empty");
-  if (usernames.length) {
-    emptyNode.className = "hidden";
-    linksNode.className = "";
+  var linksNode = document.getElementById('digest-links');
+  var emptyNode = document.getElementById('digest-empty');
+  if ((listOwner && listId) || usernames.length) {
+    emptyNode.className = 'hidden';
+    linksNode.className = '';
     
-    var baseUrl = 'twitter/digest?usernames=' + usernames.join("+");
+    var baseUrl = 'twitter/digest?';
     
-    var htmlLinkNode = document.getElementById("digest-html-link");
-    var feedLinkNode = document.getElementById("digest-feed-link");
-    
-    htmlLinkNode.href = baseUrl + "&output=html";
-    feedLinkNode.href = baseUrl + "&output=atom";
+    if (listOwner && listId) {
+      baseUrl += 'list=' + listOwner + '/' + listId;
+    } else {
+      baseUrl += 'usernames=' + usernames.join('+');
+    }
+
+    var htmlLinkNode = document.getElementById('digest-html-link');
+    var feedLinkNode = document.getElementById('digest-feed-link');
+    htmlLinkNode.href = baseUrl + '&output=html';
+    feedLinkNode.href = baseUrl + '&output=atom';
   } else {
-    emptyNode.className = "";
-    linksNode.className = "hidden";
+    emptyNode.className = '';
+    linksNode.className = 'hidden';
   }
   
   // Update button state (so if there's only one username, it can't be
   // removed)
-  var buttons = tableNode.getElementsByTagName("button");
+  var buttons = usernamesNode.getElementsByTagName('button');
   buttons[0].disabled = usernameNodes.length == 1;
 }
 

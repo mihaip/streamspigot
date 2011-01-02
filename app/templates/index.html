@@ -21,20 +21,40 @@
     visit periodically, or as an Atom feed that you subscribe to get updates
     (grouped as one feed item) in your favorite feed reader.</p>
     
-    <p>To get started, enter one of more Twitter usernames below (one username
-    per line) and use the links that will appear at the bottom.</p>
+    <p>To get started, either choose a
+    <a href="http://support.twitter.com/articles/247929">Twitter list</a> or
+    enter one or more Twitter usernames below (one username per line) and use
+    the links that will appear at the bottom.</p>
   </div>
   
   <div class="symbol">&#8675;</div>
 </div>
 
-<table id="usernames-table">
-  <tr>
-    <td><input type="text" class="username"></td>
-    <td><button class="remove">-</button></td>
-    <td><button class="add">+</button></td>
-  </tr>
+<table id="setup-table">
+  <td id="list-column">
+    <fieldset>
+      <legend>Twitter list</legend>
+      <input type="text" id="twitter-list-owner" placeholder="Username">
+      <select id="twitter-lists" disabled>
+          <option disabled>Lists</option>
+      </select>
+    </fieldset>
+  </td>
+  <td id="or-column">or</td>
+  <td id="usernames-column">
+    <fieldset>
+      <legend>Twitter usernames</legend>
+      <div id="usernames">
+        <div class="row">
+          <input type="text" class="username"  placeholder="Username">
+          <button class="remove">-</button>
+          <button class="add">+</button>
+        </div>
+      </div>
+    </fieldset>
+  </td>
 </table>
+
 
 <div id="digest-links" class="hidden">
   <div class="symbol">&#8675;</div>
@@ -52,7 +72,7 @@
   <div class="symbol">&empty;</div>
 
   <div class="inner">
-    You must select at least one Twitter user to create a digest for.
+    You must select a Twitter list or at least one Twitter user to create a digest for.
   </div>
 </div>
 
