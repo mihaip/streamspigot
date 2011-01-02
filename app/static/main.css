@@ -1,4 +1,4 @@
-div,table {
+div, table {
   margin: 0;
 }
 
@@ -8,20 +8,24 @@ html, body {
 }
 
 body {
-  text-align: center;
-  background: #8AA7FF;
-  font-family: sans-serif;
+  background: #8aa7ff;
+  font-family: Helvetica, Arial, sans-serif;
   font-size: 10pt;
 }
 
 a {
-  color: #2DB300;
+  color: #2db300;
+}
+
+.feed-link {
+  padding-left: 17px;
+  background: url(/static/feed-icon.png) no-repeat;
 }
 
 h1 {
   text-align: center;
   margin: 0 auto 1em auto;
-  background: #7094FF;
+  background: #7094ff;
   width: 550px;
   padding: 0.5em 0.3em;
   color: #666;
@@ -35,6 +39,7 @@ h1 {
 #setup-table #usernames-column {
   width: 250px;
   vertical-align: top;
+  text-align: center;  
 }
 
 #setup-table #or-column {
@@ -53,6 +58,7 @@ h1 {
 #setup-table legend {
   color: #333;
   padding: 0 1em;
+  text-align: center;  
 }
 
 #usernames button {
@@ -63,12 +69,12 @@ h1 {
   text-align: center;
   height: 1.7em;
   padding: 0 0.1em 0.1em 0.1em;
-  color: #8AA7FF;
+  color: #8aa7ff;
   cursor: pointer;
 }
 
 #usernames button[disabled] {
-  background: #7094FF;
+  background: #7094ff;
   cursor: default;
 }
 
@@ -79,11 +85,7 @@ h1 {
 #digest-links,
 #digest-empty {
   margin-top: 1em;
-}
-
-#intro .inner,
-#footer .inner {
-  text-align: left;
+  text-align: center;  
 }
 
 #intro .symbol {
@@ -108,7 +110,8 @@ h1 {
   margin: 0;
   padding: .1em;
   height: 1.5em;
-}	  
+  text-align: center;
+}
 
 #digest-links .symbol {
   color: #333;

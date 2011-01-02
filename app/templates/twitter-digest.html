@@ -7,19 +7,9 @@
         title="Twitter Digest Atom Feed"
         type="application/atom+xml">
 	<script src="/static/main.js"></script>
+	<link rel="stylesheet" type="text/css" href="/static/main.css">
 	<base href="http://twitter.com/">
 	<style type="text/css">
-    html, body {
-      padding: 0;
-      margin: 0;
-    }
-  
-    body {
-      font-family: Helvetica, Arial, sans-serif;
-      font-size: 10pt;
-      background: {{ BACKGROUND_COLOR }};
-    }
-  
     h1,
     #content,
     #footer {
@@ -65,7 +55,7 @@
   </div>
   <div id="footer">
     <p>
-      This is a digest of {{ digest_source }}.
+      This is a digest of {{ digest_source }}. It is also available <a href="{{ feed_url|escape }}" class="feed-link">as a feed</a>.
     </p>
     {% if digest_errors %}
       <p class="errors">
