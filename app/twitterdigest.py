@@ -154,7 +154,7 @@ class ListTwitterFetcher(TwitterFetcher):
     def _fetch(self):
         statuses = []
         while True:
-            max_id = len(statuses) and statuses[-1].id or None
+            max_id = len(statuses) and statuses[-1].id - 1 or None
             chunk = self._api.GetListTimeline(
                 self._list_owner,
                 self._list_id,
