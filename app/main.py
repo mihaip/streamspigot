@@ -72,9 +72,9 @@ class TwitterDigestHandler(BaseHandler):
             self.use_relative_dates = use_relative_dates
     OUTPUT_TEMPLATES = {
         'html': OutputTemplate(
-            'twitter-digest.html', 'text/html', True),
+            'twitterdigest/twitter-digest.html', 'text/html', True),
         'atom': OutputTemplate(
-            'twitter-digest.atom', 'text/xml', False),
+            'twitterdigest/twitter-digest.atom', 'text/xml', False),
     }
     def get(self):
         # Extract parameters
@@ -121,18 +121,19 @@ class TwitterDigestHandler(BaseHandler):
         digest_errors = None
         if usernames:
             digest_source = self._render_template(
-                'usernames.snippet', {'usernames': usernames})
+                'twitterdigest/usernames.snippet', {'usernames': usernames})
             if error_usernames:
                 digest_errors = 'Errors were encountered for: %s ' \
                     '(most likely their Tweets are private).' % \
                         self._render_template(
-                            'usernames.snippet', {'usernames': error_usernames})
+                            'twitterdigest/usernames.snippet',
+                            {'usernames': error_usernames})
             base_digest_url = homepage_url + '/twitter/digest?usernames=' + \
                 '+'.join(usernames)
             digest_id = '+'.join(usernames)
         else:
             digest_source = self._render_template(
-                'twitter-list.snippet',
+                'twitterdigest/twitter-list.snippet',
                 {'list_owner': list_owner, 'list_id': list_id})
             if had_error:
                 digest_errors = 'Errors were encountered when fetching ' \
@@ -160,7 +161,7 @@ class TwitterDigestHandler(BaseHandler):
             'start_date_iso': start_date.isoformat(),
             
             'digest_contents': util.strip_html_whitespace(self._render_template(
-                'twitter-digest-contents.snippet', {
+                'twitterdigest/twitter-digest-contents.snippet', {
                     'grouped_statuses': grouped_statuses,
                     'use_relative_dates': output_template.use_relative_dates,
                 })),
