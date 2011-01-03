@@ -1,70 +1,71 @@
-<!DOCTYPE html>
-<html>
-<head>
-	<title>{{ APP_NAME|escape }}: {{ title|escape }}</title>
-  <link href="{{ feed_url|escape }}"
-        rel="alternate"
-        title="Twitter Digest Atom Feed"
-        type="application/atom+xml">
-	<script src="/static/main.js"></script>
-	<link rel="stylesheet" type="text/css" href="/static/main.css">
-	<base href="http://twitter.com/">
-	<style type="text/css">
-    h1,
-    #content,
-    #footer {
-      width: 625px;
-      margin: 0 auto;
-      padding: 0.5em;
-    }
-  
-    #content {
-      margin-top: 1em;
-    }
-  
-    h1,
-    #footer {
-      background: {{ BUBBLE_COLOR }};
-      text-align: center;
-      color: {{ HEADER_COLOR }};
-    }
-  
-    h1 {
-      text-align: center;
-      margin-bottom: 1em;
-      background: {{ BACKGROUND_DARKER_COLOR }};
-    }
-  
-    #footer {
-      margin-top: 1em;
-    }
-  
-    #footer a {
-      color: {{ ANCHOR_COLOR }};
-    }
-  
-    #footer .errors {
-      background: #fcc;
-    }
-	</style>
-</head>
-<body>
-  <h1>{{ APP_NAME|escape }}: {{ title|escape }}</h1>
-  <div id="content">
-    {{ digest_contents }}
-  </div>
-  <div id="footer">
-    <p>
-      This is a digest of {{ digest_source }}. It is also available <a href="{{ feed_url|escape }}" class="feed-link">as a feed</a>.
-    </p>
-    {% if digest_errors %}
-      <p class="errors">
-        {{ digest_errors }}
-      </p>
-    {% endif %}
-    <p>To create a new digest, see the
-    <a href="{{ homepage_url|escape }}">{{ APP_NAME|escape }} homepage</a>.</p>
-  </div>
+{% extends "../base/page.html" %}
 
-</body>
-</html>
+{% block title %}{{ APP_NAME|escape }}: {{ title|escape }}{% endblock %}
+
+{% block head %}
+<link href="{{ feed_url|escape }}"
+      rel="alternate"
+      title="Twitter Digest Atom Feed"
+      type="application/atom+xml">
+<script src="/static/main.js"></script>
+<link rel="stylesheet" type="text/css" href="/static/main.css">
+<base href="http://twitter.com/">
+<style type="text/css">
+  h1,
+  #content,
+  #footer {
+    width: 625px;
+    margin: 0 auto;
+    padding: 0.5em;
+  }
+
+  #content {
+    margin-top: 1em;
+  }
+
+  h1,
+  #footer {
+    background: {{ BUBBLE_COLOR }};
+    text-align: center;
+    color: {{ HEADER_COLOR }};
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 1em;
+    background: {{ BACKGROUND_DARKER_COLOR }};
+  }
+
+  #footer {
+    margin-top: 1em;
+  }
+
+  #footer a {
+    color: {{ ANCHOR_COLOR }};
+  }
+
+  #footer .errors {
+    background: #fcc;
+  }
+</style>
+{% endblock %}
+
+{% block header %}{{ APP_NAME|escape }}: {{ title|escape }}{% endblock %}
+
+{% block body %}
+<div id="content">
+  {{ digest_contents }}
+</div>
+<div id="footer">
+  <p>
+    This is a digest of {{ digest_source }}. It is also available <a href="{{ feed_url|escape }}" class="feed-link">as a feed</a>.
+  </p>
+  {% if digest_errors %}
+    <p class="errors">
+      {{ digest_errors }}
+    </p>
+  {% endif %}
+  <p>To create a new digest, see the
+  <a href="{{ homepage_url|escape }}">{{ APP_NAME|escape }} homepage</a>.</p>
+</div>
+{% endblock %}

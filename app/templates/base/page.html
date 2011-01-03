@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<title>{% block title %}{{ APP_NAME|escape }}{% endblock %}</title>
+	<link rel="stylesheet" type="text/css" href="/static/main.css">
+	<script src="/static/main.js"></script>
+	{% block head %}{% endblock %}
+</head>
+<body>
+
+<h1>{% block header %}{{ APP_NAME|escape }}{% endblock %}</h1>
+
+{% block body %}{% endblock %}
+
+</body>
+</html>

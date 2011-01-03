@@ -1,15 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-	<meta http-equiv="content-type" content="text/html; charset=utf-8">
-	<title>{{ APP_NAME|escape }}</title>
-	<link rel="stylesheet" type="text/css" href="static/main.css">
-	<script src="static/main.js"></script>
-</head>
-<body onload="init();">
+{% extends "base/page.html" %}
 
-<h1>{{ APP_NAME|escape }}</h1>
-
+{% block body %}
 <div id="intro">
   <div class="inner">
     <p>{{ APP_NAME|escape }} lets you read <a href="http://twitter.com">Twitter</a> 
@@ -93,5 +84,6 @@
   </div>
 </div>
 
-</body>
-</html>
+<script>init();</script>
+
+{% endblock %}
