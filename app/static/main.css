@@ -22,11 +22,15 @@ a {
   background: url(/static/feed-icon.png) no-repeat;
 }
 
+#container {
+  width: 625px;
+  margin: 0 auto;    
+}
+
 h1 {
   text-align: center;
-  margin: 0 auto 1em auto;
+  margin: 0 0 1em 0;
   background: #7094ff;
-  width: 550px;
   padding: 0.5em 0.3em;
   color: #666;
 }
@@ -95,7 +99,6 @@ h1 {
 
 .inner {
   background: #f6f6f6;
-  width: 550px;
   padding: 0.5em;
   margin: 0 auto;
 }
@@ -122,17 +125,17 @@ h1 {
 }
 
 #footer {
-  margin-top: 2em;
+  margin-top: 5em;
 }
 
 #footer .inner {
   background: #cad8fb;
 }
 
-#footer p {
-  margin: 0;
+#footer p:first-child {
+  margin-top: 0;
 }
 
-#footer p:first-child {
-  margin-bottom: 1em;
+#footer p:last-child {
+  margin-bottom: 0;
 }

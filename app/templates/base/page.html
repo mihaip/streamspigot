@@ -9,9 +9,17 @@
 </head>
 <body>
 
-<h1>{% block header %}{{ APP_NAME|escape }}{% endblock %}</h1>
-
-{% block body %}{% endblock %}
+<div id="container">
+  <h1>{% block header %}{{ APP_NAME|escape }}{% endblock %}</h1>
+  
+  {% block body %}{% endblock %}
+  
+  <div id="footer">
+    <div class="inner">
+      {% block footer %}{% endblock %}
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

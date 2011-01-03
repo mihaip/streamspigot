@@ -65,24 +65,22 @@
     You must select a Twitter list or at least one Twitter user to create a digest for.
   </div>
 </div>
+{% endblock %}
 
-<div id="footer">
-  <div class="inner">
-    <p>
-      {{ APP_NAME|escape }} was created by <a href="http://persistent.info">Mihai
-      Parparita</a>, who can be reached at <script>printEmail();</script>. 
-      <a href="https://github.com/mihaip/streamspigot">Source is available</a>
-      on <a href="https://github.com/">GitHub</a>.
-    </p>
-    
-    <p>
-      The app was formerly known as "Twitter Digest" but was renamed due to
-      plans to increase its scope and to comply with Twitter's
-      <a href="http://support.twitter.com/articles/77641">trademark
-      guidelines</a>.
-    </p>
-  </div>
-</div>
+{% block footer %}
+<p>
+  {{ APP_NAME|escape }} was created by <a href="http://persistent.info">Mihai
+  Parparita</a>, who can be reached at <script>printEmail();</script>. 
+  <a href="https://github.com/mihaip/streamspigot">Source is available</a>
+  on <a href="https://github.com/">GitHub</a>.
+</p>
+
+<p>
+  The app was formerly known as "Twitter Digest" but was renamed due to
+  plans to increase its scope and to comply with Twitter's
+  <a href="http://support.twitter.com/articles/77641">trademark
+  guidelines</a>.
+</p>
 
 <script>init();</script>
 
