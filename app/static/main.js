@@ -1,5 +1,6 @@
 // TODO(mihaip): Start using Closure (and Plovr)
 var streamspigot = {};
+
 streamspigot.twitterdigest = {};
 
 streamspigot.twitterdigest.init = function() {
@@ -188,6 +189,20 @@ streamspigot.twitterdigest.updateLinks = function() {
   buttons[0].disabled = usernameNodes.length == 1;
 };
 
+streamspigot.feedplayback = {};
+
+streamspigot.feedplayback.init = function() {
+  var setupNode = document.getElementById('feedplayback-setup-table');
+  var urlNode = document.getElementById('feedplayback-url');
+  urlNode.onkeyup = function() {
+    if (urlNode.value) {
+      setupNode.className = 'enabled';
+    } else {
+      setupNode.className = 'disabled';
+    }
+  };
+};
+
 streamspigot.util = {};
 
 streamspigot.util.printEmail = function(opt_anchorText) {
@@ -202,3 +217,4 @@ streamspigot.util.printEmail = function(opt_anchorText) {
                  (opt_anchorText || b) + 
                  '<' + '/a>');
 };
+

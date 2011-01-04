@@ -224,3 +224,24 @@ h1 a {
 #feedplayback-url {
   width: 30em;
 }
+
+#feedplayback-status-row td {
+  padding-top: 0;
+}
+
+#feedplayback-status {
+  color: #4d5c7f;  
+}
+
+#feedplayback-setup-table.disabled #feedplayback-enabled-symbol,
+#feedplayback-setup-table.enabled #feedplayback-disabled-symbol {
+  display: none;
+}
+
+#feedplayback-enabled-symbol {
+  color: #333;
+}
+
+#feedplayback-disabled-symbol {
+  color: red;
+}

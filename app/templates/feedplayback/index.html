@@ -22,14 +22,21 @@
   <div class="symbol">&#8675;</div>  
 </div>
 
-<table id="feedplayback-setup-table">
+<table id="feedplayback-setup-table" class="disabled">
   <tr>
     <td class="label"><label for="feedplayback-url">Blog or feed URL:</label></td>
-    <td><input id="feedplayback-url"></td>
+    <td>
+      <input id="feedplayback-url">
+    </td>
+  </tr>
+  <tr id="feedplayback-status-row">
+    <td class="label"></td>
+    <td><div id="feedplayback-status">Enter a URL above</div></td>
   </tr>
   <tr>
     <td colspan="2">
-      <div class="symbol">&empty;</div>
+      <div id="feedplayback-disabled-symbol" class="symbol">&empty;</div>
+      <div id="feedplayback-enabled-symbol" class="symbol">&#8675;</div>
     </td>
   </tr>
   <tr>
@@ -64,5 +71,7 @@
   that Reader metadata about the original post (who shared or liked it,
   published and crawl date, etc.) is preserved, and content is not duplicated.
   However, you do not have to use Google Reader to subscribe to it, any consumer
-  of Atom 1.0 should work just as well.</p>
+  of Atom 1.0 should work just as well.
+  <script>streamspigot.feedplayback.init();</script>  
+  </p>
 {% endblock %}
