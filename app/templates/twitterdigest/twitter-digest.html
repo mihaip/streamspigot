@@ -11,6 +11,9 @@
 <link rel="stylesheet" type="text/css" href="/static/main.css">
 <base href="http://twitter.com/">
 <style type="text/css">
+  h1 {
+    font-size: 24px;
+  }
   #footer {
     text-align: center;
   }
@@ -22,7 +25,10 @@
 </style>
 {% endblock %}
 
-{% block header %}{{ APP_NAME|escape }}: {{ title|escape }}{% endblock %}
+{% block header %}
+  {{ title|escape }}
+  <div id="subtitle">{{ APP_NAME|escape }}</div>
+{% endblock %}
 
 {% block body %}
 <div id="content">
