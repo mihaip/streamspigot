@@ -54,7 +54,10 @@ function fetchTwitterLists() {
       }
     }
   };
-  xhr.open('GET', '/twitter/lists?username=' + encodeURIComponent(listOwner), true);
+  xhr.open(
+      'GET',
+      '/twitter-digest/lists?username=' + encodeURIComponent(listOwner),
+      true);
   xhr.send(null);
 
   console.log('fetching twitter lists for ' + listOwnerNode.value);
@@ -158,7 +161,7 @@ function updateLinks(ev) {
     emptyNode.className = 'hidden';
     linksNode.className = '';
     
-    var baseUrl = 'twitter/digest?';
+    var baseUrl = 'digest?';
     
     if (listOwner && listId) {
       baseUrl += 'list=' + listOwner + '/' + listId;

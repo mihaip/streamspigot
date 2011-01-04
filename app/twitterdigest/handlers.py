@@ -88,8 +88,8 @@ class TwitterDigestHandler(base.handlers.BaseHandler):
                         self._render_template(
                             'twitterdigest/usernames.snippet',
                             {'usernames': error_usernames})
-            base_digest_url = homepage_url + '/twitter/digest?usernames=' + \
-                '+'.join(usernames)
+            base_digest_url = homepage_url + \
+                '/twitter-digest/digest?usernames=' + '+'.join(usernames)
             digest_id = '+'.join(usernames)
         else:
             digest_source = self._render_template(
@@ -98,8 +98,8 @@ class TwitterDigestHandler(base.handlers.BaseHandler):
             if had_error:
                 digest_errors = 'Errors were encountered when fetching ' \
                     'the list (it may be private)'
-            base_digest_url = homepage_url + '/twitter/digest?list=%s/%s' % (
-                list_owner, list_id)
+            base_digest_url = homepage_url + \
+                '/twitter-digest/digest?list=%s/%s' % (list_owner, list_id)
             digest_id = '%s/%s' % (list_owner, list_id)
 
         digest_entry_id = digest_id + '-' + start_date.date().isoformat()
