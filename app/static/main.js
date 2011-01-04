@@ -12,16 +12,8 @@ streamspigot.twitterdigest.init = function() {
 
 streamspigot.twitterdigest.initList = function() {
   var listOwnerNode = document.getElementById('twitter-list-owner');
-  var fetchTwitterListsTimeout = null;
-  listOwnerNode.onkeyup = function() {
-      if (fetchTwitterListsTimeout) {
-        window.clearTimeout(fetchTwitterListsTimeout);
-      }
-      fetchTwitterListsTimeout = window.setTimeout(function() {
-          fetchTwitterListsTimeout = null;
-          streamspigot.twitterdigest.fetchTwitterLists();
-      }, 500);
-  };
+  listOwnerNode.onkeyup = streamspigot.util.throttle(
+      streamspigot.twitterdigest.fetchTwitterLists, 500);
   
   var listsNode = document.getElementById('twitter-lists');
   listsNode.onchange = streamspigot.twitterdigest.updateLinks;
@@ -192,15 +184,19 @@ streamspigot.twitterdigest.updateLinks = function() {
 streamspigot.feedplayback = {};
 
 streamspigot.feedplayback.init = function() {
+  var urlNode = document.getElementById('feedplayback-url');
+  urlNode.onkeyup = streamspigot.util.throttle(
+      streamspigot.feedplayback.fetchFeedInfo, 500);
+};
+
+streamspigot.feedplayback.fetchFeedInfo = function() {
   var setupNode = document.getElementById('feedplayback-setup-table');
   var urlNode = document.getElementById('feedplayback-url');
-  urlNode.onkeyup = function() {
-    if (urlNode.value) {
-      setupNode.className = 'enabled';
-    } else {
-      setupNode.className = 'disabled';
-    }
-  };
+  if (urlNode.value) {
+    setupNode.className = 'enabled';
+  } else {
+    setupNode.className = 'disabled';
+  }
 };
 
 streamspigot.util = {};
@@ -218,3 +214,15 @@ streamspigot.util.printEmail = function(opt_anchorText) {
                  '<' + '/a>');
 };
 
+streamspigot.util.throttle = function(func, minTimeMs) {
+  var timeout = null;
+  return function() {
+      if (timeout) {
+        window.clearTimeout(timeout);
+      }
+      timeout = window.setTimeout(function() {
+          timeout = null;
+          func();
+      }, minTimeMs);
+  };
+};
