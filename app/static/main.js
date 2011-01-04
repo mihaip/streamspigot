@@ -28,6 +28,7 @@ function fetchTwitterLists() {
   for (var i = listsNode.options.length - 1; i >= 1; i--) {
     listsNode.removeChild(listsNode.options[i]);
   }
+  listsNode.options[0].innerHTML = 'Loading...';
   listsNode.disabled = true;
   var listOwner = listOwnerNode.value;
   
@@ -35,16 +36,21 @@ function fetchTwitterLists() {
   
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function() {
-    if (xhr.readyState == 4 && xhr.status == 200) {
-      var lists = eval('(' + xhr.responseText + ')');
-      for (var i = 0; i < lists.length; i++) {
-        var listOptionNode = document.createElement('option');
-        listOptionNode.value = lists[i];
-        listOptionNode.appendChild(document.createTextNode(lists[i]));
-        listsNode.appendChild(listOptionNode);
-      }
-      if (lists.length) {
-        listsNode.disabled = false;
+    if (xhr.readyState == 4) {
+        if (xhr.status == 200) {
+          listsNode.options[0].innerHTML = 'Lists';
+          var lists = eval('(' + xhr.responseText + ')');
+          for (var i = 0; i < lists.length; i++) {
+            var listOptionNode = document.createElement('option');
+            listOptionNode.value = lists[i];
+            listOptionNode.appendChild(document.createTextNode(lists[i]));
+            listsNode.appendChild(listOptionNode);
+          }
+          if (lists.length) {
+            listsNode.disabled = false;
+          }
+      } else {
+        listsNode.options[0].innerHTML = 'Error';        
       }
     }
   };

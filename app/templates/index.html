@@ -1,76 +1,47 @@
 {% extends "base/page.html" %}
 
+{% block header %}
+{{ APP_NAME|escape }}
+<div id="subtitle">Flow control for the real-time web firehose</div>
+{% endblock %}
+
 {% block body %}
 <div id="intro">
   <div class="inner">
-    <p>{{ APP_NAME|escape }} lets you read <a href="http://twitter.com">Twitter</a> 
-    updates in a more manageable fashion. Just pick the usernames you'd like
-    to generate a digest for, and you will see all updates made by them during 
-    the past full day (GMT). At midnight, a new set of updates rolls over.</p>
-    
-    <p>The digest is available as both a webpage that you can 
-    visit periodically, or as an Atom feed that you subscribe to get updates
-    (grouped as one feed item) in your favorite feed reader.</p>
-    
-    <p>To get started, either choose a
-    <a href="http://support.twitter.com/articles/247929">Twitter list</a> or
-    enter one or more Twitter usernames below (one username per line) and use
-    the links that will appear at the bottom.</p>
+    <p>{{ APP_NAME|escape }} is a collection of tools that let you keep up with
+    the "real-time web" better. Instead of living in fear of missing something,
+    these tools let you consume information at your desired pace in efficient
+    batches.</p>
   </div>
+</div>
+    
+<div id="tools">
+  <a href="/twitter-digest/" class="tool">
+    <h2>Twitter Digest</h2>
+    <p>Read Tweets in daily batches</p>
+  </a>
   
-  <div class="symbol">&#8675;</div>
-</div>
-
-<table id="setup-table">
-  <td id="list-column">
-    <fieldset>
-      <legend>Twitter list</legend>
-      <input type="text" id="twitter-list-owner" placeholder="Username">
-      <select id="twitter-lists" disabled>
-          <option disabled>Lists</option>
-      </select>
-    </fieldset>
-  </td>
-  <td id="or-column">or</td>
-  <td id="usernames-column">
-    <fieldset>
-      <legend>Twitter usernames</legend>
-      <div id="usernames">
-        <div class="row">
-          <input type="text" class="username"  placeholder="Username">
-          <button class="remove">-</button>
-          <button class="add">+</button>
-        </div>
-      </div>
-    </fieldset>
-  </td>
-</table>
-
-
-<div id="digest-links" class="hidden">
-  <div class="symbol">&#8675;</div>
-
-  <div class="inner">
-    Your digest is available as both 
-    <a href="" id="digest-html-link" target="_blank">a web page</a>
-    and as 
-    <a href="" id="digest-feed-link" target="_blank" class="feed-link">a feed</a>.
-  </div>
-</div>
-
-<div id="digest-empty">
-  <div class="symbol">&empty;</div>
-
-  <div class="inner">
-    You must select a Twitter list or at least one Twitter user to create a digest for.
-  </div>
+  <a href="/feed-playback/" class="tool">
+    <h2>Feed Playback</h2>
+    <p>Start reading a blog from<br>the very beginning</p>
+  </a>
+  
+  <a href="#" class="tool coming-soon">
+    <h2>"Best of" Feed</h2>
+    <p>Only the top posts in a feed (coming soon)</p>
+  </a>
 </div>
 {% endblock %}
 
 {% block footer %}
 <p>
   {{ APP_NAME|escape }} was created by <a href="http://persistent.info">Mihai
-  Parparita</a>, who can be reached at <script>printEmail();</script>. 
+  Parparita</a>, who can be reached at <script>printEmail();</script>. To keep
+  up with {{ APP_NAME|escape }} developments, you can
+  <a href="http://twitter.com/streamspigot">follow us on Twitter</a>.
+</p>
+
+<p>
   <a href="https://github.com/mihaip/streamspigot">Source is available</a>
   on <a href="https://github.com/">GitHub</a>.
 </p>
@@ -81,7 +52,5 @@
   <a href="http://support.twitter.com/articles/77641">trademark
   guidelines</a>.
 </p>
-
-<script>init();</script>
 
 {% endblock %}

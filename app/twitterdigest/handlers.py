@@ -10,6 +10,10 @@ class LinkFormatter(object):
         return 'style="color:%s"' % base.constants.CONSTANTS['ANCHOR_COLOR']
 LINK_FORMATTER = LinkFormatter()
 
+class MainHandler(base.handlers.BaseHandler):
+    def get(self):
+        self._write_template('twitterdigest/index.html')
+
 class TwitterListsHandler(base.handlers.BaseHandler):
     def get(self):
         username = self.request.get('username').strip()

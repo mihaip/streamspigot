@@ -1,0 +1,81 @@
+{% extends "../base/page.html" %}
+
+{% block title %}{{ APP_NAME|escape}} : Twitter Digest{% endblock %}
+{% block header %}<a href="/">{{ APP_NAME|escape}}</a> : Twitter Digest{% endblock %}
+
+{% block body %}
+<div id="intro">
+  <div class="inner">
+    <p>This {{ APP_NAME }} feature lets you read <a href="http://twitter.com">Twitter</a> 
+    updates in a more manageable fashion. Just pick the list or usernames you'd
+    like to generate a digest for, and you will see all updates made by them
+    during  the past full day (GMT). At midnight, a new set of updates rolls
+    over.</p>
+    
+    <p>The digest is available as both a webpage that you can 
+    visit periodically, or as an Atom feed that you subscribe to get updates
+    (grouped as one feed item) in your
+    <a href="http://www.google.com/reader/">favorite feed reader</a>.</p>
+    
+    <p>To get started, either choose a
+    <a href="http://support.twitter.com/articles/247929">Twitter list</a> or
+    enter one or more Twitter usernames below (one username per line) and use
+    the links that will appear at the bottom.</p>
+  </div>
+  
+  <div class="symbol">&#8675;</div>
+</div>
+
+<table id="setup-table">
+  <td id="list-column">
+    <fieldset>
+      <legend>Twitter list</legend>
+      <input type="text" id="twitter-list-owner" placeholder="Username">
+      <select id="twitter-lists" disabled>
+          <option disabled>Lists</option>
+      </select>
+    </fieldset>
+  </td>
+  <td id="or-column">or</td>
+  <td id="usernames-column">
+    <fieldset>
+      <legend>Twitter usernames</legend>
+      <div id="usernames">
+        <div class="row">
+          <input type="text" class="username" placeholder="Username">
+          <button class="remove">-</button>
+          <button class="add">+</button>
+        </div>
+      </div>
+    </fieldset>
+  </td>
+</table>
+
+
+<div id="digest-links" class="hidden">
+  <div class="symbol">&#8675;</div>
+
+  <div class="inner">
+    Your digest is available as both 
+    <a href="" id="digest-html-link" target="_blank">a web page</a>
+    and as 
+    <a href="" id="digest-feed-link" target="_blank" class="feed-link">a feed</a>.
+  </div>
+</div>
+
+<div id="digest-empty">
+  <div class="symbol">&empty;</div>
+
+  <div class="inner">
+    You must select a Twitter list or at least one Twitter user to create a digest for.
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<p>
+  Keep in mind that digests can only be created for public Twitter accounts and
+  lists.
+  <script>init();</script>
+</p>
+{% endblock %}

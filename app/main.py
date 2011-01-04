@@ -14,8 +14,9 @@ class MainHandler(base.handlers.BaseHandler):
 def main():
     ereporter.register_logger()
     application = webapp.WSGIApplication([
-            ('/twitter/lists', twitterdigest.handlers.TwitterListsHandler),
-            ('/twitter/digest', twitterdigest.handlers.TwitterDigestHandler),
+            ('/twitter-digest/?', twitterdigest.handlers.MainHandler),
+            ('/twitter-digest/lists', twitterdigest.handlers.TwitterListsHandler),
+            ('/twitter-digest/digest', twitterdigest.handlers.TwitterDigestHandler),
             ('/', MainHandler),
         ],
         debug=True)
