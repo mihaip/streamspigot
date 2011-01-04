@@ -13,8 +13,10 @@ body {
   font-size: 10pt;
 }
 
-a {
+a, .link {
   color: #2db300;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .feed-link {

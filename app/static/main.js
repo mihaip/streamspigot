@@ -1,7 +1,13 @@
-// TODO(mihaip): Start using Closure (and Plovr)
-var streamspigot = {};
+// TODO(mihaip): Start using Plovr
 
-streamspigot.twitterdigest = {};
+goog.require('goog.dom');
+goog.require('goog.net.EventType');
+goog.require('goog.net.XhrIo');
+goog.require('goog.string');
+
+goog.provide('streamspigot.twitterdigest');
+goog.provide('streamspigot.feedplayback');
+goog.provide('streamspigot.util');
 
 streamspigot.twitterdigest.init = function() {
   streamspigot.twitterdigest.initList();
@@ -11,17 +17,17 @@ streamspigot.twitterdigest.init = function() {
 };
 
 streamspigot.twitterdigest.initList = function() {
-  var listOwnerNode = document.getElementById('twitter-list-owner');
+  var listOwnerNode = goog.dom.$('twitter-list-owner');
   listOwnerNode.onkeyup = streamspigot.util.throttle(
       streamspigot.twitterdigest.fetchTwitterLists, 500);
   
-  var listsNode = document.getElementById('twitter-lists');
+  var listsNode = goog.dom.$('twitter-lists');
   listsNode.onchange = streamspigot.twitterdigest.updateLinks;
 };
 
 streamspigot.twitterdigest.fetchTwitterLists = function() {
-  var listOwnerNode = document.getElementById('twitter-list-owner');
-  var listsNode = document.getElementById('twitter-lists');
+  var listOwnerNode = goog.dom.$('twitter-list-owner');
+  var listsNode = goog.dom.$('twitter-lists');
   for (var i = listsNode.options.length - 1; i >= 1; i--) {
     listsNode.removeChild(listsNode.options[i]);
   }
@@ -51,7 +57,7 @@ streamspigot.twitterdigest.fetchTwitterLists = function() {
 };
 
 streamspigot.twitterdigest.initUsernames = function() {
-  var usernamesNode = document.getElementById('usernames');
+  var usernamesNode = goog.dom.$('usernames');
   var templateRowNode = usernamesNode.getElementsByTagName('div')[0];
   streamspigot.twitterdigest.initUsernameRow(templateRowNode);
 };
@@ -116,18 +122,18 @@ streamspigot.twitterdigest.addUsernameRow = function(currentRow) {
 
 streamspigot.twitterdigest.updateLinks = function() {
   // See if a list was selected
-  var listOwnerNode = document.getElementById('twitter-list-owner');
+  var listOwnerNode = goog.dom.$('twitter-list-owner');
   var listOwner = listOwnerNode.value;
   var listId = null;
   if (listOwner) {
-    var listsNode = document.getElementById('twitter-lists');
+    var listsNode = goog.dom.$('twitter-lists');
     if (listsNode.selectedIndex > 0) {
       listId = listsNode.options[listsNode.selectedIndex].value;
     }
   }
   
   // Collect all usernames
-  var usernamesNode = document.getElementById('usernames');
+  var usernamesNode = goog.dom.$('usernames');
   var usernameNodes = usernamesNode.getElementsByTagName('input');
   var usernames = [];
   
@@ -142,8 +148,8 @@ streamspigot.twitterdigest.updateLinks = function() {
   }
   
   // Update links
-  var linksNode = document.getElementById('digest-links');
-  var emptyNode = document.getElementById('digest-empty');
+  var linksNode = goog.dom.$('digest-links');
+  var emptyNode = goog.dom.$('digest-empty');
   if ((listOwner && listId) || usernames.length) {
     emptyNode.className = 'hidden';
     linksNode.className = '';
@@ -156,8 +162,8 @@ streamspigot.twitterdigest.updateLinks = function() {
       baseUrl += 'usernames=' + usernames.join('+');
     }
 
-    var htmlLinkNode = document.getElementById('digest-html-link');
-    var feedLinkNode = document.getElementById('digest-feed-link');
+    var htmlLinkNode = goog.dom.$('digest-html-link');
+    var feedLinkNode = goog.dom.$('digest-feed-link');
     htmlLinkNode.href = baseUrl + '&output=html';
     feedLinkNode.href = baseUrl + '&output=atom';
   } else {
@@ -171,30 +177,34 @@ streamspigot.twitterdigest.updateLinks = function() {
   buttons[0].disabled = usernameNodes.length == 1;
 };
 
-streamspigot.feedplayback = {};
-
 streamspigot.feedplayback.init = function() {
-  var urlNode = document.getElementById('feedplayback-url');
+  var urlNode = goog.dom.$('feedplayback-url');
   urlNode.onkeyup = streamspigot.util.throttle(
       streamspigot.feedplayback.fetchFeedInfo, 1000);
 };
 
+streamspigot.feedplayback.preFillForm = function(url) {
+  goog.dom.$('feedplayback-url').value = url;
+  streamspigot.feedplayback.fetchFeedInfo();
+};
+
 streamspigot.feedplayback.fetchFeedInfo = function() {
-  var urlNode = document.getElementById('feedplayback-url');
+  var urlNode = goog.dom.$('feedplayback-url');
   var url = urlNode.value;
   
-  var statusNode = document.getElementById('feedplayback-status');
+  var statusNode = goog.dom.$('feedplayback-status');
   statusNode.innerHTML = 'Looking up URL...';
 
-  var urlNode = document.getElementById('feedplayback-url');
+  var urlNode = goog.dom.$('feedplayback-url');
   var url = urlNode.value;
   streamspigot.util.fetchJson(
       '/feed-playback/feed-info?url=' + encodeURIComponent(url),
       function (info) {
-        var setupNode = document.getElementById('feedplayback-setup-table');
+        var setupNode = goog.dom.$('feedplayback-setup-table');
         
         if (info.feedUrl) {
-          statusNode.innerHTML = 'Feed URL: ' + info.feedUrl;
+          statusNode.innerHTML =
+              'Feed URL: ' + goog.string.htmlEscape(info.feedUrl);
           setupNode.className = 'enabled';
         } else {
           statusNode.innerHTML = 'No feed found.';
@@ -206,21 +216,19 @@ streamspigot.feedplayback.fetchFeedInfo = function() {
       });
 };
 
-streamspigot.util = {};
-
 streamspigot.util.fetchJson = function(url, jsonCallback, errorCallback) {
-  var xhr = new XMLHttpRequest();
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState == 4) {
-        if (xhr.status == 200) {
-        jsonCallback(eval('(' + xhr.responseText + ')'));
-      } else {
-        errorCallback();
-      }
+  var xhr = new goog.net.XhrIo();
+  
+  goog.events.listen(xhr, goog.net.EventType.COMPLETE, function() {
+    if (xhr.isSuccess()) {
+      jsonCallback(xhr.getResponseJson());
+    } else {
+      errorCallback();
     }
-  };
-  xhr.open('GET', url, true);
-  xhr.send(null);  
+    xhr.dispose();
+  });
+  
+  xhr.send(url);
 };
 
 streamspigot.util.printEmail = function(opt_anchorText) {
