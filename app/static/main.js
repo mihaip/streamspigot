@@ -31,33 +31,23 @@ streamspigot.twitterdigest.fetchTwitterLists = function() {
   
   if (!listOwner) return;
   
-  var xhr = new XMLHttpRequest();
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState == 4) {
-        if (xhr.status == 200) {
-          listsNode.options[0].innerHTML = 'Lists';
-          var lists = eval('(' + xhr.responseText + ')');
-          for (var i = 0; i < lists.length; i++) {
-            var listOptionNode = document.createElement('option');
-            listOptionNode.value = lists[i];
-            listOptionNode.appendChild(document.createTextNode(lists[i]));
-            listsNode.appendChild(listOptionNode);
-          }
-          if (lists.length) {
-            listsNode.disabled = false;
-          }
-      } else {
-        listsNode.options[0].innerHTML = 'Error';        
-      }
-    }
-  };
-  xhr.open(
-      'GET',
+  streamspigot.util.fetchJson(
       '/twitter-digest/lists?username=' + encodeURIComponent(listOwner),
-      true);
-  xhr.send(null);
-
-  console.log('fetching twitter lists for ' + listOwnerNode.value);
+      function (lists) {
+        listsNode.options[0].innerHTML = 'Lists';      
+        for (var i = 0; i < lists.length; i++) {
+          var listOptionNode = document.createElement('option');
+          listOptionNode.value = lists[i];
+          listOptionNode.appendChild(document.createTextNode(lists[i]));
+          listsNode.appendChild(listOptionNode);
+        }
+        if (lists.length) {
+          listsNode.disabled = false;
+        }
+      },
+      function() {
+        listsNode.options[0].innerHTML = 'Error';              
+      });
 };
 
 streamspigot.twitterdigest.initUsernames = function() {
@@ -186,20 +176,52 @@ streamspigot.feedplayback = {};
 streamspigot.feedplayback.init = function() {
   var urlNode = document.getElementById('feedplayback-url');
   urlNode.onkeyup = streamspigot.util.throttle(
-      streamspigot.feedplayback.fetchFeedInfo, 500);
+      streamspigot.feedplayback.fetchFeedInfo, 1000);
 };
 
 streamspigot.feedplayback.fetchFeedInfo = function() {
-  var setupNode = document.getElementById('feedplayback-setup-table');
   var urlNode = document.getElementById('feedplayback-url');
-  if (urlNode.value) {
-    setupNode.className = 'enabled';
-  } else {
-    setupNode.className = 'disabled';
-  }
+  var url = urlNode.value;
+  
+  var statusNode = document.getElementById('feedplayback-status');
+  statusNode.innerHTML = 'Looking up URL...';
+
+  var urlNode = document.getElementById('feedplayback-url');
+  var url = urlNode.value;
+  streamspigot.util.fetchJson(
+      '/feed-playback/feed-info?url=' + encodeURIComponent(url),
+      function (info) {
+        var setupNode = document.getElementById('feedplayback-setup-table');
+        
+        if (info.feedUrl) {
+          statusNode.innerHTML = 'Feed URL: ' + info.feedUrl;
+          setupNode.className = 'enabled';
+        } else {
+          statusNode.innerHTML = 'No feed found.';
+          setupNode.className = 'disabled';
+        }
+      },
+      function() {
+        statusNode.innerHTML = 'Error: could not look up URL.';
+      });
 };
 
 streamspigot.util = {};
+
+streamspigot.util.fetchJson = function(url, jsonCallback, errorCallback) {
+  var xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4) {
+        if (xhr.status == 200) {
+        jsonCallback(eval('(' + xhr.responseText + ')'));
+      } else {
+        errorCallback();
+      }
+    }
+  };
+  xhr.open('GET', url, true);
+  xhr.send(null);  
+};
 
 streamspigot.util.printEmail = function(opt_anchorText) {
   var a = [109, 105, 104, 97, 105, 64, 112, 101, 114, 115, 105, 115, 116,

@@ -20,6 +20,7 @@ def main():
             ('/twitter-digest/digest', twitterdigest.handlers.TwitterDigestHandler),
 
             ('/feed-playback/?', feedplayback.handlers.MainHandler),
+            ('/feed-playback/feed-info', feedplayback.handlers.FeedInfoHandler),
 
             ('/', MainHandler),
         ],
