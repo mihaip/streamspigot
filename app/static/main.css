@@ -47,31 +47,31 @@ h1 a {
   color: #686f85;
 }
 
-#setup-table {
+#twitterdigest-setup-table {
   margin: 0 auto;
 }
 
-#setup-table #list-column,
-#setup-table #usernames-column {
+#twitterdigest-list-column,
+#twitterdigest-usernames-column {
   width: 250px;
   vertical-align: top;
   text-align: center;  
 }
 
-#setup-table #or-column {
+#twitterdigest-or-column {
   padding-left: 1em;
   padding-right: 1em;
   font-weight: bold;
   color: #272e40;
 }
 
-#setup-table fieldset {
+#twitterdigest-setup-table fieldset {
   border-width: 1px 0 0 0;
   border-color: #6c80b2;
   border-style: solid;
 }
 
-#setup-table legend {
+#twitterdigest-setup-table legend {
   color: #333;
   padding: 0 1em;
   text-align: center;  
@@ -121,6 +121,15 @@ h1 a {
 
 .inner p {
   line-height: 1.5em;
+  margin: 1em 0;
+}
+
+.inner p:first-child {
+  margin-top: 0;
+}
+
+.inner p:last-child {
+  margin-bottom: 0;
 }
 
 .feed-icon {
@@ -150,14 +159,6 @@ h1 a {
 
 #footer .inner {
   background: #cad8fb;
-}
-
-#footer p:first-child {
-  margin-top: 0;
-}
-
-#footer p:last-child {
-  margin-bottom: 0;
 }
 
 #tools {
@@ -198,4 +199,28 @@ h1 a {
 .tool p {
   margin: 0;
   color: #000;
+}
+
+#feedplayback-setup-table {
+  margin: 1em auto 0 auto;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+#feedplayback-setup-table td {
+  padding: 3px;
+}
+
+#feedplayback-setup-table .label {
+  text-align: right;
+}
+
+#feedplayback-url,
+#feedplayback-start-date {
+  margin: 0;
+  padding: 2px 1px;
+}
+
+#feedplayback-url {
+  width: 30em;
 }

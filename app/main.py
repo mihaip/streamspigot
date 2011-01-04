@@ -6,6 +6,7 @@ from google.appengine.ext.webapp import util
 
 import base.handlers
 import twitterdigest.handlers
+import feedplayback.handlers
 
 class MainHandler(base.handlers.BaseHandler):
     def get(self):
@@ -17,6 +18,9 @@ def main():
             ('/twitter-digest/?', twitterdigest.handlers.MainHandler),
             ('/twitter-digest/lists', twitterdigest.handlers.TwitterListsHandler),
             ('/twitter-digest/digest', twitterdigest.handlers.TwitterDigestHandler),
+
+            ('/feed-playback/?', feedplayback.handlers.MainHandler),
+
             ('/', MainHandler),
         ],
         debug=True)

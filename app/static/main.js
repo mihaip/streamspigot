@@ -1,11 +1,15 @@
-function init() {
-  initList();
-  initUsernames();
-  
-  updateLinks();
-}
+// TODO(mihaip): Start using Closure (and Plovr)
+var streamspigot = {};
+streamspigot.twitterdigest = {};
 
-function initList() {
+streamspigot.twitterdigest.init = function() {
+  streamspigot.twitterdigest.initList();
+  streamspigot.twitterdigest.initUsernames();
+  
+  streamspigot.twitterdigest.updateLinks();
+};
+
+streamspigot.twitterdigest.initList = function() {
   var listOwnerNode = document.getElementById('twitter-list-owner');
   var fetchTwitterListsTimeout = null;
   listOwnerNode.onkeyup = function() {
@@ -14,15 +18,15 @@ function initList() {
       }
       fetchTwitterListsTimeout = window.setTimeout(function() {
           fetchTwitterListsTimeout = null;
-          fetchTwitterLists();
+          streamspigot.twitterdigest.fetchTwitterLists();
       }, 500);
   };
   
   var listsNode = document.getElementById('twitter-lists');
-  listsNode.onchange = updateLinks;
-}
+  listsNode.onchange = streamspigot.twitterdigest.updateLinks;
+};
 
-function fetchTwitterLists() {
+streamspigot.twitterdigest.fetchTwitterLists = function() {
   var listOwnerNode = document.getElementById('twitter-list-owner');
   var listsNode = document.getElementById('twitter-lists');
   for (var i = listsNode.options.length - 1; i >= 1; i--) {
@@ -61,15 +65,15 @@ function fetchTwitterLists() {
   xhr.send(null);
 
   console.log('fetching twitter lists for ' + listOwnerNode.value);
-}
+};
 
-function initUsernames() {
+streamspigot.twitterdigest.initUsernames = function() {
   var usernamesNode = document.getElementById('usernames');
   var templateRowNode = usernamesNode.getElementsByTagName('div')[0];
-  initUsernameRow(templateRowNode);
-}
+  streamspigot.twitterdigest.initUsernameRow(templateRowNode);
+};
 
-function initUsernameRow(rowNode) {
+streamspigot.twitterdigest.initUsernameRow = function(rowNode) {
   var inputNode = rowNode.getElementsByTagName('input')[0];
   inputNode.value = '';
   inputNode.onkeyup = function(ev) {
@@ -80,12 +84,12 @@ function initUsernameRow(rowNode) {
       var inputNode = ev.target || ev.srcElement;
       if (inputNode) {
         var rowNode = inputNode.parentNode.parentNode;
-        addRow(rowNode);
+        streamspigot.twitterdigest.addUsernameRow(rowNode);
         return;
       }
     }  
     
-    updateLinks();
+    streamspigot.twitterdigest.updateLinks();
   };
   
   var buttonNodes = rowNode.getElementsByTagName('button');
@@ -93,10 +97,10 @@ function initUsernameRow(rowNode) {
   buttonNodes[0].disabled = buttonNodes[1].disabled = false;
   
   buttonNodes[0].onclick = function() {
-    removeUsernameRow(rowNode);
+    streamspigot.twitterdigest.removeUsernameRow(rowNode);
   };
   buttonNodes[1].onclick = function() {
-    addUsernameRow(rowNode);
+    streamspigot.twitterdigest.addUsernameRow(rowNode);
   };
   
   // Prevent focusing of buttons (to remove dotted border outline, which
@@ -108,26 +112,26 @@ function initUsernameRow(rowNode) {
   buttonNodes[1].onfocus = function() {
     buttonNodes[1].blur();
   };
-}
+};
 
-function removeUsernameRow(currentRow) {
+streamspigot.twitterdigest.removeUsernameRow = function(currentRow) {
   currentRow.parentNode.removeChild(currentRow);
   
-  updateLinks();
-}
+  streamspigot.twitterdigest.updateLinks();
+};
 
-function addUsernameRow(currentRow) {
+streamspigot.twitterdigest.addUsernameRow = function(currentRow) {
   var newRow = currentRow.cloneNode(true);
-  initUsernameRow(newRow);
+  streamspigot.twitterdigest.initUsernameRow(newRow);
   
   currentRow.parentNode.insertBefore(newRow, currentRow.nextSibling);
   
   newRow.getElementsByTagName('input')[0].focus();
   
-  updateLinks();
-}
+  streamspigot.twitterdigest.updateLinks();
+};
 
-function updateLinks(ev) {
+streamspigot.twitterdigest.updateLinks = function() {
   // See if a list was selected
   var listOwnerNode = document.getElementById('twitter-list-owner');
   var listOwner = listOwnerNode.value;
@@ -182,9 +186,11 @@ function updateLinks(ev) {
   // removed)
   var buttons = usernamesNode.getElementsByTagName('button');
   buttons[0].disabled = usernameNodes.length == 1;
-}
+};
 
-function printEmail(opt_anchorText) {
+streamspigot.util = {};
+
+streamspigot.util.printEmail = function(opt_anchorText) {
   var a = [109, 105, 104, 97, 105, 64, 112, 101, 114, 115, 105, 115, 116,
       101, 110, 116, 46, 105, 110, 102, 111];
   var b = [];
@@ -195,4 +201,4 @@ function printEmail(opt_anchorText) {
   document.write('<' + 'a href="mailto:' + b + '">' + 
                  (opt_anchorText || b) + 
                  '<' + '/a>');
-}
+};

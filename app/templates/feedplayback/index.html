@@ -1,0 +1,68 @@
+{% extends "../base/page.html" %}
+
+{% block title %}{{ APP_NAME|escape}} : Feed Playback{% endblock %}
+{% block header %}<a href="/">{{ APP_NAME|escape}}</a> : Feed Playback{% endblock %}
+
+{% block body %}
+<div id="intro">
+  <div class="inner">
+    <p>This <a href="/">{{ APP_NAME|escape }}</a> tool lets you read blogs (or
+    anything else with an RSS or Atom feed) that you've come across from the
+    start. This works well with blogs with big archives, as well as
+    <a href="http://sysadvent.blogspot.com/">topical</a>
+    <a href="http://calendar.perfplanet.com/">"Advent"</a> 
+    <a href="http://perladvent.pm.org/FAQ-2shortplanks.html">blogs</a>.</p>
+    
+    <p>Simply enter the URL of the blog or feed that you wish to play back,
+    and (optionally) pick a start date and update frequency if you don't want to
+    read it from the beginning. Once the playback is setup, you'll get an Atom
+    feed URL that you can subscribe to.
+  </div>
+  
+  <div class="symbol">&#8675;</div>  
+</div>
+
+<table id="feedplayback-setup-table">
+  <tr>
+    <td class="label"><label for="feedplayback-url">Blog or feed URL:</label></td>
+    <td><input id="feedplayback-url"></td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <div class="symbol">&empty;</div>
+    </td>
+  </tr>
+  <tr>
+    <td class="label"><label for="feedplayback-start-date" disabled>Playback start date:</label></td>
+    <td><input type="date" id="feedplayback-start-date" disabled></td>
+  </tr>
+  <tr>
+    <td class="label"><label for="feedplayback-frequency">Frequency:</label></td>
+    <td>
+      <select id="feedplayback-frequency" disabled>
+        <option>One post per day</option>
+        <option>One post every other day</option>
+        <option>One post per week</option>
+      </select>
+    </td>
+  </tr>
+
+  <tr>
+    <td class="label"></td>
+    <td><button id="feedplayback-setup" disabled>Setup feed playback</button></td>
+  </tr>
+</table>
+{% endblock %}
+
+
+{% block footer %}
+  <p>The tool uses Google Reader's feed archive to get data, which means that
+  if a blog predates Google Reader (which launched in October 2005) it may
+  be missing posts.</p>
+  
+  <p>The Atom feed that is generated is a Google Reader tag feed. This means
+  that Reader metadata about the original post (who shared or liked it,
+  published and crawl date, etc.) is preserved, and content is not duplicated.
+  However, you do not have to use Google Reader to subscribe to it, any consumer
+  of Atom 1.0 should work just as well.</p>
+{% endblock %}
