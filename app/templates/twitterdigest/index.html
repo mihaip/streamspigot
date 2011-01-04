@@ -6,11 +6,11 @@
 {% block body %}
 <div id="intro">
   <div class="inner">
-    <p>This {{ APP_NAME }} feature lets you read <a href="http://twitter.com">Twitter</a> 
-    updates in a more manageable fashion. Just pick the list or usernames you'd
-    like to generate a digest for, and you will see all updates made by them
-    during  the past full day (GMT). At midnight, a new set of updates rolls
-    over.</p>
+    <p>This <a href="/">{{ APP_NAME|escape }}</a> tool lets you read
+    <a href="http://twitter.com">Twitter</a> updates in a more manageable
+    fashion. Just pick the Twitter list or usernames you'd like to generate a
+    digest for, and you will see all updates made by them during the past full
+    day (GMT). At midnight, a new set of updates rolls over.</p>
     
     <p>The digest is available as both a webpage that you can 
     visit periodically, or as an Atom feed that you subscribe to get updates
