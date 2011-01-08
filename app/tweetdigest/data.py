@@ -36,12 +36,21 @@ def get_status_text_as_html(status, link_formatter):
     
     def add_raw_chunk(chunk):
         text_as_html.append(chunk)
+
+    def add_tweet_chunk(chunk):
+        # Twitter escapes < and > in status texts, but not & (see
+        # http://code.google.com/p/twitter-api/issues/detail?id=1695). Unescape
+        # then and re-escape everything so that we can have a consistent level
+        # of escaping (we also unescape &amp; in case the Twitter bug does get
+        # fixed).
+        add_escaped_chunk(
+            chunk.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&'))
     
     def add_escaped_chunk(chunk):
         add_raw_chunk(xml.sax.saxutils.escape(chunk))
     
     for e in entities:
-      add_raw_chunk(status.text[last_entity_end:e.start_index])
+      add_tweet_chunk(status.text[last_entity_end:e.start_index])
 
       entity_anchor_text = status.text[e.start_index:e.end_index]
       entity_url = None
@@ -60,14 +69,14 @@ def get_status_text_as_html(status, link_formatter):
           add_raw_chunk('<a href="')
           add_escaped_chunk(entity_url)
           add_raw_chunk('" %s>' % link_formatter.get_attributes())
-          add_raw_chunk(entity_anchor_text)
+          add_tweet_chunk(entity_anchor_text)
           add_raw_chunk('</a>')
       else:
-          add_escaped_chunk(entity_anchor_text)
+          add_tweet_chunk(entity_anchor_text)
       
       last_entity_end = e.end_index
     
-    add_raw_chunk(status.text[last_entity_end:])
+    add_tweet_chunk(status.text[last_entity_end:])
     
     return ''.join(text_as_html)
 
@@ -101,11 +110,11 @@ def _get_digest_timestamps():
 def _process_digest_statuses(
     statuses, digest_start_time, digest_end_time, link_formatter, error_info):
     # Filter them for the ones that fall in the window
-    digest_statuses = [
-        s for s in statuses
-        if s.created_at_in_seconds <= digest_end_time and
-            s.created_at_in_seconds > digest_start_time
-    ]
+    digest_statuses = statuses#[
+#        s for s in statuses
+#        if s.created_at_in_seconds <= digest_end_time and
+#            s.created_at_in_seconds > digest_start_time
+#    ]
     
     # Decorate them with the HTML representation of the text and formatted dates
     for s in digest_statuses:
