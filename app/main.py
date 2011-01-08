@@ -5,7 +5,7 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 
 import base.handlers
-import twitterdigest.handlers
+import tweetdigest.handlers
 import feedplayback.handlers
 
 class MainHandler(base.handlers.BaseHandler):
@@ -15,9 +15,9 @@ class MainHandler(base.handlers.BaseHandler):
 def main():
     ereporter.register_logger()
     application = webapp.WSGIApplication([
-            ('/twitter-digest/?', twitterdigest.handlers.MainHandler),
-            ('/twitter-digest/lists', twitterdigest.handlers.TwitterListsHandler),
-            ('/twitter-digest/digest', twitterdigest.handlers.TwitterDigestHandler),
+            ('/tweet-digest/?', tweetdigest.handlers.MainHandler),
+            ('/tweet-digest/lists', tweetdigest.handlers.ListsHandler),
+            ('/tweet-digest/digest', tweetdigest.handlers.DigestHandler),
 
             ('/feed-playback/?', feedplayback.handlers.MainHandler),
             ('/feed-playback/feed-info', feedplayback.handlers.FeedInfoHandler),

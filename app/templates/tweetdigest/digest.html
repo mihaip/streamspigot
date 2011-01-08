@@ -5,7 +5,7 @@
 {% block head %}
 <link href="{{ feed_url|escape }}"
       rel="alternate"
-      title="Twitter Digest Atom Feed"
+      title="Tweet Digest of {{ digest_source|striptags|escape }} - {{ APP_NAME|escape }}"
       type="application/atom+xml">
 <script src="/static/main.js"></script>
 <link rel="stylesheet" type="text/css" href="/static/main.css">

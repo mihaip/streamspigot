@@ -49,31 +49,31 @@ h1 a {
   color: #686f85;
 }
 
-#twitterdigest-setup-table {
+#tweetdigest-setup-table {
   margin: 0 auto;
 }
 
-#twitterdigest-list-column,
-#twitterdigest-usernames-column {
+#tweetdigest-list-column,
+#tweetdigest-usernames-column {
   width: 250px;
   vertical-align: top;
   text-align: center;  
 }
 
-#twitterdigest-or-column {
+#tweetdigest-or-column {
   padding-left: 1em;
   padding-right: 1em;
   font-weight: bold;
   color: #272e40;
 }
 
-#twitterdigest-setup-table fieldset {
+#tweetdigest-setup-table fieldset {
   border-width: 1px 0 0 0;
   border-color: #6c80b2;
   border-style: solid;
 }
 
-#twitterdigest-setup-table legend {
+#tweetdigest-setup-table legend {
   color: #333;
   padding: 0 1em;
   text-align: center;  

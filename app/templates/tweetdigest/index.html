@@ -1,7 +1,7 @@
 {% extends "../base/page.html" %}
 
-{% block title %}{{ APP_NAME|escape}} : Twitter Digest{% endblock %}
-{% block header %}<a href="/">{{ APP_NAME|escape}}</a> : Twitter Digest{% endblock %}
+{% block title %}{{ APP_NAME|escape}} : Tweet Digest{% endblock %}
+{% block header %}<a href="/">{{ APP_NAME|escape}}</a> : Tweet Digest{% endblock %}
 
 {% block body %}
 <div id="intro">
@@ -26,8 +26,8 @@
   <div class="symbol">&#8675;</div>
 </div>
 
-<table id="twitterdigest-setup-table">
-  <td id="twitterdigest-list-column">
+<table id="tweetdigest-setup-table">
+  <td id="tweetdigest-list-column">
     <fieldset>
       <legend>Twitter list</legend>
       <input type="text" id="twitter-list-owner" placeholder="Username">
@@ -36,8 +36,8 @@
       </select>
     </fieldset>
   </td>
-  <td id="twitterdigest-or-column">or</td>
-  <td id="twitterdigest-usernames-column">
+  <td id="tweetdigest-or-column">or</td>
+  <td id="tweetdigest-usernames-column">
     <fieldset>
       <legend>Twitter usernames</legend>
       <div id="usernames">
@@ -76,6 +76,6 @@
 <p>
   Keep in mind that digests can only be created for public Twitter accounts and
   lists.
-  <script>streamspigot.twitterdigest.init();</script>
+  <script>streamspigot.tweetdigest.init();</script>
 </p>
 {% endblock %}

@@ -5,40 +5,43 @@ goog.require('goog.net.EventType');
 goog.require('goog.net.XhrIo');
 goog.require('goog.string');
 
-goog.provide('streamspigot.twitterdigest');
+goog.provide('streamspigot.tweetdigest');
 goog.provide('streamspigot.feedplayback');
 goog.provide('streamspigot.util');
 
-streamspigot.twitterdigest.init = function() {
-  streamspigot.twitterdigest.initList();
-  streamspigot.twitterdigest.initUsernames();
+streamspigot.tweetdigest.init = function() {
+  streamspigot.tweetdigest.initList();
+  streamspigot.tweetdigest.initUsernames();
   
-  streamspigot.twitterdigest.updateLinks();
+  streamspigot.tweetdigest.updateLinks();
 };
 
-streamspigot.twitterdigest.initList = function() {
+streamspigot.tweetdigest.initList = function() {
   var listOwnerNode = goog.dom.$('twitter-list-owner');
   listOwnerNode.onkeyup = streamspigot.util.throttle(
-      streamspigot.twitterdigest.fetchTwitterLists, 500);
+      streamspigot.tweetdigest.fetchTwitterLists, 500);
   
   var listsNode = goog.dom.$('twitter-lists');
-  listsNode.onchange = streamspigot.twitterdigest.updateLinks;
+  listsNode.onchange = streamspigot.tweetdigest.updateLinks;
 };
 
-streamspigot.twitterdigest.fetchTwitterLists = function() {
+streamspigot.tweetdigest.fetchTwitterLists = function() {
   var listOwnerNode = goog.dom.$('twitter-list-owner');
   var listsNode = goog.dom.$('twitter-lists');
   for (var i = listsNode.options.length - 1; i >= 1; i--) {
     listsNode.removeChild(listsNode.options[i]);
   }
-  listsNode.options[0].innerHTML = 'Loading...';
   listsNode.disabled = true;
   var listOwner = listOwnerNode.value;
   
-  if (!listOwner) return;
+  if (!listOwner) {
+    streamspigot.tweetdigest.updateLinks();
+    return;
+  };
+  listsNode.options[0].innerHTML = 'Loading...';
   
   streamspigot.util.fetchJson(
-      '/twitter-digest/lists?username=' + encodeURIComponent(listOwner),
+      '/tweet-digest/lists?username=' + encodeURIComponent(listOwner),
       function (lists) {
         listsNode.options[0].innerHTML = 'Lists';      
         for (var i = 0; i < lists.length; i++) {
@@ -56,13 +59,13 @@ streamspigot.twitterdigest.fetchTwitterLists = function() {
       });
 };
 
-streamspigot.twitterdigest.initUsernames = function() {
+streamspigot.tweetdigest.initUsernames = function() {
   var usernamesNode = goog.dom.$('usernames');
   var templateRowNode = usernamesNode.getElementsByTagName('div')[0];
-  streamspigot.twitterdigest.initUsernameRow(templateRowNode);
+  streamspigot.tweetdigest.initUsernameRow(templateRowNode);
 };
 
-streamspigot.twitterdigest.initUsernameRow = function(rowNode) {
+streamspigot.tweetdigest.initUsernameRow = function(rowNode) {
   var inputNode = rowNode.getElementsByTagName('input')[0];
   inputNode.value = '';
   inputNode.onkeyup = function(ev) {
@@ -73,12 +76,12 @@ streamspigot.twitterdigest.initUsernameRow = function(rowNode) {
       var inputNode = ev.target || ev.srcElement;
       if (inputNode) {
         var rowNode = inputNode.parentNode.parentNode;
-        streamspigot.twitterdigest.addUsernameRow(rowNode);
+        streamspigot.tweetdigest.addUsernameRow(rowNode);
         return;
       }
     }  
     
-    streamspigot.twitterdigest.updateLinks();
+    streamspigot.tweetdigest.updateLinks();
   };
   
   var buttonNodes = rowNode.getElementsByTagName('button');
@@ -86,10 +89,10 @@ streamspigot.twitterdigest.initUsernameRow = function(rowNode) {
   buttonNodes[0].disabled = buttonNodes[1].disabled = false;
   
   buttonNodes[0].onclick = function() {
-    streamspigot.twitterdigest.removeUsernameRow(rowNode);
+    streamspigot.tweetdigest.removeUsernameRow(rowNode);
   };
   buttonNodes[1].onclick = function() {
-    streamspigot.twitterdigest.addUsernameRow(rowNode);
+    streamspigot.tweetdigest.addUsernameRow(rowNode);
   };
   
   // Prevent focusing of buttons (to remove dotted border outline, which
@@ -103,24 +106,24 @@ streamspigot.twitterdigest.initUsernameRow = function(rowNode) {
   };
 };
 
-streamspigot.twitterdigest.removeUsernameRow = function(currentRow) {
+streamspigot.tweetdigest.removeUsernameRow = function(currentRow) {
   currentRow.parentNode.removeChild(currentRow);
   
-  streamspigot.twitterdigest.updateLinks();
+  streamspigot.tweetdigest.updateLinks();
 };
 
-streamspigot.twitterdigest.addUsernameRow = function(currentRow) {
+streamspigot.tweetdigest.addUsernameRow = function(currentRow) {
   var newRow = currentRow.cloneNode(true);
-  streamspigot.twitterdigest.initUsernameRow(newRow);
+  streamspigot.tweetdigest.initUsernameRow(newRow);
   
   currentRow.parentNode.insertBefore(newRow, currentRow.nextSibling);
   
   newRow.getElementsByTagName('input')[0].focus();
   
-  streamspigot.twitterdigest.updateLinks();
+  streamspigot.tweetdigest.updateLinks();
 };
 
-streamspigot.twitterdigest.updateLinks = function() {
+streamspigot.tweetdigest.updateLinks = function() {
   // See if a list was selected
   var listOwnerNode = goog.dom.$('twitter-list-owner');
   var listOwner = listOwnerNode.value;

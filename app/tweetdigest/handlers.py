@@ -12,9 +12,9 @@ LINK_FORMATTER = LinkFormatter()
 
 class MainHandler(base.handlers.BaseHandler):
     def get(self):
-        self._write_template('twitterdigest/index.html')
+        self._write_template('tweetdigest/index.html')
 
-class TwitterListsHandler(base.handlers.BaseHandler):
+class ListsHandler(base.handlers.BaseHandler):
     def get(self):
         username = self.request.get('username').strip()
         if not username:
@@ -24,7 +24,7 @@ class TwitterListsHandler(base.handlers.BaseHandler):
         lists = data.get_lists(username)
         self._write_json([l.slug for l in lists])
 
-class TwitterDigestHandler(base.handlers.BaseHandler):
+class DigestHandler(base.handlers.BaseHandler):
     class OutputTemplate(object):
         def __init__(self, template_file, content_type, use_relative_dates):
             self.template_file = template_file
@@ -32,9 +32,9 @@ class TwitterDigestHandler(base.handlers.BaseHandler):
             self.use_relative_dates = use_relative_dates
     OUTPUT_TEMPLATES = {
         'html': OutputTemplate(
-            'twitterdigest/twitter-digest.html', 'text/html', True),
+            'tweetdigest/digest.html', 'text/html', True),
         'atom': OutputTemplate(
-            'twitterdigest/twitter-digest.atom', 'text/xml', False),
+            'tweetdigest/digest.atom', 'text/xml', False),
     }
     def get(self):
         # Extract parameters
@@ -51,9 +51,9 @@ class TwitterDigestHandler(base.handlers.BaseHandler):
                 self._write_input_error('Malformed "list" parameter')
                 return
             list_owner, list_id = list.split('/', 1)
-        output_template = TwitterDigestHandler.OUTPUT_TEMPLATES.get(
+        output_template = DigestHandler.OUTPUT_TEMPLATES.get(
             self.request.get('output'),
-            TwitterDigestHandler.OUTPUT_TEMPLATES['html'])
+            DigestHandler.OUTPUT_TEMPLATES['html'])
         
         if not usernames and not list_owner:
             self._write_input_error(
@@ -81,25 +81,25 @@ class TwitterDigestHandler(base.handlers.BaseHandler):
         digest_errors = None
         if usernames:
             digest_source = self._render_template(
-                'twitterdigest/usernames.snippet', {'usernames': usernames})
+                'tweetdigest/usernames.snippet', {'usernames': usernames})
             if error_usernames:
                 digest_errors = 'Errors were encountered for: %s ' \
                     '(most likely their Tweets are private).' % \
                         self._render_template(
-                            'twitterdigest/usernames.snippet',
+                            'tweetdigest/usernames.snippet',
                             {'usernames': error_usernames})
             base_digest_url = homepage_url + \
-                '/twitter-digest/digest?usernames=' + '+'.join(usernames)
+                '/tweet-digest/digest?usernames=' + '+'.join(usernames)
             digest_id = '+'.join(usernames)
         else:
             digest_source = self._render_template(
-                'twitterdigest/twitter-list.snippet',
+                'tweetdigest/list.snippet',
                 {'list_owner': list_owner, 'list_id': list_id})
             if had_error:
                 digest_errors = 'Errors were encountered when fetching ' \
                     'the list (it may be private)'
             base_digest_url = homepage_url + \
-                '/twitter-digest/digest?list=%s/%s' % (list_owner, list_id)
+                '/tweet-digest/digest?list=%s/%s' % (list_owner, list_id)
             digest_id = '%s/%s' % (list_owner, list_id)
 
         digest_entry_id = digest_id + '-' + start_date.date().isoformat()
@@ -111,7 +111,7 @@ class TwitterDigestHandler(base.handlers.BaseHandler):
             'digest_errors': digest_errors,
             'grouped_statuses': grouped_statuses, 
             
-            'title': 'Twitter Digest for %s (GMT)' %
+            'title': 'Tweet Digest for %s (GMT)' %
                 start_date.strftime('%A, %B %d, %Y'),
             'homepage_url': homepage_url,
             'feed_url': base_digest_url + '&output=atom',
@@ -122,7 +122,7 @@ class TwitterDigestHandler(base.handlers.BaseHandler):
             
             'digest_contents': base.util.strip_html_whitespace(
                 self._render_template(
-                    'twitterdigest/twitter-digest-contents.snippet', {
+                    'tweetdigest/digest-contents.snippet', {
                         'grouped_statuses': grouped_statuses,
                         'use_relative_dates': output_template.use_relative_dates,
                     })),
