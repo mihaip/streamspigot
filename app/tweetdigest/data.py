@@ -110,11 +110,11 @@ def _get_digest_timestamps():
 def _process_digest_statuses(
     statuses, digest_start_time, digest_end_time, link_formatter, error_info):
     # Filter them for the ones that fall in the window
-    digest_statuses = statuses#[
-#        s for s in statuses
-#        if s.created_at_in_seconds <= digest_end_time and
-#            s.created_at_in_seconds > digest_start_time
-#    ]
+    digest_statuses = [
+        s for s in statuses
+        if s.created_at_in_seconds <= digest_end_time and
+            s.created_at_in_seconds > digest_start_time
+    ]
     
     # Decorate them with the HTML representation of the text and formatted dates
     for s in digest_statuses:
