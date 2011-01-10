@@ -2,6 +2,8 @@
 
 goog.require('goog.dom');
 goog.require('goog.dom.classes');
+goog.require('goog.events');
+goog.require('goog.events.EventType');
 goog.require('goog.net.EventType');
 goog.require('goog.net.XhrIo');
 goog.require('goog.string');
@@ -182,9 +184,22 @@ streamspigot.tweetdigest.updateLinks = function() {
 };
 
 streamspigot.feedplayback.init = function() {
-  var urlNode = goog.dom.$('feedplayback-url');
-  urlNode.onkeyup = streamspigot.util.throttle(
-      streamspigot.feedplayback.fetchFeedInfo, 1000);
+  goog.events.listen(
+      goog.dom.$('feedplayback-url'),
+      goog.events.EventType.KEYUP,
+      streamspigot.util.throttle(
+          streamspigot.feedplayback.fetchFeedInfo, 1000));
+
+  goog.events.listen(
+      goog.dom.$('feedplayback-setup-form'),
+      goog.events.EventType.SUBMIT,
+      streamspigot.feedplayback.setup);
+      
+  goog.events.listen(
+      goog.dom.$('feedplayback-error-details-link'),
+      goog.events.EventType.CLICK,
+      goog.partial(goog.dom.classes.remove,
+          goog.dom.$('feedplayback-error-details'), 'hidden'));
 };
 
 streamspigot.feedplayback.preFillForm = function(url) {
@@ -193,9 +208,9 @@ streamspigot.feedplayback.preFillForm = function(url) {
 };
 
 streamspigot.feedplayback.setEnabledState = function(isEnabled) {
-  var setupNode = goog.dom.$('feedplayback-setup-table');
-  goog.dom.classes.enable(setupNode, 'enabled', isEnabled);
-  goog.dom.classes.enable(setupNode, 'disabled', !isEnabled);
+  var tableNode = goog.dom.$('feedplayback-setup-table');
+  goog.dom.classes.enable(tableNode, 'enabled', isEnabled);
+  goog.dom.classes.enable(tableNode, 'disabled', !isEnabled);
   
   goog.dom.$('feedplayback-start-date').disabled = !isEnabled;
   goog.dom.$('feedplayback-frequency').disabled = !isEnabled;
@@ -248,7 +263,50 @@ streamspigot.feedplayback.fetchFeedInfo = function() {
       });
 };
 
-streamspigot.util.fetchJson = function(url, jsonCallback, errorCallback) {
+streamspigot.feedplayback.setup = function(event) {
+  event.preventDefault();
+  goog.dom.$('feedplayback-setup').disabled = true;
+  
+  var paramsMap = {
+    'url': 'feedplayback-url',
+    'start-date': 'feedplayback-start-date',
+    'frequency': 'feedplayback-frequency'
+  }
+  
+  var data = '';
+  
+  for (var paramName in paramsMap) {
+    data += paramName + '=' +
+        encodeURIComponent(goog.dom.$(paramsMap[paramName]).value) + '&';
+  }
+  
+  streamspigot.util.fetchJson(
+      '/feed-playback/create',
+      function(data) {
+          goog.dom.$('feedplayback-setup').disabled = false;
+          goog.dom.classes.remove(goog.dom.$('result'), 'hidden');
+          goog.dom.classes.add(goog.dom.$('error'), 'hidden');
+          
+          var feedUrlNode = goog.dom.$('feedplayback-feed-url');
+          feedUrlNode.href = data.feedUrl;
+          feedUrlNode.innerHTML = goog.string.htmlEscape(data.feedUrl);
+          var readerUrlNode = goog.dom.$('feedplayback-reader-url');
+          readerUrlNode.href = data.readerUrl;
+      },
+      function(statusCode, responseText) {
+        goog.dom.$('feedplayback-setup').disabled = false;
+        goog.dom.classes.add(goog.dom.$('result'), 'hidden');
+        goog.dom.classes.remove(goog.dom.$('error'), 'hidden');
+        
+        goog.dom.$('feedplayback-error-details-status').innerHTML =
+            goog.string.htmlEscape(statusCode);
+        goog.dom.$('feedplayback-error-details-response').innerHTML =
+            goog.string.htmlEscape(responseText);
+      },
+      data);
+};
+
+streamspigot.util.fetchJson = function(url, jsonCallback, errorCallback, opt_postData) {
   var xhr = new goog.net.XhrIo();
   
   goog.events.listen(xhr, goog.net.EventType.COMPLETE, function() {
@@ -257,12 +315,13 @@ streamspigot.util.fetchJson = function(url, jsonCallback, errorCallback) {
       // logic (we want exceptions to end up in the console).
       setTimeout(goog.partial(jsonCallback, xhr.getResponseJson()), 0);
     } else {
-      setTimeout(errorCallback, 0);
+      setTimeout(goog.partial(
+          errorCallback, xhr.getStatus(), xhr.getResponseText()), 0);
     }
     xhr.dispose();
   });
   
-  xhr.send(url);
+  xhr.send(url, opt_postData ? 'POST': 'GET', opt_postData);
 };
 
 streamspigot.util.printEmail = function(opt_anchorText) {

@@ -1,4 +1,4 @@
-div, table {
+div, table, form {
   margin: 0;
 }
 
@@ -22,6 +22,10 @@ a, .link {
 .feed-link {
   padding-left: 17px;
   background: url(/static/feed-icon.png) no-repeat;
+}
+
+.hidden {
+  display: none;
 }
 
 #container {
@@ -204,7 +208,7 @@ h1 a {
 }
 
 #feedplayback-setup-table {
-  margin: 1em auto 0 auto;
+  margin: 0 auto .5em auto;
   border-collapse: collapse;
   border-spacing: 0;
 }
@@ -244,6 +248,7 @@ h1 a {
   color: #333;
 }
 
-#feedplayback-disabled-symbol {
+#feedplayback-disabled-symbol,
+#error .symbol {
   color: red;
 }
