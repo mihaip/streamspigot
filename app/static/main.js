@@ -1,6 +1,7 @@
 // TODO(mihaip): Start using Plovr
 
 goog.require('goog.dom');
+goog.require('goog.dom.classes');
 goog.require('goog.net.EventType');
 goog.require('goog.net.XhrIo');
 goog.require('goog.string');
@@ -191,11 +192,22 @@ streamspigot.feedplayback.preFillForm = function(url) {
   streamspigot.feedplayback.fetchFeedInfo();
 };
 
+streamspigot.feedplayback.setEnabledState = function(isEnabled) {
+  var setupNode = goog.dom.$('feedplayback-setup-table');
+  goog.dom.classes.enable(setupNode, 'enabled', isEnabled);
+  goog.dom.classes.enable(setupNode, 'disabled', !isEnabled);
+  
+  goog.dom.$('feedplayback-start-date').disabled = !isEnabled;
+  goog.dom.$('feedplayback-frequency').disabled = !isEnabled;
+  goog.dom.$('feedplayback-setup').disabled = !isEnabled;
+};
+
 streamspigot.feedplayback.fetchFeedInfo = function() {
   var urlNode = goog.dom.$('feedplayback-url');
   var url = urlNode.value;
   
   var statusNode = goog.dom.$('feedplayback-status');
+  streamspigot.feedplayback.setEnabledState(false);
   statusNode.innerHTML = 'Looking up URL...';
 
   var urlNode = goog.dom.$('feedplayback-url');
@@ -203,16 +215,33 @@ streamspigot.feedplayback.fetchFeedInfo = function() {
   streamspigot.util.fetchJson(
       '/feed-playback/feed-info?url=' + encodeURIComponent(url),
       function (info) {
-        var setupNode = goog.dom.$('feedplayback-setup-table');
+        var statusHtml = '';
+        var isEnabled = false;
         
         if (info.feedUrl) {
-          statusNode.innerHTML =
-              'Feed URL: ' + goog.string.htmlEscape(info.feedUrl);
-          setupNode.className = 'enabled';
+          statusHtml += 'Feed URL: <b>' +
+              goog.string.htmlEscape(info.feedUrl) + '</b>';
+          if (info.itemCount) {
+            var oldestItemDate = new Date(info.oldestItemTimestampMsec);
+            var oldestItemDateDisplay = oldestItemDate.toLocaleDateString();
+            statusHtml += '<br><b>' + info.itemCount + ' items</b> ';
+            statusHtml +=
+                '(oldest is from <b>' + oldestItemDateDisplay + '</b>)';
+
+            var oldestItemDateValue =
+                streamspigot.util.getIso8601DateString(oldestItemDate);
+            goog.dom.$('feedplayback-start-date').value = oldestItemDateValue;
+                
+            isEnabled = true;
+          } else {
+            statusHtml += '<br>No feed items found.';
+          }
         } else {
-          statusNode.innerHTML = 'No feed found.';
-          setupNode.className = 'disabled';
+          statusHtml += 'No feed found.';
         }
+        
+        statusNode.innerHTML = statusHtml;
+        streamspigot.feedplayback.setEnabledState(isEnabled);
       },
       function() {
         statusNode.innerHTML = 'Error: could not look up URL.';
@@ -224,9 +253,11 @@ streamspigot.util.fetchJson = function(url, jsonCallback, errorCallback) {
   
   goog.events.listen(xhr, goog.net.EventType.COMPLETE, function() {
     if (xhr.isSuccess()) {
-      jsonCallback(xhr.getResponseJson());
+      // Invoke callback in a timeout to avoid Closure's exception-catching
+      // logic (we want exceptions to end up in the console).
+      setTimeout(goog.partial(jsonCallback, xhr.getResponseJson()), 0);
     } else {
-      errorCallback();
+      setTimeout(errorCallback, 0);
     }
     xhr.dispose();
   });
@@ -259,3 +290,13 @@ streamspigot.util.throttle = function(func, minTimeMs) {
       }, minTimeMs);
   };
 };
+
+streamspigot.util.getIso8601DateString = function(date) {
+  function pad(n) {
+    return n < 10 ? '0' + n : n;
+  }
+  
+  return date.getFullYear() + '-' +
+      pad(date.getMonth() + 1) + '-' +
+      pad(date.getDate());  
+}
