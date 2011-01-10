@@ -1,4 +1,7 @@
 import base64
+import datetime
+import logging
+import time
 import urllib
 import urlparse
 import uuid
@@ -85,6 +88,15 @@ class Subscription(object):
 def create_subscription(feed_url, start_date, frequency):
     feed_info = get_feed_info_from_feed_url(feed_url)
     
+    start_timestamp_usec = time.mktime(start_date.utctimetuple()) * 1000000
+    start_position = 0
+    for item_timestamp_usec in feed_info.item_timestamps_usec:
+        if item_timestamp_usec >= start_timestamp_usec:
+            break
+        start_position += 1
+
+    logging.info('start position: %d' % start_position)
+    
     feed_title = feed_info.title
     # Compact encoding of a UUID
     subscription_id = base64.urlsafe_b64encode(
@@ -98,4 +110,4 @@ def create_subscription(feed_url, start_date, frequency):
         reader_stream_id,
         feed_url,
         frequency,
-        0)
+        start_position)
