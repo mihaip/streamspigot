@@ -13,7 +13,13 @@ class BaseHandler(webapp.RequestHandler):
         template_values.update(base.constants.CONSTANTS)
         return template.render(template_path, template_values)
 
-    def _write_template(self, template_file_name, template_values={}):
+    def _write_template(
+            self,
+            template_file_name,
+            template_values={},
+            content_type='text/html',
+            charset='utf-8'):
+        self.response.headers['Content-Type'] = '%s; charset=%s' % (content_type, charset)
         self.response.out.write(
             self._render_template(template_file_name, template_values))
     

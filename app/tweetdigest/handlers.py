@@ -104,8 +104,6 @@ class DigestHandler(base.handlers.BaseHandler):
 
         digest_entry_id = digest_id + '-' + start_date.date().isoformat()
                     
-        self.response.headers['Content-Type'] = \
-            '%s; charset=utf-8' % output_template.content_type
         self._write_template(output_template.template_file, {
             'digest_source': digest_source,
             'digest_errors': digest_errors,
@@ -126,4 +124,5 @@ class DigestHandler(base.handlers.BaseHandler):
                         'grouped_statuses': grouped_statuses,
                         'use_relative_dates': output_template.use_relative_dates,
                     })),
-        })
+        },
+        content_type=output_template.content_type)
