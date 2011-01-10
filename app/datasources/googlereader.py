@@ -1,3 +1,4 @@
+import logging
 import urllib
 
 from django.utils import simplejson
@@ -53,6 +54,7 @@ def _fetch_api_json(path, extra_params={}):
     url = 'http://www.google.com/reader/api/0/' \
         '%s?output=json&client=streamspigot&%s' % (
             path, urllib.urlencode(extra_params))
+    logging.info('Google Reader API request: %s' % url)
     response = urlfetch.fetch(
         url=url,
         method=urlfetch.GET,
@@ -60,3 +62,4 @@ def _fetch_api_json(path, extra_params={}):
     if response.content:
         return simplejson.loads(response.content)
     return None
+    

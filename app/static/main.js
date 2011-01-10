@@ -236,6 +236,7 @@ streamspigot.feedplayback.fetchFeedInfo = function() {
         if (info.feedUrl) {
           statusHtml += 'Feed URL: <b>' +
               goog.string.htmlEscape(info.feedUrl) + '</b>';
+          goog.dom.$('feedplayback-feed-url').value = info.feedUrl;
           if (info.feedTitle) {
             statusHtml += '<br>Title: <b>' +
                 goog.string.htmlEscape(info.feedTitle) + '</b>';
@@ -272,7 +273,7 @@ streamspigot.feedplayback.setup = function(event) {
   goog.dom.$('feedplayback-setup').disabled = true;
   
   var paramsMap = {
-    'url': 'feedplayback-url',
+    'url': 'feedplayback-feed-url',
     'start-date': 'feedplayback-start-date',
     'frequency': 'feedplayback-frequency'
   }
@@ -291,10 +292,9 @@ streamspigot.feedplayback.setup = function(event) {
           goog.dom.classes.remove(goog.dom.$('result'), 'hidden');
           goog.dom.classes.add(goog.dom.$('error'), 'hidden');
           
-          var feedUrlNode = goog.dom.$('feedplayback-feed-url');
+          var feedUrlNode = goog.dom.$('feedplayback-subscription-feed-url');
           feedUrlNode.href = data.feedUrl;
-          feedUrlNode.innerHTML = goog.string.htmlEscape(data.feedUrl);
-          var readerUrlNode = goog.dom.$('feedplayback-reader-url');
+          var readerUrlNode = goog.dom.$('feedplayback-subscription-reader-url');
           readerUrlNode.href = data.readerUrl;
       },
       function(statusCode, responseText) {

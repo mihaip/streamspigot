@@ -1,4 +1,7 @@
+import base64
+import urllib
 import urlparse
+import uuid
 
 from google.appengine.ext import db
 
@@ -34,6 +37,9 @@ def get_feed_info(html_or_feed_url):
     if not feed_url:
         return {}
 
+    return get_feed_info_from_feed_url(feed_url)
+
+def get_feed_info_from_feed_url(feed_url):
     feed_info = _FeedInfo.get_by_key_name(feed_url)
     
     if not feed_info:
@@ -57,3 +63,39 @@ def get_feed_info(html_or_feed_url):
         title=feed_info.title,
         item_ids=feed_info.item_ids,
         item_timestamps_usec=feed_info.item_timestamps_usec)
+
+class Subscription(object):
+    def __init__(self, id, reader_stream_id, feed_url, frequency, position):
+        self.id = id
+        self.reader_stream_id = reader_stream_id
+        self.feed_url = feed_url
+        self.frequency = frequency
+        self.position = position
+    
+    def as_json_dict(self):
+        escaped_stream_id = urllib.quote(self.reader_stream_id)
+        feed_url = 'http://www.google.com/reader/public/atom/%s' % escaped_stream_id
+        reader_url = 'http://www.google.com/reader/view/%s' % escaped_stream_id
+    
+        return {
+          'feedUrl': feed_url,
+          'readerUrl': reader_url,
+        }
+
+def create_subscription(feed_url, start_date, frequency):
+    feed_info = get_feed_info_from_feed_url(feed_url)
+    
+    feed_title = feed_info.title
+    # Compact encoding of a UUID
+    subscription_id = base64.urlsafe_b64encode(
+        uuid.uuid4().bytes).replace('=', '')
+
+    reader_tag_name = '%s (Stream Spigot Playback %s)' % (feed_title, subscription_id)
+    reader_stream_id = 'user/123/label/%s' % reader_tag_name
+        
+    return Subscription(
+        subscription_id,
+        reader_stream_id,
+        feed_url,
+        frequency,
+        0)

@@ -57,7 +57,10 @@
   
     <tr>
       <td class="label"></td>
-      <td><input type="submit" id="feedplayback-setup" disabled value="Setup feed playback"></td>
+      <td>
+        <input type="hidden" id="feedplayback-feed-url">
+        <input type="submit" id="feedplayback-setup" disabled value="Setup feed playback">
+      </td>
     </tr>
   </table>
 </form>
@@ -65,7 +68,10 @@
 <div id="result" class="hidden">
   <div class="symbol">&#8675;</div>
   <div class="inner">
-    <p>Feed playback has begun. You can subscribe to the feed at <a href="" id="feedplayback-feed-url"></a> (<a href="" id="feedplayback-reader-url">view in Google Reader</a>).</p>
+    <p>Feed playback has begun. You can subscribe to
+      <a href="" id="feedplayback-subscription-feed-url" class="feed-link">the playback feed</a>
+      (<a href="" id="feedplayback-subscription-reader-url">view in Google Reader</a>).
+    </p>
   </div>
 </div>
 
