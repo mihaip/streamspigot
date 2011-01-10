@@ -1,3 +1,6 @@
+import base64
+import uuid
+
 import base.handlers
 import data
 
@@ -11,7 +14,12 @@ class CreateHandler(base.handlers.BaseHandler):
         start_date = self.request.get('start-date')
         frequency = self.request.get('frequency')
         
-        reader_tag_name = 'Feed playback';
+        feed_title = data.get_feed_info(url).title
+        # Compact encoding of a UUID
+        subscription_id = base64.urlsafe_b64encode(
+            uuid.uuid4().bytes).replace('=', '')
+        
+        reader_tag_name = '%s (Stream Spigot Playback %s)' % (feed_title, subscription_id)
         reader_stream_id = 'user/123/label/%s' % reader_tag_name
         
         feed_url = 'http://www.google.com/reader/public/atom/%s' % reader_stream_id
@@ -29,4 +37,4 @@ class FeedInfoHandler(base.handlers.BaseHandler):
             self._write_input_error('Missing "url" parameter')
             return
     
-        self._write_json(data.get_feed_info(url))
+        self._write_json(data.get_feed_info(url).as_json_dict())
