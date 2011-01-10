@@ -218,6 +218,9 @@ streamspigot.feedplayback.setEnabledState = function(isEnabled) {
 };
 
 streamspigot.feedplayback.fetchFeedInfo = function() {
+  goog.dom.classes.add(goog.dom.$('result'), 'hidden');
+  goog.dom.classes.add(goog.dom.$('error'), 'hidden');
+
   var urlNode = goog.dom.$('feedplayback-url');
   var url = urlNode.value;
   
