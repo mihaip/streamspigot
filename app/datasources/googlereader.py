@@ -14,6 +14,12 @@ def lookup_feed_url(html_or_feed_url):
         return json['feed'][0]['href']
     return None
 
+def lookup_feed_title(feed_url):
+    json = _fetch_api_json('stream/contents/feed/%s' % urllib.quote(feed_url))
+    if json and 'title' in json:
+        return json['title']
+    return None
+
 def get_feed_item_refs(feed_url, oldest_timestamp_usec=None):
     params = {
       's': 'feed/%s' % feed_url,

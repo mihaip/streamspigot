@@ -236,6 +236,10 @@ streamspigot.feedplayback.fetchFeedInfo = function() {
         if (info.feedUrl) {
           statusHtml += 'Feed URL: <b>' +
               goog.string.htmlEscape(info.feedUrl) + '</b>';
+          if (info.feedTitle) {
+            statusHtml += '<br>Title: <b>' +
+                goog.string.htmlEscape(info.feedTitle) + '</b>';
+          }
           if (info.itemCount) {
             var oldestItemDate = new Date(info.oldestItemTimestampMsec);
             var oldestItemDateDisplay = oldestItemDate.toLocaleDateString();
