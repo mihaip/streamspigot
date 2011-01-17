@@ -67,13 +67,35 @@ def get_feed_info_from_feed_url(feed_url):
         item_ids=feed_info.item_ids,
         item_timestamps_usec=feed_info.item_timestamps_usec)
 
+class _Subscription(db.Model):
+    reader_stream_id = db.StringProperty()
+    feed_url = db.StringProperty()
+    frequency = db.StringProperty()
+    # Remainder of days-since-epoch of subscription creation divided by update
+    # frequency (i.e. modulo of 2 for every other day, modulo of 7 for weekly),
+    # so that we can figure out for the daily cron job invocation which
+    # subscriptions to advance.
+    frequency_modulo = db.IntegerProperty()
+    position = db.IntegerProperty()
+
 class Subscription(object):
-    def __init__(self, id, reader_stream_id, feed_url, frequency, position):
+    def __init__(self, id, reader_stream_id, feed_url, frequency, frequency_modulo, position):
         self.id = id
         self.reader_stream_id = reader_stream_id
         self.feed_url = feed_url
         self.frequency = frequency
+        self.frequency_modulo = frequency_modulo
         self.position = position
+    
+    def save(self):
+        subscription = _Subscription(
+            key_name=self.id,
+            reader_stream_id=self.reader_stream_id,
+            feed_url=self.feed_url,
+            frequency=self.frequency,
+            frequency_modulo=self.frequency_modulo,
+            position=self.position)
+        subscription.put()
     
     def as_json_dict(self):
         escaped_stream_id = urllib.quote(self.reader_stream_id)
@@ -84,6 +106,16 @@ class Subscription(object):
           'feedUrl': feed_url,
           'readerUrl': reader_url,
         }
+        
+def get_modulo_for_frequency(frequency):
+    if frequency == '1d':
+      return 0
+    else:
+        days_since_epoch = int(time.time()/3600 * 24)
+        if frequency == '2d':
+            return days_since_epoch % 2
+        else:
+            return days_since_epoch % 7
 
 def create_subscription(feed_url, start_date, frequency):
     feed_info = get_feed_info_from_feed_url(feed_url)
@@ -104,10 +136,15 @@ def create_subscription(feed_url, start_date, frequency):
 
     reader_tag_name = '%s (Stream Spigot Playback %s)' % (feed_title, subscription_id)
     reader_stream_id = 'user/123/label/%s' % reader_tag_name
-        
-    return Subscription(
+    
+    subscription = Subscription(
         subscription_id,
         reader_stream_id,
         feed_url,
         frequency,
+        get_modulo_for_frequency(frequency),
         start_position)
+    
+    subscription.save()
+    
+    return subscription
