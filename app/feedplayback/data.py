@@ -96,15 +96,17 @@ class Subscription(object):
             frequency_modulo=self.frequency_modulo,
             position=self.position)
         subscription.put()
+        
+    def get_subscription_feed_url(self):
+        return 'http://www.google.com/reader/public/atom/%s' % urllib.quote(self.reader_stream_id)
+    
+    def get_subscription_reader_url(self):
+        return 'http://www.google.com/reader/view/%s' % urllib.quote(self.reader_stream_id)
     
     def as_json_dict(self):
-        escaped_stream_id = urllib.quote(self.reader_stream_id)
-        feed_url = 'http://www.google.com/reader/public/atom/%s' % escaped_stream_id
-        reader_url = 'http://www.google.com/reader/view/%s' % escaped_stream_id
-    
         return {
-          'feedUrl': feed_url,
-          'readerUrl': reader_url,
+          'feedUrl': self.get_subscription_feed_url(),
+          'readerUrl': self.get_subscription_reader_url(),
         }
         
 def get_modulo_for_frequency(frequency):
@@ -116,6 +118,20 @@ def get_modulo_for_frequency(frequency):
             return days_since_epoch % 2
         else:
             return days_since_epoch % 7
+
+def get_subscription_by_id(id):
+    subscription = _Subscription.get_by_key_name(id)
+    
+    if not subscription:
+        return None
+    
+    return Subscription(
+        id,
+        subscription.reader_stream_id,
+        subscription.feed_url,
+        subscription.frequency,
+        subscription.frequency_modulo,
+        subscription.position)
 
 def create_subscription(feed_url, start_date, frequency):
     feed_info = get_feed_info_from_feed_url(feed_url)

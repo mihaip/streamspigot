@@ -23,6 +23,10 @@ class BaseHandler(webapp.RequestHandler):
         self.response.out.write(
             self._render_template(template_file_name, template_values))
     
+    def _write_not_found(self):
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.set_status(404)
+
     def _write_input_error(self, error_message):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.set_status(400)

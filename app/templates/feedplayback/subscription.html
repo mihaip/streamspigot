@@ -1,0 +1,26 @@
+{% extends "../base/page.html" %}
+
+{% block title %}{{ APP_NAME|escape}} : Feed Playback for {{ feed_title|escape }}{% endblock %}
+{% block header %}<a href="/">{{ APP_NAME|escape}}</a> : Feed Playback for {{ feed_title|escape }}{% endblock %}
+
+{% block body %}
+<div id="intro">
+  <div class="inner">
+    <p>This is a feed playback for the
+    <a href="{{ feed_url|escape }}">{{ feed_title|escape }}</a> feed. It is set
+    to update {{ frequency|escape }}. It is currently at item
+    {{ position|escape }} of {{ item_count|escape }}.</p>
+    
+    <p>You can subscribe to
+      <a href="{{ subscription_feed_url|escape }}" class="feed-link">the playback feed</a>
+      (<a href=" {{ subscription_reader_url|escape }}">view in Google Reader</a>).
+    </p>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block footer %}
+<p>To play back another feed, see the
+<a href="{{ homepage_url|escape }}">{{ APP_NAME|escape }} homepage</a>.</p>
+{% endblock %}
