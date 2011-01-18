@@ -83,12 +83,12 @@ def _post_to_api(path, params):
     url = 'http://www.google.com/reader/api/0/%s?client=streamspigot' % path
     params['T'] = token
     
-    logging.info('POST params: %s' % urllib.urlencode(params, doseq=True))
-    
     resp, content = READER_OAUTH_CLIENT.request(
         url, 'POST', body=urllib.urlencode(params, doseq=True))
-  
-    logging.info('POST response: %s\n%s' % (str(resp), content))
+        
+    if resp.status != 200:
+      logging.warning('POST response: %s\n%s\nto request:%s' % (
+          str(resp), content), str(params))
     
 def _fetch_api_json(path, extra_params={}):
     url = 'http://www.google.com/reader/api/0/' \

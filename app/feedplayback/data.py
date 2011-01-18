@@ -96,6 +96,13 @@ class Subscription(object):
             frequency_modulo=self.frequency_modulo,
             position=self.position)
         subscription.put()
+
+    def create_reader_stream(self, intro_title, intro_body):
+        googlereader.create_note(
+            title=intro_title,
+            body=intro_body,
+            share=False,
+            additional_stream_ids=[self.reader_stream_id])
         
     def get_subscription_feed_url(self):
         return 'http://www.google.com/reader/public/atom/%s' % urllib.quote(self.reader_stream_id)
@@ -143,15 +150,14 @@ def create_subscription(feed_url, start_date, frequency):
             break
         start_position += 1
 
-    logging.info('start position: %d' % start_position)
-    
     feed_title = feed_info.title
     # Compact encoding of a UUID
     subscription_id = base64.urlsafe_b64encode(
         uuid.uuid4().bytes).replace('=', '')
 
-    reader_tag_name = '%s (Stream Spigot Playback %s)' % (feed_title, subscription_id)
-    reader_stream_id = 'user/123/label/%s' % reader_tag_name
+    reader_tag_name = '%s ( Stream Spigot Feed Playback %s)' % (feed_title, subscription_id)
+    reader_stream_id = 'user/%s/label/%s' % (
+        googlereader.FEED_PLAYBACK_USER_ID, reader_tag_name)
     
     subscription = Subscription(
         subscription_id,
