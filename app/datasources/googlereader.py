@@ -125,7 +125,7 @@ def _post_to_api(path, params):
         
     if resp.status != 200:
       logging.warning('POST response: %s\n%s\nto request:%s %s' % (
-          str(resp), content), path, str(params))
+          str(resp), content, path, str(params)))
     
 def _fetch_api_json(path, extra_params={}):
     url = 'http://www.google.com/reader/api/0/' \

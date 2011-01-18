@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 from base.constants import CONSTANTS
 import base.handlers
@@ -13,6 +14,20 @@ _FREQUENCY_DISPLAY_NAMES = {
 class MainHandler(base.handlers.BaseHandler):
     def get(self):
         self._write_template('feedplayback/index.html')
+
+class AdvanceHandler(base.handlers.BaseHandler):
+    def get(self):
+        frequency = self.request.get('frequency')
+        frequency_modulo = int(self.request.get('frequency_modulo'))
+        
+        subscriptions = data.get_subscriptions_with_frequency_and_modulo(
+            frequency, frequency_modulo)
+        
+        for subscription in subscriptions:
+            subscription.advance()
+        
+        logging.info('Advanced %d subscriptions' % len(subscriptions))
+        self.response.out.write('OK')
 
 class CreateHandler(base.handlers.BaseHandler):
     def post(self):

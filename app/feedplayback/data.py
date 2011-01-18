@@ -88,6 +88,16 @@ class Subscription(object):
         self.frequency_modulo = frequency_modulo
         self.position = position
     
+    @staticmethod
+    def from_datastore(subscription):
+        return Subscription(
+            subscription.key().name(),
+            subscription.reader_stream_id,
+            subscription.feed_url,
+            subscription.frequency,
+            subscription.frequency_modulo,
+            subscription.position)
+    
     def save(self):
         subscription = _Subscription(
             key_name=self.id,
@@ -156,13 +166,17 @@ def get_subscription_by_id(id):
     if not subscription:
         return None
     
-    return Subscription(
-        id,
-        subscription.reader_stream_id,
-        subscription.feed_url,
-        subscription.frequency,
-        subscription.frequency_modulo,
-        subscription.position)
+    return Subscription.from_datastore(subscription)
+
+def get_subscriptions_with_frequency_and_modulo(frequency, frequency_modulo):
+    query = _Subscription.all()
+    query.filter("frequency =", frequency)
+    query.filter("frequency_modulo =", frequency_modulo)
+    
+    subscriptions = []
+    for result in query:
+        subscriptions.append(Subscription.from_datastore(result))
+    return subscriptions
 
 def create_subscription(feed_url, start_date, frequency):
     feed_info = get_feed_info_from_feed_url(feed_url)
