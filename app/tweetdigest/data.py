@@ -8,6 +8,7 @@ import xml.sax.saxutils
 
 from google.appengine.api import urlfetch
 
+from base.constants import CONSTANTS
 from datasources import twitter, twitterappengine
 
 DIGEST_LENGTH = 60 * 60 * 24
@@ -15,9 +16,9 @@ DIGEST_LENGTH = 60 * 60 * 24
 def _get_digest_twitter_api(max_cache_age):
     api = twitter.Api(cache=twitterappengine.MemcacheCache())
     api.SetCacheTimeout(max_cache_age)
-    api.SetUserAgent('StreamSpigot/%s (+http://%s)' % (
+    api.SetUserAgent('StreamSpigot/%s (+%s)' % (
         os.environ.get('CURRENT_VERSION_ID', '1'),
-        os.environ.get('SERVER_NAME', 'streamspigot.appspot.com'),
+        CONSTANTS.APP_URL,
     ))
     return api
     

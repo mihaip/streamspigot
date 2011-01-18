@@ -1,13 +1,13 @@
 import os
 
-import base.constants
+from base.constants import CONSTANTS
 import base.handlers
 import base.util
 import data
 
 class LinkFormatter(object):
     def get_attributes(self):
-        return 'style="color:%s"' % base.constants.CONSTANTS['ANCHOR_COLOR']
+        return 'style="color:%s"' % CONSTANTS.ANCHOR_COLOR
 LINK_FORMATTER = LinkFormatter()
 
 class MainHandler(base.handlers.BaseHandler):
@@ -76,8 +76,6 @@ class DigestHandler(base.handlers.BaseHandler):
                     list_owner, list_id, LINK_FORMATTER)
 
         # Template parameters
-        homepage_url = 'http://' + os.environ.get('SERVER_NAME', '')
-        
         digest_errors = None
         if usernames:
             digest_source = self._render_template(
@@ -88,8 +86,8 @@ class DigestHandler(base.handlers.BaseHandler):
                         self._render_template(
                             'tweetdigest/usernames.snippet',
                             {'usernames': error_usernames})
-            base_digest_url = homepage_url + \
-                '/tweet-digest/digest?usernames=' + '+'.join(usernames)
+            base_digest_url = '%s/tweet-digest/digest?usernames=%s' % (
+                CONSTANTS.APP_URL, '+'.join(usernames))
             digest_id = '+'.join(usernames)
         else:
             digest_source = self._render_template(
@@ -98,8 +96,8 @@ class DigestHandler(base.handlers.BaseHandler):
             if had_error:
                 digest_errors = 'Errors were encountered when fetching ' \
                     'the list (it may be private)'
-            base_digest_url = homepage_url + \
-                '/tweet-digest/digest?list=%s/%s' % (list_owner, list_id)
+            base_digest_url = '%s/tweet-digest/digest?list=%s/%s' % (
+                CONSTANTS.APP_URL, list_owner, list_id)
             digest_id = '%s/%s' % (list_owner, list_id)
 
         digest_entry_id = digest_id + '-' + start_date.date().isoformat()
@@ -111,7 +109,6 @@ class DigestHandler(base.handlers.BaseHandler):
             
             'title': 'Tweet Digest for %s (GMT)' %
                 start_date.strftime('%A, %B %d, %Y'),
-            'homepage_url': homepage_url,
             'feed_url': base_digest_url + '&output=atom',
             'html_url': base_digest_url + '&output=html',
             'digest_id': digest_id,
