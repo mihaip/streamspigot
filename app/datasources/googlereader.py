@@ -62,16 +62,34 @@ def get_feed_item_refs(feed_url, oldest_timestamp_usec=None):
 
     return item_refs
 
-def create_note(title, body, share=True, additional_stream_ids=[]):
-    _post_to_api(
-        'item/edit',
-        {
-          'title': title,
-          'snippet': body,
-          'share': share and 'true' or 'false',
-          'tags': additional_stream_ids,
-          'linkify': 'false',
-        })
+def create_note(
+    title,
+    body,
+    url=None,
+    source_url=None,
+    source_title=None,
+    share=True,
+    additional_stream_ids=[]):
+    params = {
+      'title': title,
+      'snippet': body,
+      'share': share and 'true' or 'false',
+      'linkify': 'false',
+    }
+    
+    if additional_stream_ids:
+        params['tags'] = additional_stream_ids
+    
+    if url:
+        params['url'] = url
+        
+    if source_url:
+        params['srcUrl'] = source_url
+
+    if source_title:
+        params['srcTitle'] = source_title
+      
+    _post_to_api('item/edit', params)
 
 def _get_post_token():
     resp, content = READER_OAUTH_CLIENT.request(

@@ -8,6 +8,7 @@ import uuid
 
 from google.appengine.ext import db
 
+from base.constants import CONSTANTS
 from datasources import googlereader
 
 class _FeedInfo(db.Model):
@@ -97,10 +98,13 @@ class Subscription(object):
             position=self.position)
         subscription.put()
 
-    def create_reader_stream(self, intro_title, intro_body):
+    def create_reader_stream(self, intro_html_url, intro_title, intro_body):
         googlereader.create_note(
             title=intro_title,
             body=intro_body,
+            url=intro_html_url,
+            source_url=CONSTANTS.APP_URL,
+            source_title=CONSTANTS.APP_NAME,
             share=False,
             additional_stream_ids=[self.reader_stream_id])
         

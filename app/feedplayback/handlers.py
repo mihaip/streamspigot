@@ -1,6 +1,6 @@
 import datetime
-import os
 
+from base.constants import CONSTANTS
 import base.handlers
 import data
 
@@ -28,10 +28,11 @@ class CreateHandler(base.handlers.BaseHandler):
             
         feed_info = data.get_feed_info_from_feed_url(url)
         feed_title = feed_info.title
-        subscription_html_url = 'http://%s/feed-playback/subscription/%s' % (
-            os.environ.get('SERVER_NAME', ''), subscription.id)
+        subscription_html_url = '%s/feed-playback/subscription/%s' % (
+            CONSTANTS.APP_URL, subscription.id)
 
         subscription.create_reader_stream(
+            intro_html_url=subscription_html_url,
             intro_title='Feed playback for "%s"' % feed_title,
             intro_body=self._render_template(
                 'feedplayback/intro-body.snippet', {
@@ -63,7 +64,6 @@ class SubscriptionHandler(base.handlers.BaseHandler):
             return
             
         feed_info = data.get_feed_info_from_feed_url(subscription.feed_url)
-        homepage_url = 'http://' + os.environ.get('SERVER_NAME', '')
 
         self._write_template('feedplayback/subscription.html', {
             'feed_title': feed_info.title,
@@ -72,6 +72,5 @@ class SubscriptionHandler(base.handlers.BaseHandler):
             'subscription_reader_url': subscription.get_subscription_reader_url(),
             'position': subscription.position + 1,
             'item_count': len(feed_info.item_ids),
-            'frequency': _FREQUENCY_DISPLAY_NAMES[subscription.frequency],
-            'homepage_url': homepage_url
+            'frequency': _FREQUENCY_DISPLAY_NAMES[subscription.frequency]
         })

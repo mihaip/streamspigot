@@ -15,5 +15,5 @@ CONSTANTS = _ConstantsDict(
     HEADER_COLOR='#666',
     
     APP_NAME='Stream Spigot',
-    APP_URL='http://www.streamspigot.com/',
+    APP_URL='http://www.streamspigot.com',
 )
