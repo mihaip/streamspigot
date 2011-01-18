@@ -30,7 +30,11 @@ import hmac
 import binascii
 import httplib2
 
-from urlparse import parse_qs, parse_qsl
+# parse_qsl moved to urlparse module in v2.6
+try:
+  from urlparse import parse_qs, parse_qsl
+except:
+  from cgi import parse_qs, parse_qsl
 
 try:
     from hashlib import sha1
