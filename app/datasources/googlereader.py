@@ -4,6 +4,18 @@ import urllib
 from django.utils import simplejson
 from google.appengine.api import urlfetch
 
+import oauth2 as oauth
+import google_oauth_keys
+
+READER_OAUTH_CLIENT = oauth.Client(
+    oauth.Consumer(
+        key=google_oauth_keys.CONSUMER_KEY,
+        secret=google_oauth_keys.CONSUMER_SECRET),
+    token=oauth.Token(
+        key=google_oauth_keys.READER_ACCESS_TOKEN_KEY,
+        secret=google_oauth_keys.READER_ACCESS_TOKEN_SECRET))
+FEED_PLAYBACK_USER_ID = '07254461334580145372'
+
 class ItemRef(object):
     def __init__(self, id, timestamp_usec):
         self.id = id
@@ -50,10 +62,38 @@ def get_feed_item_refs(feed_url, oldest_timestamp_usec=None):
 
     return item_refs
 
+def create_note(title, body, share=True, additional_stream_ids=[]):
+    _post_to_api(
+        'item/edit',
+        {
+          'title': title,
+          'snippet': body,
+          'share': share and 'true' or 'false',
+          'tags': additional_stream_ids,
+          'linkify': 'false',
+        })
+
+def _get_post_token():
+    resp, content = READER_OAUTH_CLIENT.request(
+        'http://www.google.com/reader/api/0/token', 'GET')
+    return content.strip()
+
+def _post_to_api(path, params):
+    token = _get_post_token()
+    url = 'http://www.google.com/reader/api/0/%s?client=streamspigot' % path
+    params['T'] = token
+    
+    logging.info('POST params: %s' % urllib.urlencode(params, doseq=True))
+    
+    resp, content = READER_OAUTH_CLIENT.request(
+        url, 'POST', body=urllib.urlencode(params, doseq=True))
+  
+    logging.info('POST response: %s\n%s' % (str(resp), content))
+    
 def _fetch_api_json(path, extra_params={}):
     url = 'http://www.google.com/reader/api/0/' \
         '%s?output=json&client=streamspigot&%s' % (
-            path, urllib.urlencode(extra_params))
+            path, urllib.urlencode(extra_params, doseq=True))
     logging.info('Google Reader API request: %s' % url)
     response = urlfetch.fetch(
         url=url,
