@@ -96,6 +96,19 @@ def set_stream_public(stream_id, is_public):
         's': stream_id,
         'pub': is_public and 'true' or 'false'
     })
+    
+def edit_item_tags(item_id, origin_stream_id, add_tags=[], remove_tags=[]):
+    params = {
+        'i': item_id,
+        's': origin_stream_id,
+    }
+    
+    if add_tags:
+        params['a'] = add_tags
+    if remove_tags:
+        params['r'] = remove_tags
+
+    _post_to_api('edit-tag', params)
 
 def _get_post_token():
     resp, content = READER_OAUTH_CLIENT.request(

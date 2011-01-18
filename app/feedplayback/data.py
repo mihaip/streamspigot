@@ -108,6 +108,25 @@ class Subscription(object):
             share=False,
             additional_stream_ids=[self.reader_stream_id])
         googlereader.set_stream_public(self.reader_stream_id, is_public=True)
+        self.advance()
+        
+    def advance(self):
+        feed_info = get_feed_info_from_feed_url(self.feed_url)
+        
+        if self.position == len(feed_info.item_ids):
+            # TODO(mihaip): insert some kind of "you're done" notification into
+            # the stream?
+            return
+        
+        item_id = feed_info.item_ids[self.position]
+        
+        googlereader.edit_item_tags(
+            item_id,
+            origin_stream_id='feed/%s' % self.feed_url,
+            add_tags=[self.reader_stream_id])
+        
+        self.position += 1
+        self.save()
         
     def get_subscription_feed_url(self):
         return 'http://www.google.com/reader/public/atom/%s' % urllib.quote(self.reader_stream_id)
