@@ -90,6 +90,12 @@ def create_note(
         params['srcTitle'] = source_title
       
     _post_to_api('item/edit', params)
+    
+def set_stream_public(stream_id, is_public):
+    _post_to_api('tag/edit', {
+        's': stream_id,
+        'pub': is_public and 'true' or 'false'
+    })
 
 def _get_post_token():
     resp, content = READER_OAUTH_CLIENT.request(
@@ -105,8 +111,8 @@ def _post_to_api(path, params):
         url, 'POST', body=urllib.urlencode(params, doseq=True))
         
     if resp.status != 200:
-      logging.warning('POST response: %s\n%s\nto request:%s' % (
-          str(resp), content), str(params))
+      logging.warning('POST response: %s\n%s\nto request:%s %s' % (
+          str(resp), content), path, str(params))
     
 def _fetch_api_json(path, extra_params={}):
     url = 'http://www.google.com/reader/api/0/' \

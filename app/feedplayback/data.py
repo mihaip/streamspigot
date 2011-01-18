@@ -107,6 +107,7 @@ class Subscription(object):
             source_title=CONSTANTS.APP_NAME,
             share=False,
             additional_stream_ids=[self.reader_stream_id])
+        googlereader.set_stream_public(self.reader_stream_id, is_public=True)
         
     def get_subscription_feed_url(self):
         return 'http://www.google.com/reader/public/atom/%s' % urllib.quote(self.reader_stream_id)
@@ -159,7 +160,7 @@ def create_subscription(feed_url, start_date, frequency):
     subscription_id = base64.urlsafe_b64encode(
         uuid.uuid4().bytes).replace('=', '')
 
-    reader_tag_name = '%s ( Stream Spigot Feed Playback %s)' % (feed_title, subscription_id)
+    reader_tag_name = '%s (%s)' % (feed_title, subscription_id)
     reader_stream_id = 'user/%s/label/%s' % (
         googlereader.FEED_PLAYBACK_USER_ID, reader_tag_name)
     
