@@ -20,6 +20,12 @@ class AdvanceHandler(base.handlers.BaseHandler):
         frequency = self.request.get('frequency')
         frequency_modulo = int(self.request.get('frequency_modulo'))
         
+        current_modulo = data.get_modulo_for_frequency(frequency)
+        if current_modulo != frequency_modulo:
+            logging.info('Not advancing for modulo %d today '
+                '(which is modulo %d)' % (frequency_modulo, current_modulo))
+            return
+        
         subscriptions = data.get_subscriptions_with_frequency_and_modulo(
             frequency, frequency_modulo)
         
