@@ -154,7 +154,7 @@ def get_modulo_for_frequency(frequency):
     if frequency == '1d':
       return 0
     else:
-        days_since_epoch = int(time.time()/3600 * 24)
+        days_since_epoch = int(time.time()/(3600 * 24))
         if frequency == '2d':
             return days_since_epoch % 2
         else:
