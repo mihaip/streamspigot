@@ -58,7 +58,7 @@ def get_feed_item_refs(feed_url, oldest_timestamp_usec=None):
         item_refs = [i for i in item_refs
             if i.timestamp_usec > oldest_timestamp_usec]
 
-    item_refs.sort(lambda a, b: int(a.timestamp_usec - b.timestamp_usec))
+    item_refs.sort(lambda a, b: cmp(a.timestamp_usec, b.timestamp_usec))
 
     return item_refs
 
