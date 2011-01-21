@@ -273,7 +273,6 @@ streamspigot.feedplayback.fetchFeedInfo = function() {
 
 streamspigot.feedplayback.setup = function(event) {
   event.preventDefault();
-  goog.dom.$('feedplayback-setup').disabled = true;
   
   var paramsMap = {
     'url': 'feedplayback-feed-url',
@@ -287,6 +286,14 @@ streamspigot.feedplayback.setup = function(event) {
     data += paramName + '=' +
         encodeURIComponent(goog.dom.$(paramsMap[paramName]).value) + '&';
   }
+  
+  if (data == streamspigot.feedplayback.previousSetupParams) {
+    return;
+  }
+  
+  streamspigot.feedplayback.previousSetupParams = data;
+  
+  goog.dom.$('feedplayback-setup').disabled = true;
   
   streamspigot.util.fetchJson(
       '/feed-playback/create',
