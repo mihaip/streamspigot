@@ -11,10 +11,14 @@ from google.appengine.ext import db
 from base.constants import CONSTANTS
 from datasources import googlereader
 
-class _FeedInfo(db.Model):
+class FeedInfoData(db.Model):
     title = db.StringProperty()
     item_ids = db.StringListProperty()
     item_timestamps_usec = db.ListProperty(long)
+    
+    @classmethod
+    def kind(cls):
+        return "feedplayback.FeedInfoData"
 
 class FeedInfo(object):
     def __init__(self, feed_url, title, item_ids, item_timestamps_usec):
@@ -44,7 +48,7 @@ def get_feed_info(html_or_feed_url):
     return get_feed_info_from_feed_url(feed_url)
 
 def get_feed_info_from_feed_url(feed_url):
-    feed_info = _FeedInfo.get_by_key_name(feed_url)
+    feed_info = FeedInfoData.get_by_key_name(feed_url)
     
     if not feed_info:
         title = googlereader.lookup_feed_title(feed_url) or \
@@ -54,7 +58,7 @@ def get_feed_info_from_feed_url(feed_url):
         if not item_refs:
             return {}
         
-        feed_info = _FeedInfo(
+        feed_info = FeedInfoData(
             key_name=feed_url,
             title=title,
             item_ids=[i.id for i in item_refs],
@@ -68,7 +72,7 @@ def get_feed_info_from_feed_url(feed_url):
         item_ids=feed_info.item_ids,
         item_timestamps_usec=feed_info.item_timestamps_usec)
 
-class _Subscription(db.Model):
+class SubscriptionData(db.Model):
     reader_stream_id = db.StringProperty()
     feed_url = db.StringProperty()
     frequency = db.StringProperty()
@@ -78,6 +82,10 @@ class _Subscription(db.Model):
     # subscriptions to advance.
     frequency_modulo = db.IntegerProperty()
     position = db.IntegerProperty()
+    
+    @classmethod
+    def kind(cls):
+        return "feedplayback.SubscriptionData"
 
 class Subscription(object):
     def __init__(self, id, reader_stream_id, feed_url, frequency, frequency_modulo, position):
@@ -99,7 +107,7 @@ class Subscription(object):
             subscription.position)
     
     def save(self):
-        subscription = _Subscription(
+        subscription = SubscriptionData(
             key_name=self.id,
             reader_stream_id=self.reader_stream_id,
             feed_url=self.feed_url,
@@ -161,7 +169,7 @@ def get_modulo_for_frequency(frequency):
             return days_since_epoch % 7
 
 def get_subscription_by_id(id):
-    subscription = _Subscription.get_by_key_name(id)
+    subscription = SubscriptionData.get_by_key_name(id)
     
     if not subscription:
         return None
@@ -169,7 +177,7 @@ def get_subscription_by_id(id):
     return Subscription.from_datastore(subscription)
 
 def get_subscriptions_with_frequency_and_modulo(frequency, frequency_modulo):
-    query = _Subscription.all()
+    query = SubscriptionData.all()
     query.filter("frequency =", frequency)
     query.filter("frequency_modulo =", frequency_modulo)
     
