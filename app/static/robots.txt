@@ -1,2 +1,3 @@
 User-agent: *
 Disallow: /tweet-digest/digest
+Disallow: /feed-playback/subscription
