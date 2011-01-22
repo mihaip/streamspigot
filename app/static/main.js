@@ -308,6 +308,7 @@ streamspigot.feedplayback.setup = function(event) {
           readerUrlNode.href = data.readerUrl;
       },
       function(statusCode, responseText) {
+        delete streamspigot.feedplayback.previousSetupParams;
         goog.dom.$('feedplayback-setup').disabled = false;
         goog.dom.classes.add(goog.dom.$('result'), 'hidden');
         goog.dom.classes.remove(goog.dom.$('error'), 'hidden');
