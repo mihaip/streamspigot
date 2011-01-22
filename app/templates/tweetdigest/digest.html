@@ -1,6 +1,6 @@
 {% extends "../base/page.html" %}
 
-{% block title %}{{ APP_NAME|escape }}: {{ title|escape }}{% endblock %}
+{% block title %}{{ APP_NAME|escape }}: Tweet Digest for {{ title_date|escape }}{% endblock %}
 
 {% block head %}
 <link href="{{ feed_url|escape }}"
