@@ -107,8 +107,7 @@ class DigestHandler(base.handlers.BaseHandler):
             'digest_errors': digest_errors,
             'grouped_statuses': grouped_statuses, 
             
-            'title': 'Tweet Digest for %s (GMT)' %
-                start_date.strftime('%A, %B %d, %Y'),
+            'title_date': '%s (GMT)' % start_date.strftime('%A, %B %d, %Y'),
             'feed_url': base_digest_url + '&output=atom',
             'html_url': base_digest_url + '&output=html',
             'digest_id': digest_id,

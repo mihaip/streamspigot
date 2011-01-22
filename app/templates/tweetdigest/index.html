@@ -1,31 +1,29 @@
 {% extends "../base/page.html" %}
 
 {% block title %}{{ APP_NAME|escape}} : Tweet Digest{% endblock %}
-{% block header %}<a href="/">{{ APP_NAME|escape}}</a> : Tweet Digest{% endblock %}
+{% block subtitle %}Tweet Digest{% endblock %}
+
+{% block intro %}
+  <p>This <a href="/">{{ APP_NAME|escape }}</a> tool lets you read
+  <a href="http://twitter.com">Twitter</a> updates in a more manageable
+  fashion. Just pick the Twitter list or usernames you'd like to generate a
+  digest for, and you will see all updates made by them during the past full
+  day (GMT). At midnight, a new set of updates rolls over.</p>
+  
+  <p>The digest is available as both a webpage that you can 
+  visit periodically, or as an Atom feed that you subscribe to get updates
+  (grouped as one feed item) in your
+  <a href="http://www.google.com/reader/">favorite feed reader</a>.</p>
+  
+  <p>To get started, either choose a
+  <a href="http://support.twitter.com/articles/247929">Twitter list</a> or
+  enter one or more Twitter usernames below (one username per line) and use
+  the links that will appear at the bottom.</p>
+{% endblock %}
 
 {% block body %}
-<div id="intro">
-  <div class="inner">
-    <p>This <a href="/">{{ APP_NAME|escape }}</a> tool lets you read
-    <a href="http://twitter.com">Twitter</a> updates in a more manageable
-    fashion. Just pick the Twitter list or usernames you'd like to generate a
-    digest for, and you will see all updates made by them during the past full
-    day (GMT). At midnight, a new set of updates rolls over.</p>
-    
-    <p>The digest is available as both a webpage that you can 
-    visit periodically, or as an Atom feed that you subscribe to get updates
-    (grouped as one feed item) in your
-    <a href="http://www.google.com/reader/">favorite feed reader</a>.</p>
-    
-    <p>To get started, either choose a
-    <a href="http://support.twitter.com/articles/247929">Twitter list</a> or
-    enter one or more Twitter usernames below (one username per line) and use
-    the links that will appear at the bottom.</p>
-  </div>
+<div class="symbol">&#8675;</div>
   
-  <div class="symbol">&#8675;</div>
-</div>
-
 <table id="tweetdigest-setup-table">
   <td id="tweetdigest-list-column">
     <fieldset>
@@ -50,7 +48,6 @@
     </fieldset>
   </td>
 </table>
-
 
 <div id="digest-links" class="hidden">
   <div class="symbol">&#8675;</div>

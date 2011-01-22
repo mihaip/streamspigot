@@ -1,26 +1,24 @@
 {% extends "../base/page.html" %}
 
 {% block title %}{{ APP_NAME|escape}} : Feed Playback{% endblock %}
-{% block header %}<a href="/">{{ APP_NAME|escape}}</a> : Feed Playback{% endblock %}
+{% block subtitle %}Feed Playback{% endblock %}
+
+{% block intro %}
+  <p>This <a href="/">{{ APP_NAME|escape }}</a> tool lets you read blogs (or
+  anything else with an RSS or Atom feed) from the beginning. In addition to
+  being useful for newly-discovered blogs with big archives, it also works
+  well for <span class="link" onclick="streamspigot.feedplayback.preFillForm('http://sysadvent.blogspot.com/');">topical</span>
+  <span class="link" onclick="streamspigot.feedplayback.preFillForm('http://calendar.perfplanet.com/2010/');">"advent"</span>
+  <span class="link" onclick="streamspigot.feedplayback.preFillForm('http://perladvent.pm.org/2009/');">blogs</span>.</p>
+  
+  <p>Simply enter the URL of the blog or feed that you wish to play back,
+  and (optionally) pick a start date and update frequency if you don't want to
+  read it from the beginning. Once the playback is setup, you'll get an Atom
+  feed URL that you can subscribe to.</p>
+{% endblock %}
 
 {% block body %}
-<div id="intro">
-  <div class="inner">
-    <p>This <a href="/">{{ APP_NAME|escape }}</a> tool lets you read blogs (or
-    anything else with an RSS or Atom feed) from the beginning. In addition to
-    being useful for newly-discovered blogs with big archives, it also works
-    well for <span class="link" onclick="streamspigot.feedplayback.preFillForm('http://sysadvent.blogspot.com/');">topical</span>
-    <span class="link" onclick="streamspigot.feedplayback.preFillForm('http://calendar.perfplanet.com/2010/');">"advent"</span>
-    <span class="link" onclick="streamspigot.feedplayback.preFillForm('http://perladvent.pm.org/2009/');">blogs</span>.</p>
-    
-    <p>Simply enter the URL of the blog or feed that you wish to play back,
-    and (optionally) pick a start date and update frequency if you don't want to
-    read it from the beginning. Once the playback is setup, you'll get an Atom
-    feed URL that you can subscribe to.
-  </div>
-  
-  <div class="symbol">&#8675;</div>  
-</div>
+<div class="symbol">&#8675;</div>  
 
 <form id="feedplayback-setup-form">
   <table id="feedplayback-setup-table" class="disabled">
@@ -101,6 +99,6 @@
   published and crawl date, etc.) is preserved, and content is not duplicated.
   However, you do not have to use Google Reader to subscribe to it, any consumer
   of Atom 1.0 should work just as well.
-  <script>streamspigot.feedplayback.init();</script>  
+  <script>streamspigot.feedplayback.init();</script>
   </p>
 {% endblock %}

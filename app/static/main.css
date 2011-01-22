@@ -8,7 +8,7 @@ html, body {
 }
 
 body {
-  background: #8aa7ff;
+  background: #cddcff;
   font-family: Helvetica, Arial, sans-serif;
   font-size: 10pt;
 }
@@ -28,29 +28,74 @@ a, .link {
   display: none;
 }
 
-#container {
-  width: 625px;
-  margin: 0 auto;    
+.block {
+  padding: 2em;
 }
 
-h1 {
-  text-align: center;
-  margin: 0 0 1em 0;
-  background: #7094ff;
-  padding: 0.5em 0.3em;
-  color: #666;
-  font-size: 36px;
+.block p {
+  line-height: 1.5em;
+  margin: 1em 0;
 }
 
-h1 a {
-  color: #666;
-  text-decoration: none;
+.block p:first-child {
+  margin-top: 0;
+}
+
+.block p:last-child {
+  margin-bottom: 0;
+}
+
+#header {
+  min-height: 194px;
+  background: url(/static/header-background.png) repeat-x;
+}
+
+#title {
+  display: block;
+  width: 980px;
+  height: 194px;
+  background: url(/static/header.png) no-repeat;
+}
+
+#title h1 {
+  display: none;
+}
+
+#header-container {
+  position: relative;
+  width: 980px;
+  height: 194px;
+  margin: 0 auto;  
 }
 
 #subtitle {
+  position: absolute;
+  right: 414px;
+  top: 136px;
+  text-align: right;
+  font-size: 32px;
+  font-weight: bold;
+  color: #32bc00;
+}
+
+#subsubtitle {
+  font-size: 14px;
   font-weight: normal;
-  font-size: 13px;
-  color: #686f85;
+}
+
+#container {
+  width: 625px;
+  margin: 2em auto 0; 
+}
+
+#intro {
+  margin-bottom: 2em;
+  background: #f6f6f6;
+}
+
+#footer {
+  margin-top: 5em;
+  background: #dde8ff;  
 }
 
 #tweetdigest-setup-table {
@@ -73,7 +118,7 @@ h1 a {
 
 #tweetdigest-setup-table fieldset {
   border-width: 1px 0 0 0;
-  border-color: #6c80b2;
+  border-color: #9bb9ff;
   border-style: solid;
 }
 
@@ -100,12 +145,8 @@ h1 a {
 }
 
 #usernames button[disabled] {
-  background: #7094ff;
+  opacity: 0.3;
   cursor: default;
-}
-
-.hidden {
-  display: none;
 }
 
 #digest-links,
@@ -114,35 +155,12 @@ h1 a {
   text-align: center;  
 }
 
-#intro .symbol {
-  margin-top: 0.5em;
-  color: #333;
-}
-
-.inner {
-  background: #f6f6f6;
-  padding: 0.5em;
-  margin: 0 auto;
-}
-
-.inner p {
-  line-height: 1.5em;
-  margin: 1em 0;
-}
-
-.inner p:first-child {
-  margin-top: 0;
-}
-
-.inner p:last-child {
-  margin-bottom: 0;
-}
-
 .feed-icon {
   vertical-align: text-bottom;
 }
 
 .symbol {
+  color: #333;
   font-weight: bold;
   font-size: 200%;
   margin: 0;
@@ -157,14 +175,6 @@ h1 a {
 
 #digest-empty .symbol {
   color: red;
-}
-
-#footer {
-  margin-top: 5em;
-}
-
-#footer .inner {
-  background: #cad8fb;
 }
 
 #tools {

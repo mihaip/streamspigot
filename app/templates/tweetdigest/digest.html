@@ -11,9 +11,6 @@
 <link rel="stylesheet" type="text/css" href="/static/main.css">
 <base href="http://twitter.com/">
 <style type="text/css">
-  h1 {
-    font-size: 24px;
-  }
   #footer {
     text-align: center;
   }
@@ -25,9 +22,12 @@
 </style>
 {% endblock %}
 
-{% block header %}
-  {{ title|escape }}
-  <div id="subtitle">{{ APP_NAME|escape }}</div>
+{% block subtitle %}Tweet Digest{% endblock %}
+{% block subsubtitle %}for {{ title_date|escape }}{% endblock %}
+
+{% block intro %}
+  <p>This is a digest of {{ digest_source }}. It is also available
+  <a href="{{ feed_url|escape }}" class="feed-link">as a feed</a>.</p>
 {% endblock %}
 
 {% block body %}
@@ -37,14 +37,10 @@
 {% endblock %}
 
 {% block footer %}
-<p>
-  This is a digest of {{ digest_source }}. It is also available <a href="{{ feed_url|escape }}" class="feed-link">as a feed</a>.
-</p>
 {% if digest_errors %}
-  <p class="errors">
-    {{ digest_errors }}
-  </p>
+  <p class="errors">{{ digest_errors }}</p>
 {% endif %}
 <p>To create a new digest, see the
-<a href="{{ APP_URL|escape }}">{{ APP_NAME|escape }} homepage</a>.</p>
+<a href="{{ APP_URL|escape }}/tweet-digest">Tweet Digest tool</a> on
+<a href="{{ APP_URL|escape }}">{{ APP_NAME|escape }}</a>.</p>
 {% endblock %}

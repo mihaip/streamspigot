@@ -1,20 +1,16 @@
 {% extends "base/page.html" %}
 
-{% block header %}
-{{ APP_NAME|escape }}
-<div id="subtitle">Flow control for the real-time web firehose</div>
+{% block intro %}
+  <p>
+    {{ APP_NAME|escape }} is a collection of tools that let you keep up with
+    the "real-time web" better (think
+    <a href="http://en.wikipedia.org/wiki/Transmission_Control_Protocol#Flow_control">flow control</a>).
+    Instead of living in fear of missing something, these tools let you consume
+    information at your desired pace in efficient batches.
+  </p>
 {% endblock %}
 
 {% block body %}
-<div id="intro">
-  <div class="inner">
-    <p>{{ APP_NAME|escape }} is a collection of tools that let you keep up with
-    the "real-time web" better. Instead of living in fear of missing something,
-    these tools let you consume information at your desired pace in efficient
-    batches.</p>
-  </div>
-</div>
-    
 <div id="tools">
   <a href="/tweet-digest/" class="tool">
     <h2>Tweet Digest</h2>
@@ -52,5 +48,4 @@
   <a href="http://support.twitter.com/articles/77641">trademark
   guidelines</a>.
 </p>
-
 {% endblock %}

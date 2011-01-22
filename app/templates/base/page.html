@@ -9,15 +9,25 @@
 </head>
 <body>
 
+<div id="header">
+  <div id="header-container">
+    <a href="/" id="title"><h1>{{ APP_NAME|escape }}</h1></a>
+    <div id="subtitle">
+      {% block subtitle %}{% endblock %}
+      <div id="subsubtitle">{% block subsubtitle %}{% endblock %}</div>
+    </div>
+  </div>
+</div>
+
 <div id="container">
-  <h1>{% block header %}{{ APP_NAME|escape }}{% endblock %}</h1>
+  <div id="intro" class="block">
+    {% block intro %}{% endblock %}
+  </div>
   
   {% block body %}{% endblock %}
   
-  <div id="footer">
-    <div class="inner">
-      {% block footer %}{% endblock %}
-    </div>
+  <div id="footer" class="block">
+    {% block footer %}{% endblock %}
   </div>
 </div>
 
