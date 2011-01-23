@@ -10,12 +10,10 @@
 <body>
 
 <div id="header">
-  <div id="header-container">
-    <a href="/" id="title"><h1>{{ APP_NAME|escape }}</h1></a>
-    <div id="subtitle">
-      {% block subtitle %}{% endblock %}
-      <div id="subsubtitle">{% block subsubtitle %}{% endblock %}</div>
-    </div>
+  <a href="/" id="title"><h1>{{ APP_NAME|escape }}</h1></a>
+  <div id="subtitle">
+    {% block subtitle %}{% endblock %}
+    <div id="subsubtitle">{% block subsubtitle %}{% endblock %}</div>
   </div>
 </div>
 

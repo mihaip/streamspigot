@@ -48,29 +48,24 @@ a, .link {
 #header {
   min-height: 194px;
   background: url(/static/header-background.png) repeat-x;
+  position: relative;
 }
 
 #title {
   display: block;
-  width: 980px;
+  width: 100%;
   height: 194px;
-  background: url(/static/header.png) no-repeat;
+  background: url(/static/header.png) no-repeat center top;
 }
 
 #title h1 {
   display: none;
 }
 
-#header-container {
-  position: relative;
-  width: 980px;
-  height: 194px;
-  margin: 0 auto;  
-}
-
 #subtitle {
   position: absolute;
-  right: 414px;
+  right: 50%;
+  margin-right: -75px;
   top: 136px;
   text-align: right;
   font-size: 32px;
