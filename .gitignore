@@ -1,2 +1,2 @@
 *.pyc
-app/datasources/google_oauth_keys.py
+app/datasources/oauth_keys.py
