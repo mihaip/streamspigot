@@ -80,6 +80,12 @@ ACCESS_TOKEN_URL  = 'https://api.twitter.com/oauth/access_token'
 AUTHORIZATION_URL = 'https://api.twitter.com/oauth/authorize'
 SIGNIN_URL        = 'https://api.twitter.com/oauth/authenticate'
 
+RATE_LIMIT_HEADERS = (
+  ('x-ratelimit-class', 'Class'),
+  ('x-ratelimit-remaining', 'Remaining'),
+  ('x-ratelimit-limit', 'Limit'),
+  ('x-ratelimit-reset', 'Reset'),
+)
 
 class TwitterError(Exception):
   '''Base class for Twitter errors'''
@@ -3668,6 +3674,7 @@ class Api(object):
     if encoded_post_data or no_cache or not self._cache or not self._cache_timeout:
       response = opener.open(url, encoded_post_data)
       url_data = self._DecompressGzippedResponse(response)
+      self._LogRateLimitDetails(url, response)
       opener.close()
     else:
       # Unique keys are a combination of the url and the oAuth Consumer Key
@@ -3684,6 +3691,7 @@ class Api(object):
         try:
           response = opener.open(url, encoded_post_data)
           url_data = self._DecompressGzippedResponse(response)
+          self._LogRateLimitDetails(url, response)
           self._cache.Set(key, url_data)
         except urllib2.HTTPError, e:
           print e
@@ -3693,6 +3701,18 @@ class Api(object):
 
     # Always return the latest version
     return url_data
+  
+  def _LogRateLimitDetails(self, url, response):
+    rate_limit_details = []
+    
+    for header, description in RATE_LIMIT_HEADERS:
+      value = response.headers.get(header, None)
+      if value:
+        rate_limit_details.append('    %s: %s' % (description, value))
+    
+    logging.info(
+        'Requested Twitter URL: %s, rate limit details:\n%s' %
+            (url, '\n'.join(rate_limit_details)))
 
 class _FileCacheError(Exception):
   '''Base exception class for FileCache related errors'''
