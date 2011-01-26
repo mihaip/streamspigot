@@ -4,16 +4,9 @@ import urllib
 from django.utils import simplejson
 from google.appengine.api import urlfetch
 
-import oauth2 as oauth
-import google_oauth_keys
+from oauth_keys import SERVICE_PROVIDERS
 
-READER_OAUTH_CLIENT = oauth.Client(
-    oauth.Consumer(
-        key=google_oauth_keys.CONSUMER_KEY,
-        secret=google_oauth_keys.CONSUMER_SECRET),
-    token=oauth.Token(
-        key=google_oauth_keys.READER_ACCESS_TOKEN_KEY,
-        secret=google_oauth_keys.READER_ACCESS_TOKEN_SECRET))
+READER_OAUTH_CLIENT = SERVICE_PROVIDERS['googlereader'].get_oauth_client()
 FEED_PLAYBACK_USER_ID = '07254461334580145372'
 
 class ItemRef(object):

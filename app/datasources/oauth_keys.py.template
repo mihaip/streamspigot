@@ -1,0 +1,73 @@
+# To services that have OAuth end-points, you'll have to copy this file to
+# oauth_keys.py, obtain consumer keys/secrets, replace the placeholders
+# below (search for ### markers) and then use get_oauth_access_token.py to
+# obtain access token. Once you have access tokens, you can test them with
+# test_oauth_access_token.py
+
+import urllib
+
+import oauth2 as oauth
+
+class ServiceProvider(object):
+    def __init__(self,
+            request_token_url,
+            access_token_url,
+            authorization_url,
+            consumer_key,
+            consumer_secret,
+            access_tokens,
+            test_url):
+        self.request_token_url = request_token_url
+        self.access_token_url = access_token_url
+        self.authorization_url = authorization_url
+        self.consumer = oauth.Consumer(key=consumer_key, secret=consumer_secret)
+        self.access_tokens = access_tokens
+        self.test_url = test_url
+        
+    def get_oauth_client(self, token_index=0):
+        return oauth.Client(self.consumer, self.access_tokens[token_index])
+
+class GoogleServiceProvider(ServiceProvider):
+    def __init__(self, scope, consumer_key, consumer_secret, access_tokens):
+        ServiceProvider.__init__(
+            self,
+            'https://www.google.com/accounts/OAuthGetRequestToken?scope=%s' % urllib.quote(scope),
+            'https://www.google.com/accounts/OAuthGetAccessToken',
+            'https://www.google.com/accounts/OAuthAuthorizeToken',
+            consumer_key,
+            consumer_secret,
+            access_tokens,
+            'http://www.google.com/reader/api/0/user-info')
+
+class TwitterServiceProvider(ServiceProvider):
+    def __init__(self, consumer_key, consumer_secret, access_tokens):
+        ServiceProvider.__init__(
+            self,
+            'https://api.twitter.com/oauth/request_token',
+            'https://api.twitter.com/oauth/access_token',
+            'https://api.twitter.com/oauth/authorize',
+            consumer_key,
+            consumer_secret,
+            access_tokens,
+            'http://api.twitter.com/1/account/verify_credentials.json')
+
+
+SERVICE_PROVIDERS = {
+  'googlereader': GoogleServiceProvider(
+      'http://www.google.com/reader/api/0/',
+      consumer_key='###CONSUMER_KEY###',
+      consumer_secret='###CONSUMER_SECRET###',
+      access_tokens=[
+        oauth.Token(
+            key='###ACCESS_TOKEN_KEY###',
+            secret='####ACCESS_TOKEN_SECRET###'),
+      ]),
+  'twitter': TwitterServiceProvider(
+      consumer_key='###CONSUMER_KEY###',
+      consumer_secret='###CONSUMER_SECRET###',
+      access_tokens=[
+          oauth.Token(
+              key='###ACCESS_TOKEN_KEY###',
+              secret='####ACCESS_TOKEN_SECRET###'),
+      ])
+}
