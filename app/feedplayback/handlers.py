@@ -1,6 +1,8 @@
 import datetime
 import logging
 
+from google.appengine.api import users
+
 from base.constants import CONSTANTS
 import base.handlers
 import data
@@ -17,6 +19,12 @@ class MainHandler(base.handlers.BaseHandler):
 
 class AdvanceHandler(base.handlers.BaseHandler):
     def get(self):
+        user = users.get_current_user()
+        
+        if not user or not users.is_current_user_admin():
+            self._write_error(401)
+            return
+
         frequency = self.request.get('frequency')
         frequency_modulo = int(self.request.get('frequency_modulo'))
         

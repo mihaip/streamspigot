@@ -22,14 +22,16 @@ class BaseHandler(webapp.RequestHandler):
         self.response.headers['Content-Type'] = '%s; charset=%s' % (content_type, charset)
         self.response.out.write(
             self._render_template(template_file_name, template_values))
+
+    def _write_error(self, error_code):
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.set_status(error_code)
     
     def _write_not_found(self):
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.set_status(404)
+        self._write_error(404)
 
     def _write_input_error(self, error_message):
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.set_status(400)
+        self._write_error(400)
         self.response.out.write('Input error: %s' % error_message)
         
     def _write_json(self, obj):
