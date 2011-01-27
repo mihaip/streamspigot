@@ -5,16 +5,35 @@ import logging
 import os
 import time
 import xml.sax.saxutils
+import zlib
 
 from google.appengine.api import urlfetch
 
 from base.constants import CONSTANTS
 from datasources import twitter, twitterappengine
+from datasources.oauth_keys import SERVICE_PROVIDERS
 
+TWITTER_SERVICE_PROVIDER = SERVICE_PROVIDERS['twitter']
 DIGEST_LENGTH = 60 * 60 * 24
 
-def _get_digest_twitter_api(max_cache_age):
-    api = twitter.Api(cache=twitterappengine.MemcacheCache())
+def _get_digest_twitter_api(max_cache_age, key):
+    # We don't actually need to use authentication for any of the data that
+    # we fetch, but then we end up with IP address-based rate limiting, which
+    # is depleted very quickly on App Engine (where there aren't a lot of 
+    # externally visible IP addresses). We therefore authenticate anyway, and we
+    # spread that load over a few accounts. To ensure consistency (since
+    # python-twitter incorporates the access token in the cache key), we always
+    # want to consistently use the same access token for the same request, hence
+    # the hashing based on the key that's passed in.
+    access_token = TWITTER_SERVICE_PROVIDER.access_tokens[
+        zlib.adler32(key) % len(TWITTER_SERVICE_PROVIDER.access_tokens)]
+
+    api = twitter.Api(
+        consumer_key=TWITTER_SERVICE_PROVIDER.consumer.key,
+        consumer_secret=TWITTER_SERVICE_PROVIDER.consumer.secret,
+        access_token_key=access_token.key,
+        access_token_secret=access_token.secret,
+        cache=twitterappengine.MemcacheCache())
     api.SetCacheTimeout(max_cache_age)
     api.SetUserAgent('StreamSpigot/%s (+%s)' % (
         os.environ.get('CURRENT_VERSION_ID', '1'),
@@ -196,7 +215,8 @@ class UserTwitterFetcher(TwitterFetcher):
 def get_digest_for_list(list_owner, list_id, link_formatter):
     digest_start_time, digest_end_time, max_cache_age = _get_digest_timestamps()
 
-    api = _get_digest_twitter_api(max_cache_age)
+    api = _get_digest_twitter_api(
+        max_cache_age, key='%s/%s' % (list_owner, list_id))
     
     fetcher = ListTwitterFetcher(api, list_owner, list_id, digest_start_time)
     statuses, had_error = fetcher.fetch()
@@ -210,9 +230,8 @@ def get_digest_for_usernames(usernames, link_formatter):
     statuses = []
     error_usernames = []
 
-    api = _get_digest_twitter_api(max_cache_age)
-  
     for username in usernames:
+        api = _get_digest_twitter_api(max_cache_age, key=username)
         fetcher = UserTwitterFetcher(api, username)
         user_statuses, had_error = fetcher.fetch()
         if had_error:
@@ -224,6 +243,6 @@ def get_digest_for_usernames(usernames, link_formatter):
         statuses, digest_start_time, digest_end_time, link_formatter, error_usernames)
 
 def get_lists(username):
-    api = _get_digest_twitter_api(3600)
+    api = _get_digest_twitter_api(3600, key=username)
     return api.GetLists(username)
     
