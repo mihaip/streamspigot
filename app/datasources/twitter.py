@@ -3643,7 +3643,7 @@ class Api(object):
       use_gzip = self._use_gzip
     else:
       use_gzip = use_gzip_compression
-
+      
     # Set up compression
     if use_gzip and not post_data:
       opener.addheaders.append(('Accept-Encoding', 'gzip'))
@@ -3661,13 +3661,16 @@ class Api(object):
 
       headers = req.to_header()
 
+      cache_key = url = self._BuildUrl(url, extra_params=extra_params)
+      cache_key += '=%s=%s' % (self._consumer_key, self._access_token_key)
+
       if http_method == "POST":
         encoded_post_data = req.to_postdata()
       else:
         encoded_post_data = None
         url = req.to_url()
     else:
-      url = self._BuildUrl(url, extra_params=extra_params)
+      cache_key = url = self._BuildUrl(url, extra_params=extra_params)
       encoded_post_data = self._EncodePostData(post_data)
 
     # Open and return the URL immediately if we're not going to cache
@@ -3677,14 +3680,8 @@ class Api(object):
       self._LogRateLimitDetails(url, response)
       opener.close()
     else:
-      # Unique keys are a combination of the url and the oAuth Consumer Key
-      if self._consumer_key:
-        key = self._consumer_key + ':' + url
-      else:
-        key = url
-
       # See if it has been cached before
-      last_cached = self._cache.GetCachedTime(key)
+      last_cached = self._cache.GetCachedTime(cache_key)
 
       # If the cached version is outdated then fetch another and store it
       if not last_cached or time.time() >= last_cached + self._cache_timeout:
@@ -3692,12 +3689,12 @@ class Api(object):
           response = opener.open(url, encoded_post_data)
           url_data = self._DecompressGzippedResponse(response)
           self._LogRateLimitDetails(url, response)
-          self._cache.Set(key, url_data)
+          self._cache.Set(cache_key, url_data)
         except urllib2.HTTPError, e:
           print e
         opener.close()
       else:
-        url_data = self._cache.Get(key)
+        url_data = self._cache.Get(cache_key)
 
     # Always return the latest version
     return url_data
