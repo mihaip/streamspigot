@@ -33,7 +33,6 @@ def main():
             ('/feed-playback/feed-info', feedplayback.handlers.FeedInfoHandler),
             ('/feed-playback/create', feedplayback.handlers.CreateHandler),
             ('/feed-playback/subscription/(.*)', feedplayback.handlers.SubscriptionHandler),
-            ('/feed-playback/advance', feedplayback.handlers.AdvanceHandler),
 
             ('/', MainHandler),
         ],
