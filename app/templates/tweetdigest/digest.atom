@@ -16,6 +16,9 @@
     <content type="xhtml" xml:base="http://twitter.com/">
       <div xmlns="http://www.w3.org/1999/xhtml">
         {{ digest_contents }}
+        {% if digest_errors %}
+          <p style="padding:.5em;background:#fdd;">{{ digest_errors }}</p>
+        {% endif %}        
       </div>
     </content>
   </entry>
