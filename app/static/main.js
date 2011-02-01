@@ -4,6 +4,7 @@ goog.require('goog.dom');
 goog.require('goog.dom.classes');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
+goog.require('goog.events.KeyCodes');
 goog.require('goog.net.EventType');
 goog.require('goog.net.XhrIo');
 goog.require('goog.string');
@@ -71,21 +72,16 @@ streamspigot.tweetdigest.initUsernames = function() {
 streamspigot.tweetdigest.initUsernameRow = function(rowNode) {
   var inputNode = rowNode.getElementsByTagName('input')[0];
   inputNode.value = '';
-  inputNode.onkeyup = function(ev) {
-    var e = ev || window.event;
-    
-    // Enter should add a new row
-    if (e.keyCode == 13) {
-      var inputNode = ev.target || ev.srcElement;
-      if (inputNode) {
-        var rowNode = inputNode.parentNode.parentNode;
-        streamspigot.tweetdigest.addUsernameRow(rowNode);
-        return;
-      }
-    }  
-    
-    streamspigot.tweetdigest.updateLinks();
-  };
+  goog.events.listen(
+      inputNode,
+      goog.events.EventType.KEYUP,
+      function(event) {
+        if (event.keyCode == goog.events.KeyCodes.ENTER) {
+          streamspigot.tweetdigest.addUsernameRow(rowNode);
+        } else {
+          streamspigot.tweetdigest.updateLinks();
+        }
+      });
   
   var buttonNodes = rowNode.getElementsByTagName('button');
   
