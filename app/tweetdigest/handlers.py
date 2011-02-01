@@ -1,4 +1,5 @@
 import os
+import re
 
 from base.constants import CONSTANTS
 import base.handlers
@@ -43,7 +44,7 @@ class DigestHandler(base.handlers.BaseHandler):
         list_id = None
         
         if self.request.get('usernames'):
-            usernames = self.request.get('usernames').strip().split(' ')
+            usernames = re.split('[\\s,]+', self.request.get('usernames'))
             usernames = [u.strip().lower() for u in usernames if u.strip()]
         if self.request.get('list'):
             list = self.request.get('list').strip().lower()
