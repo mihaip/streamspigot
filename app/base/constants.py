@@ -1,3 +1,5 @@
+import os
+
 class _ConstantsDict(dict):
     def __getattr__(self, m):
         return self[m]
@@ -16,4 +18,5 @@ CONSTANTS = _ConstantsDict(
     
     APP_NAME='Stream Spigot',
     APP_URL='http://www.streamspigot.com',
+    IS_DEV_SERVER=os.environ.get('HTTP_HOST', '').startswith('localhost'),
 )
