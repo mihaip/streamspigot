@@ -26,9 +26,10 @@ handlers:
   script: cron.py
   login: admin
 
+- url: /_ereporter.*
+  script: $PYTHON_LIB/google/appengine/ext/ereporter/report_generator.py
+  login: admin
+
 - url: .*
   script: main.py
 
-- url: /_ereporter/.*
-  script: $PYTHON_LIB/google/appengine/ext/ereporter/report_generator.py
-  login: admin
