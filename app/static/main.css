@@ -179,16 +179,46 @@ a, .link {
 }
 
 .tool {
+  clear: both;
   display: block;
   text-decoration: none;
-  float: left;
-  width: 200px;
-  height: 9ex;
+  width: 360px;
   border-radius: 10px;
   padding: 10px;
   margin: 10px;
   background: #f6f6f6;
   text-align: center;
+  position: relative;
+}
+
+.tool:before {
+  display: block;
+  width: 10px;
+  height: 20px;
+  background: #f6f6f6;
+  content: " ";
+  position: absolute;
+  top: -20px;
+}
+
+.tool:first-child:before {
+  display: none;
+}
+
+.tool.even {
+  float: left;
+}
+
+.tool.even:before {
+  right: 60px;
+}
+
+.tool.odd {
+  float: right;
+}
+
+.tool.odd:before {
+  left: 40px;
 }
 
 .tool:hover {

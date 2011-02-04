@@ -12,19 +12,24 @@
 
 {% block body %}
 <div id="tools">
-  <a href="/tweet-digest/" class="tool">
+  <a href="/tweet-digest/" class="tool even">
     <h2>Tweet Digest</h2>
     <p>Read Tweets in daily batches</p>
   </a>
   
-  <a href="/feed-playback/" class="tool">
+  <a href="/feed-playback/" class="tool odd">
     <h2>Feed Playback</h2>
-    <p>Start reading a blog from<br>the very beginning</p>
+    <p>Start reading a blog from the very beginning</p>
+  </a>
+
+  <a href="#" class="tool coming-soon even">
+    <h2>Feed Filter</h2>
+    <p>Posts matching keywords from a feed (coming soon)</p>
   </a>
   
-  <a href="#" class="tool coming-soon">
+  <a href="#" class="tool coming-soon odd">
     <h2>"Best of" Feed</h2>
-    <p>Only the top posts in a feed (coming soon)</p>
+    <p>The top posts in a feed, once a day/week (coming soon)</p>
   </a>
 </div>
 {% endblock %}
