@@ -196,9 +196,21 @@ streamspigot.feedplayback.init = function() {
       goog.events.EventType.CLICK,
       goog.partial(goog.dom.classes.remove,
           goog.dom.$('feedplayback-error-details'), 'hidden'));
+          
+  var sampleLinkNodes = goog.dom.$$('a', 'sample-feed');
+  for (var i = 0, sampleLinkNode; sampleLinkNode = sampleLinkNodes[i]; i++) {
+    goog.events.listen(
+        sampleLinkNode,
+        goog.events.EventType.CLICK,
+        goog.partial(
+            streamspigot.feedplayback.preFillForm, sampleLinkNode.href));
+  }
+  
 };
 
-streamspigot.feedplayback.preFillForm = function(url) {
+streamspigot.feedplayback.preFillForm = function(url, event) {
+  event.preventDefault();
+  event.stopPropagation();
   goog.dom.$('feedplayback-url').value = url;
   streamspigot.feedplayback.fetchFeedInfo();
 };
