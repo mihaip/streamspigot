@@ -332,14 +332,24 @@ streamspigot.feedplayback.setup = function(event) {
 streamspigot.util.fetchJson = function(url, jsonCallback, errorCallback, opt_postData) {
   var xhr = new goog.net.XhrIo();
   
+  function handleError() {
+    errorCallback(xhr.getStatus(), xhr.getResponseText());
+  }
+  
   goog.events.listen(xhr, goog.net.EventType.COMPLETE, function() {
     if (xhr.isSuccess()) {
+      try {
+        var json = xhr.getResponseJson();
+      } catch (err) {
+        handleError();
+        return;
+      }
+
       // Invoke callback in a timeout to avoid Closure's exception-catching
       // logic (we want exceptions to end up in the console).
-      setTimeout(goog.partial(jsonCallback, xhr.getResponseJson()), 0);
+      setTimeout(goog.partial(jsonCallback, json), 0);
     } else {
-      setTimeout(goog.partial(
-          errorCallback, xhr.getStatus(), xhr.getResponseText()), 0);
+      setTimeout(handleError, 0);
     }
     xhr.dispose();
   });
