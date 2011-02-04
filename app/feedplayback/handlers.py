@@ -54,7 +54,7 @@ class CreateHandler(base.handlers.BaseHandler):
 
         subscription.create_reader_stream(
             intro_html_url=subscription_html_url,
-            intro_title='Feed playback for "%s"' % feed_title,
+            intro_title='Feed playback for "%s" has begun' % feed_title,
             intro_body=self._render_template(
                 'feedplayback/intro-body.snippet', {
                   'subscription_html_url': subscription_html_url,

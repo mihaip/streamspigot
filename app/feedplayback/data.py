@@ -117,6 +117,8 @@ class Subscription(object):
         subscription.put()
 
     def create_reader_stream(self, intro_html_url, intro_title, intro_body):
+        googlereader.set_stream_public(self.reader_stream_id, is_public=True)
+        self.advance()
         googlereader.create_note(
             title=intro_title,
             body=intro_body,
@@ -125,8 +127,6 @@ class Subscription(object):
             source_title=CONSTANTS.APP_NAME,
             share=False,
             additional_stream_ids=[self.reader_stream_id])
-        googlereader.set_stream_public(self.reader_stream_id, is_public=True)
-        self.advance()
         
     def advance(self):
         feed_info = get_feed_info_from_feed_url(self.feed_url)
