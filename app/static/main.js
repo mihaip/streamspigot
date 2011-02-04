@@ -230,7 +230,12 @@ streamspigot.feedplayback.fetchFeedInfo = function() {
   goog.dom.classes.add(goog.dom.$('error'), 'hidden');
 
   var urlNode = goog.dom.$('feedplayback-url');
-  var url = urlNode.value;
+  var url = goog.string.trim(urlNode.value);
+  
+  if (url == streamspigot.feedplayback.previousFeedInfoUrl) {
+    return;
+  }
+  streamspigot.feedplayback.previousFeedInfoUrl = url;
   
   var statusNode = goog.dom.$('feedplayback-status');
   streamspigot.feedplayback.setEnabledState(false);
