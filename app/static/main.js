@@ -233,8 +233,8 @@ streamspigot.feedplayback.setEnabledState = function(isEnabled) {
 };
 
 streamspigot.feedplayback.fetchFeedInfo = function() {
-  goog.dom.classes.add(goog.dom.$('result'), 'hidden');
-  goog.dom.classes.add(goog.dom.$('error'), 'hidden');
+  goog.dom.classes.add(goog.dom.$('feedplayback-result'), 'hidden');
+  goog.dom.classes.add(goog.dom.$('feedplayback-error'), 'hidden');
 
   var urlNode = goog.dom.$('feedplayback-url');
   var url = goog.string.trim(urlNode.value);
@@ -319,8 +319,8 @@ streamspigot.feedplayback.setup = function(event) {
       '/feed-playback/create',
       function(data) {
           goog.dom.$('feedplayback-setup').disabled = false;
-          goog.dom.classes.remove(goog.dom.$('result'), 'hidden');
-          goog.dom.classes.add(goog.dom.$('error'), 'hidden');
+          goog.dom.classes.remove(goog.dom.$('feedplayback-result'), 'hidden');
+          goog.dom.classes.add(goog.dom.$('feedplayback-error'), 'hidden');
           
           var feedUrlNode = goog.dom.$('feedplayback-subscription-feed-url');
           feedUrlNode.href = data.feedUrl;
@@ -330,8 +330,8 @@ streamspigot.feedplayback.setup = function(event) {
       function(statusCode, responseText) {
         delete streamspigot.feedplayback.previousSetupParams;
         goog.dom.$('feedplayback-setup').disabled = false;
-        goog.dom.classes.add(goog.dom.$('result'), 'hidden');
-        goog.dom.classes.remove(goog.dom.$('error'), 'hidden');
+        goog.dom.classes.add(goog.dom.$('feedplayback-result'), 'hidden');
+        goog.dom.classes.remove(goog.dom.$('feedplayback-error'), 'hidden');
         
         goog.dom.$('feedplayback-error-details-status').innerHTML =
             goog.string.htmlEscape(statusCode);
@@ -361,7 +361,7 @@ streamspigot.util.fetchJson = function(url, jsonCallback, errorCallback, opt_pos
       // logic (we want exceptions to end up in the console).
       setTimeout(goog.partial(jsonCallback, json), 0);
     } else {
-      setTimeout(handleError, 0);
+      handleError();
     }
     xhr.dispose();
   });

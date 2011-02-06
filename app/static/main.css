@@ -256,6 +256,10 @@ a, .link {
   text-align: right;
 }
 
+#feedplayback-result p {
+  text-align: center;
+}
+
 #feedplayback-url,
 #feedplayback-start-date {
   margin: 0;
@@ -284,6 +288,6 @@ a, .link {
 }
 
 #feedplayback-disabled-symbol,
-#error .symbol {
+#feedplayback-error .symbol {
   color: red;
 }
