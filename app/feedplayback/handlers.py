@@ -73,8 +73,11 @@ class FeedInfoHandler(base.handlers.BaseHandler):
             self._write_input_error('Missing "url" parameter')
             return
     
-        self._write_json(data.get_feed_info(url).as_json_dict())
-        
+        feed_info = data.get_feed_info(url)
+        if feed_info:
+            self._write_json(feed_info.as_json_dict())
+        else:
+            self._write_input_error('Invalid "url" parameter')
 
 class SubscriptionHandler(base.handlers.BaseHandler):
     def get(self, subscription_id):
