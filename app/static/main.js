@@ -205,12 +205,19 @@ streamspigot.feedplayback.init = function() {
         goog.partial(
             streamspigot.feedplayback.preFillForm, sampleLinkNode.href));
   }
-  
+
+  // TODO(mihap): switch to goog.uri.util once we switch to Plovr
+  var match = /\?url=([^&]+)&?/.exec(location.search)
+  if (match && match[1]) {
+    streamspigot.feedplayback.preFillForm(match[1]);
+  }
 };
 
-streamspigot.feedplayback.preFillForm = function(url, event) {
-  event.preventDefault();
-  event.stopPropagation();
+streamspigot.feedplayback.preFillForm = function(url, opt_event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
   goog.dom.$('feedplayback-url').value = url;
   streamspigot.feedplayback.fetchFeedInfo();
 };
