@@ -54,7 +54,7 @@ class DigestHandler(base.handlers.BaseHandler):
             list_owner, list_id = list.split('/', 1)
         output_template = DigestHandler.OUTPUT_TEMPLATES.get(
             self.request.get('output'),
-            DigestHandler.OUTPUT_TEMPLATES['html'])
+            DigestHandler.OUTPUT_TEMPLATES['atom'])
         
         if not usernames and not list_owner:
             self._write_input_error(
