@@ -274,7 +274,9 @@ a, .link {
   padding-top: 0;
 }
 
-#feedplayback-status {
+#feedplayback-status,
+#feedplayback-first-item,
+#feedplayback-first-item a {
   color: #4d5c7f;  
 }
 

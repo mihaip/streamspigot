@@ -14,6 +14,18 @@ class ItemRef(object):
         self.id = id
         self.timestamp_usec = timestamp_usec
 
+# TODO(mihaip): add more fields as they become necessary        
+class ItemContents(object):
+    def __init__(self, title_html, url):
+        self.title_html = title_html
+        self.url = url
+
+    def as_json_dict(self):
+        return {
+            'titleHtml': self.title_html,
+            'url': self.url,
+        }
+
 def lookup_feed_url(html_or_feed_url):
     json = _fetch_api_json('feed-finder', {'q': html_or_feed_url})
     if json and 'feed' in json and len(json['feed']) and 'href' in json['feed'][0]:
@@ -24,6 +36,15 @@ def lookup_feed_title(feed_url):
     json = _fetch_api_json('stream/contents/feed/%s' % urllib.quote(feed_url))
     if json and 'title' in json:
         return json['title']
+    return None
+
+def get_item_contents(item_id):
+    json = _post_to_api('stream/items/contents', {'i': item_id})
+    if json and len(json.get('items', [])) > 0:
+        item_json = json['items'][0]
+        title = item_json.get('title', None)
+        url = len(item_json.get('alternate', [])) > 0 and item_json['alternate'][0]['href'] or None
+        return ItemContents(title, url)
     return None
 
 def get_feed_item_refs(feed_url, oldest_timestamp_usec=None):
@@ -112,6 +133,7 @@ def _post_to_api(path, params):
     token = _get_post_token()
     url = 'http://www.google.com/reader/api/0/%s?client=streamspigot' % path
     params['T'] = token
+    logging.info('Google Reader API POST request: %s %s' % (url, str(params)))
     
     resp, content = READER_OAUTH_CLIENT.request(
         url, 'POST', body=urllib.urlencode(params, doseq=True))
@@ -119,6 +141,13 @@ def _post_to_api(path, params):
     if resp.status != 200:
       logging.warning('POST response: %s\n%s\nto request:%s %s' % (
           str(resp), content, path, str(params)))
+      return None
+          
+    try:
+        return simplejson.loads(content)
+    except ValueError, err:
+        logging.warning('Could not parse response as JSON: %s' % content)
+        return None
     
 def _fetch_api_json(path, extra_params={}):
     url = 'http://www.google.com/reader/api/0/' \
@@ -130,6 +159,10 @@ def _fetch_api_json(path, extra_params={}):
         method=urlfetch.GET,
         deadline=10)
     if response.content:
-        return simplejson.loads(response.content)
+        try:
+            return simplejson.loads(response.content)
+        except ValueError, err:
+            logging.warning('Could not parse response as JSON: %s' % response.content)
+            
     return None
     

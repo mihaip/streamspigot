@@ -186,15 +186,25 @@ def get_subscriptions_with_frequency_and_modulo(frequency, frequency_modulo):
         subscriptions.append(Subscription.from_datastore(result))
     return subscriptions
 
+def _get_nearest_item_index(feed_info, date):
+    timestamp_usec = time.mktime(date.utctimetuple()) * 1000000
+    index = 0
+    for item_timestamp_usec in feed_info.item_timestamps_usec:
+        if item_timestamp_usec >= timestamp_usec:
+            break
+        index += 1
+    return index
+
+def get_start_item_contents(feed_url, start_date):
+    feed_info = get_feed_info_from_feed_url(feed_url)
+    item_index = _get_nearest_item_index(feed_info, start_date)
+    item_id = feed_info.item_ids[item_index]
+    return googlereader.get_item_contents(item_id)
+
 def create_subscription(feed_url, start_date, frequency):
     feed_info = get_feed_info_from_feed_url(feed_url)
     
-    start_timestamp_usec = time.mktime(start_date.utctimetuple()) * 1000000
-    start_position = 0
-    for item_timestamp_usec in feed_info.item_timestamps_usec:
-        if item_timestamp_usec >= start_timestamp_usec:
-            break
-        start_position += 1
+    start_position = _get_nearest_item_index(feed_info, start_date)
 
     feed_title = feed_info.title
     # Compact encoding of a UUID

@@ -35,6 +35,16 @@ class AdvanceHandler(base.handlers.BaseHandler):
         logging.info('Advanced %d subscriptions' % len(subscriptions))
         self.response.out.write('OK')
 
+class PreviewHandler(base.handlers.BaseHandler):
+    def get(self):
+        url = self.request.get('url')
+        start_date = datetime.datetime.strptime(
+            self.request.get('start-date'), '%Y-%m-%d')
+    
+        self._write_json({
+            'firstItem': data.get_start_item_contents(url, start_date).as_json_dict(),
+        })
+    
 class CreateHandler(base.handlers.BaseHandler):
     def post(self):
         url = self.request.get('url')

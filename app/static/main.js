@@ -197,6 +197,11 @@ streamspigot.feedplayback.init = function() {
       goog.partial(goog.dom.classes.remove,
           goog.dom.$('feedplayback-error-details'), 'hidden'));
           
+  goog.events.listen(
+      goog.dom.$('feedplayback-start-date'),
+      'input',
+      streamspigot.util.throttle(streamspigot.feedplayback.updatePreview, 500));          
+          
   var sampleLinkNodes = goog.dom.$$('a', 'sample-feed');
   for (var i = 0, sampleLinkNode; sampleLinkNode = sampleLinkNodes[i]; i++) {
     goog.events.listen(
@@ -252,7 +257,7 @@ streamspigot.feedplayback.fetchFeedInfo = function() {
   var url = urlNode.value;
   streamspigot.util.fetchJson(
       '/feed-playback/feed-info?url=' + encodeURIComponent(url),
-      function (info) {
+      function(info) {
         var statusHtml = '';
         var isEnabled = false;
         
@@ -276,6 +281,7 @@ streamspigot.feedplayback.fetchFeedInfo = function() {
             goog.dom.$('feedplayback-start-date').value = oldestItemDateValue;
                 
             isEnabled = true;
+            streamspigot.feedplayback.updatePreview();
           } else {
             statusHtml += '<br>No feed items found.';
           }
@@ -288,6 +294,24 @@ streamspigot.feedplayback.fetchFeedInfo = function() {
       },
       function() {
         statusNode.innerHTML = 'Error: could not look up URL.';
+      });
+};
+
+streamspigot.feedplayback.updatePreview = function() {
+  var feedUrl = goog.dom.$('feedplayback-feed-url').value;
+  var startDate = goog.dom.$('feedplayback-start-date').value;
+  
+    streamspigot.util.fetchJson(
+      '/feed-playback/preview?url=' + encodeURIComponent(feedUrl) +
+          '&start-date=' + encodeURIComponent(startDate),
+      function(preview) {
+          if (preview && preview.firstItem) {
+            goog.dom.classes.remove(goog.dom.$('feedplayback-first-item'), 'hidden');
+            goog.dom.$('feedplayback-first-item-title').innerHTML = preview.firstItem.titleHtml;
+            goog.dom.$('feedplayback-first-item-title').href = preview.firstItem.url;
+          } else {
+            goog.dom.classes.add(goog.dom.$('feedplayback-first-item'), 'hidden');
+          }
       });
 };
 
