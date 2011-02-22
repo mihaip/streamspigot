@@ -129,6 +129,19 @@ def _get_post_token():
         'http://www.google.com/reader/api/0/token', 'GET')
     return content.strip()
 
+def _encode_params(params):
+  def encode(s):
+    return isinstance(s, unicode) and s.encode('utf-8') or s
+
+  encoded_params = {}
+  for key, value in params.items():
+    if isinstance(value, list):
+      value = [encode(v) for v in value]
+    else:
+      value = encode(value)
+    encoded_params[encode(key)] = value
+  return urllib.urlencode(encoded_params, doseq=True)
+
 def _post_to_api(path, params):
     token = _get_post_token()
     url = 'http://www.google.com/reader/api/0/%s?client=streamspigot' % path
@@ -136,7 +149,7 @@ def _post_to_api(path, params):
     logging.info('Google Reader API POST request: %s %s' % (url, str(params)))
     
     resp, content = READER_OAUTH_CLIENT.request(
-        url, 'POST', body=urllib.urlencode(params, doseq=True))
+        url, 'POST', body=_encode_params(params))
         
     if resp.status != 200:
       logging.warning('POST response: %s\n%s\nto request:%s %s' % (
@@ -152,7 +165,7 @@ def _post_to_api(path, params):
 def _fetch_api_json(path, extra_params={}):
     url = 'http://www.google.com/reader/api/0/' \
         '%s?output=json&client=streamspigot&%s' % (
-            path, urllib.urlencode(extra_params, doseq=True))
+            path, _encode_params(extra_params))
     logging.info('Google Reader API request: %s' % url)
     response = urlfetch.fetch(
         url=url,

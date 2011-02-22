@@ -147,10 +147,10 @@ class Subscription(object):
         self.save()
         
     def get_subscription_feed_url(self):
-        return 'http://www.google.com/reader/public/atom/%s' % urllib.quote(self.reader_stream_id)
+        return 'http://www.google.com/reader/public/atom/%s' % urllib.quote(self.reader_stream_id.encode('utf-8'))
     
     def get_subscription_reader_url(self):
-        return 'http://www.google.com/reader/view/%s' % urllib.quote(self.reader_stream_id)
+        return 'http://www.google.com/reader/view/%s' % urllib.quote(self.reader_stream_id.encode('utf-8'))
     
     def as_json_dict(self):
         return {

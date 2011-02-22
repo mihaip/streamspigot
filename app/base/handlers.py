@@ -11,7 +11,11 @@ class BaseHandler(webapp.RequestHandler):
         template_path = os.path.join(
             os.path.dirname(__file__), '..', 'templates', template_file_name)
         template_values.update(base.constants.CONSTANTS)
-        return template.render(template_path, template_values)
+        rendered_template = template.render(template_path, template_values)
+        # Django templates are returned as utf-8 encoded by default
+        if not isinstance(rendered_template, unicode):
+          rendered_template = unicode(rendered_template, 'utf-8')
+        return rendered_template
 
     def _write_template(
             self,
