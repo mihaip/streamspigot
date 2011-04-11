@@ -9,12 +9,12 @@
   fashion. Just pick the Twitter list or usernames you'd like to generate a
   digest for, and you will see all updates made by them during the past full
   day (GMT). At midnight, a new set of updates rolls over.</p>
-  
-  <p>The digest is available as both a webpage that you can 
+
+  <p>The digest is available as both a webpage that you can
   visit periodically, or as an Atom feed that you subscribe to get updates
   (grouped as one feed item) in your
   <a href="http://www.google.com/reader/">favorite feed reader</a>.</p>
-  
+
   <p>To get started, either choose a
   <a href="http://support.twitter.com/articles/247929">Twitter list</a> or
   enter one or more Twitter usernames below (one username per line) and use
@@ -23,7 +23,7 @@
 
 {% block body %}
 <div class="symbol">&#8675;</div>
-  
+
 <table id="tweetdigest-setup-table">
   <td id="tweetdigest-list-column">
     <fieldset>
@@ -53,9 +53,9 @@
   <div class="symbol">&#8675;</div>
 
   <div class="inner">
-    Your digest is available as both 
+    Your digest is available as both
     <a href="" id="digest-html-link" target="_blank">a web page</a>
-    and as 
+    and as
     <a href="" id="digest-feed-link" target="_blank" class="feed-link">a feed</a>.
   </div>
 </div>
@@ -65,6 +65,13 @@
 
   <div class="inner">
     You must select a Twitter list or at least one Twitter user to create a digest for.
+  </div>
+</div>
+
+<div id="digest-error" class="hidden">
+  <div class="symbol">&empty;</div>
+
+  <div class="inner" id="digest-error-message">
   </div>
 </div>
 {% endblock %}

@@ -13,18 +13,24 @@ goog.provide('streamspigot.tweetdigest');
 goog.provide('streamspigot.feedplayback');
 goog.provide('streamspigot.util');
 
+streamspigot.tweetdigest.TWITTER_USERNAME_RE = /^[a-zA-Z0-9_]{1,15}$/;
+
 streamspigot.tweetdigest.init = function() {
   streamspigot.tweetdigest.initList();
   streamspigot.tweetdigest.initUsernames();
-  
+
   streamspigot.tweetdigest.updateLinks();
+};
+
+streamspigot.tweetdigest.isValidUsername = function(username) {
+  return streamspigot.tweetdigest.TWITTER_USERNAME_RE.test(username);
 };
 
 streamspigot.tweetdigest.initList = function() {
   var listOwnerNode = goog.dom.$('twitter-list-owner');
   listOwnerNode.onkeyup = streamspigot.util.throttle(
       streamspigot.tweetdigest.fetchTwitterLists, 500);
-  
+
   var listsNode = goog.dom.$('twitter-lists');
   listsNode.onchange = streamspigot.tweetdigest.updateLinks;
 };
@@ -37,17 +43,24 @@ streamspigot.tweetdigest.fetchTwitterLists = function() {
   }
   listsNode.disabled = true;
   var listOwner = listOwnerNode.value;
-  
+
   if (!listOwner) {
     streamspigot.tweetdigest.updateLinks();
     return;
   };
+
+  listOwner = goog.string.trim(listOwner);
+  if (!streamspigot.tweetdigest.isValidUsername(listOwner)) {
+    streamspigot.tweetdigest.updateLinks();
+    return;
+  }
+
   listsNode.options[0].innerHTML = 'Loading...';
-  
+
   streamspigot.util.fetchJson(
       '/tweet-digest/lists?username=' + encodeURIComponent(listOwner),
       function (lists) {
-        listsNode.options[0].innerHTML = 'Lists';      
+        listsNode.options[0].innerHTML = 'Lists';
         for (var i = 0; i < lists.length; i++) {
           var listOptionNode = document.createElement('option');
           listOptionNode.value = lists[i];
@@ -59,7 +72,7 @@ streamspigot.tweetdigest.fetchTwitterLists = function() {
         }
       },
       function() {
-        listsNode.options[0].innerHTML = 'Error';              
+        listsNode.options[0].innerHTML = 'Error';
       });
 };
 
@@ -82,24 +95,24 @@ streamspigot.tweetdigest.initUsernameRow = function(rowNode) {
           streamspigot.tweetdigest.updateLinks();
         }
       });
-  
+
   var buttonNodes = rowNode.getElementsByTagName('button');
-  
+
   buttonNodes[0].disabled = buttonNodes[1].disabled = false;
-  
+
   buttonNodes[0].onclick = function() {
     streamspigot.tweetdigest.removeUsernameRow(rowNode);
   };
   buttonNodes[1].onclick = function() {
     streamspigot.tweetdigest.addUsernameRow(rowNode);
   };
-  
+
   // Prevent focusing of buttons (to remove dotted border outline, which
   // can't seem to be removed with just CSS)
   buttonNodes[0].onfocus = function() {
     buttonNodes[0].blur();
   }
-  
+
   buttonNodes[1].onfocus = function() {
     buttonNodes[1].blur();
   };
@@ -107,57 +120,76 @@ streamspigot.tweetdigest.initUsernameRow = function(rowNode) {
 
 streamspigot.tweetdigest.removeUsernameRow = function(currentRow) {
   currentRow.parentNode.removeChild(currentRow);
-  
+
   streamspigot.tweetdigest.updateLinks();
 };
 
 streamspigot.tweetdigest.addUsernameRow = function(currentRow) {
   var newRow = currentRow.cloneNode(true);
   streamspigot.tweetdigest.initUsernameRow(newRow);
-  
+
   currentRow.parentNode.insertBefore(newRow, currentRow.nextSibling);
-  
+
   newRow.getElementsByTagName('input')[0].focus();
-  
+
   streamspigot.tweetdigest.updateLinks();
 };
 
 streamspigot.tweetdigest.updateLinks = function() {
+  var errorUsernames = [];
+
   // See if a list was selected
   var listOwnerNode = goog.dom.$('twitter-list-owner');
-  var listOwner = listOwnerNode.value;
+  var listOwner = goog.string.trim(listOwnerNode.value);
   var listId = null;
   if (listOwner) {
     var listsNode = goog.dom.$('twitter-lists');
     if (listsNode.selectedIndex > 0) {
       listId = listsNode.options[listsNode.selectedIndex].value;
     }
+    if (!streamspigot.tweetdigest.isValidUsername(listOwner)) {
+      errorUsernames.push(listOwner);
+    }
   }
-  
+
   // Collect all usernames
   var usernamesNode = goog.dom.$('usernames');
   var usernameNodes = usernamesNode.getElementsByTagName('input');
   var usernames = [];
-  
+
   for (var i = 0, usernameNode; usernameNode = usernameNodes[i]; i++) {
-    var username = usernameNode.value;
-    username = username.replace(/^\s*/, '');
-    username = username.replace(/\s*$/, '');
-    
+    var username = goog.string.trim(usernameNode.value);
+
     if (username) {
       usernames.push(username);
+      if (!streamspigot.tweetdigest.isValidUsername(username)) {
+        errorUsernames.push(username);
+      }
     }
   }
-  
+
   // Update links
   var linksNode = goog.dom.$('digest-links');
   var emptyNode = goog.dom.$('digest-empty');
-  if ((listOwner && listId) || usernames.length) {
+  var errorNode = goog.dom.$('digest-error');
+  if (errorUsernames.length) {
+    emptyNode.className = 'hidden';
+    linksNode.className = 'hidden';
+    errorNode.className = '';
+
+    goog.dom.$('digest-error-message').innerHTML =
+        '"' + goog.string.htmlEscape(errorUsernames.join('", "')) + '" ' +
+            (errorUsernames.length == 1 ? 'is an' : 'are') +
+            ' invalid Twitter username' +
+            (errorUsernames.length == 1 ? '' : 's') +
+            '.';
+  } else if ((listOwner && listId) || usernames.length) {
     emptyNode.className = 'hidden';
     linksNode.className = '';
-    
+    errorNode.className = 'hidden';
+
     var baseUrl = 'digest?';
-    
+
     if (listOwner && listId) {
       baseUrl += 'list=' + listOwner + '/' + listId;
     } else {
@@ -171,8 +203,9 @@ streamspigot.tweetdigest.updateLinks = function() {
   } else {
     emptyNode.className = '';
     linksNode.className = 'hidden';
+    errorNode.className = 'hidden';
   }
-  
+
   // Update button state (so if there's only one username, it can't be
   // removed)
   var buttons = usernamesNode.getElementsByTagName('button');
@@ -190,18 +223,18 @@ streamspigot.feedplayback.init = function() {
       goog.dom.$('feedplayback-setup-form'),
       goog.events.EventType.SUBMIT,
       streamspigot.feedplayback.setup);
-      
+
   goog.events.listen(
       goog.dom.$('feedplayback-error-details-link'),
       goog.events.EventType.CLICK,
       goog.partial(goog.dom.classes.remove,
           goog.dom.$('feedplayback-error-details'), 'hidden'));
-          
+
   goog.events.listen(
       goog.dom.$('feedplayback-start-date'),
       'input',
-      streamspigot.util.throttle(streamspigot.feedplayback.updatePreview, 500));          
-          
+      streamspigot.util.throttle(streamspigot.feedplayback.updatePreview, 500));
+
   var sampleLinkNodes = goog.dom.$$('a', 'sample-feed');
   for (var i = 0, sampleLinkNode; sampleLinkNode = sampleLinkNodes[i]; i++) {
     goog.events.listen(
@@ -231,7 +264,7 @@ streamspigot.feedplayback.setEnabledState = function(isEnabled) {
   var tableNode = goog.dom.$('feedplayback-setup-table');
   goog.dom.classes.enable(tableNode, 'enabled', isEnabled);
   goog.dom.classes.enable(tableNode, 'disabled', !isEnabled);
-  
+
   goog.dom.$('feedplayback-start-date').disabled = !isEnabled;
   goog.dom.$('feedplayback-frequency').disabled = !isEnabled;
   goog.dom.$('feedplayback-setup').disabled = !isEnabled;
@@ -243,12 +276,12 @@ streamspigot.feedplayback.fetchFeedInfo = function() {
 
   var urlNode = goog.dom.$('feedplayback-url');
   var url = goog.string.trim(urlNode.value);
-  
+
   if (url == streamspigot.feedplayback.previousFeedInfoUrl) {
     return;
   }
   streamspigot.feedplayback.previousFeedInfoUrl = url;
-  
+
   var statusNode = goog.dom.$('feedplayback-status');
   streamspigot.feedplayback.setEnabledState(false);
   statusNode.innerHTML = 'Looking up URL...';
@@ -260,7 +293,7 @@ streamspigot.feedplayback.fetchFeedInfo = function() {
       function(info) {
         var statusHtml = '';
         var isEnabled = false;
-        
+
         if (info.feedUrl) {
           statusHtml += 'Feed URL: <b>' +
               goog.string.htmlEscape(info.feedUrl) + '</b>';
@@ -279,7 +312,7 @@ streamspigot.feedplayback.fetchFeedInfo = function() {
             var oldestItemDateValue =
                 streamspigot.util.getIso8601DateString(oldestItemDate);
             goog.dom.$('feedplayback-start-date').value = oldestItemDateValue;
-                
+
             isEnabled = true;
             streamspigot.feedplayback.updatePreview();
           } else {
@@ -288,7 +321,7 @@ streamspigot.feedplayback.fetchFeedInfo = function() {
         } else {
           statusHtml += 'No feed found.';
         }
-        
+
         statusNode.innerHTML = statusHtml;
         streamspigot.feedplayback.setEnabledState(isEnabled);
       },
@@ -300,7 +333,7 @@ streamspigot.feedplayback.fetchFeedInfo = function() {
 streamspigot.feedplayback.updatePreview = function() {
   var feedUrl = goog.dom.$('feedplayback-feed-url').value;
   var startDate = goog.dom.$('feedplayback-start-date').value;
-  
+
     streamspigot.util.fetchJson(
       '/feed-playback/preview?url=' + encodeURIComponent(feedUrl) +
           '&start-date=' + encodeURIComponent(startDate),
@@ -317,35 +350,35 @@ streamspigot.feedplayback.updatePreview = function() {
 
 streamspigot.feedplayback.setup = function(event) {
   event.preventDefault();
-  
+
   var paramsMap = {
     'url': 'feedplayback-feed-url',
     'start-date': 'feedplayback-start-date',
     'frequency': 'feedplayback-frequency'
   }
-  
+
   var data = '';
-  
+
   for (var paramName in paramsMap) {
     data += paramName + '=' +
         encodeURIComponent(goog.dom.$(paramsMap[paramName]).value) + '&';
   }
-  
+
   if (data == streamspigot.feedplayback.previousSetupParams) {
     return;
   }
-  
+
   streamspigot.feedplayback.previousSetupParams = data;
-  
+
   goog.dom.$('feedplayback-setup').disabled = true;
-  
+
   streamspigot.util.fetchJson(
       '/feed-playback/create',
       function(data) {
           goog.dom.$('feedplayback-setup').disabled = false;
           goog.dom.classes.remove(goog.dom.$('feedplayback-result'), 'hidden');
           goog.dom.classes.add(goog.dom.$('feedplayback-error'), 'hidden');
-          
+
           var feedUrlNode = goog.dom.$('feedplayback-subscription-feed-url');
           feedUrlNode.href = data.feedUrl;
           var readerUrlNode = goog.dom.$('feedplayback-subscription-reader-url');
@@ -356,7 +389,7 @@ streamspigot.feedplayback.setup = function(event) {
         goog.dom.$('feedplayback-setup').disabled = false;
         goog.dom.classes.add(goog.dom.$('feedplayback-result'), 'hidden');
         goog.dom.classes.remove(goog.dom.$('feedplayback-error'), 'hidden');
-        
+
         goog.dom.$('feedplayback-error-details-status').innerHTML =
             goog.string.htmlEscape(statusCode);
         goog.dom.$('feedplayback-error-details-response').innerHTML =
@@ -367,11 +400,11 @@ streamspigot.feedplayback.setup = function(event) {
 
 streamspigot.util.fetchJson = function(url, jsonCallback, errorCallback, opt_postData) {
   var xhr = new goog.net.XhrIo();
-  
+
   function handleError() {
     errorCallback(xhr.getStatus(), xhr.getResponseText());
   }
-  
+
   goog.events.listen(xhr, goog.net.EventType.COMPLETE, function() {
     if (xhr.isSuccess()) {
       try {
@@ -389,7 +422,7 @@ streamspigot.util.fetchJson = function(url, jsonCallback, errorCallback, opt_pos
     }
     xhr.dispose();
   });
-  
+
   xhr.send(url, opt_postData ? 'POST': 'GET', opt_postData);
 };
 
@@ -401,8 +434,8 @@ streamspigot.util.printEmail = function(opt_anchorText) {
     b.push(String.fromCharCode(a[i]));
   }
   b = b.join('');
-  document.write('<' + 'a href="mailto:' + b + '">' + 
-                 (opt_anchorText || b) + 
+  document.write('<' + 'a href="mailto:' + b + '">' +
+                 (opt_anchorText || b) +
                  '<' + '/a>');
 };
 
@@ -423,8 +456,8 @@ streamspigot.util.getIso8601DateString = function(date) {
   function pad(n) {
     return n < 10 ? '0' + n : n;
   }
-  
+
   return date.getFullYear() + '-' +
       pad(date.getMonth() + 1) + '-' +
-      pad(date.getDate());  
+      pad(date.getDate());
 }

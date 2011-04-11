@@ -3,6 +3,7 @@ import datetime
 import itertools
 import logging
 import os
+import re
 import time
 import xml.sax.saxutils
 import zlib
@@ -15,6 +16,8 @@ from datasources.oauth_keys import SERVICE_PROVIDERS
 
 TWITTER_SERVICE_PROVIDER = SERVICE_PROVIDERS['twitter']
 DIGEST_LENGTH = 60 * 60 * 24
+
+TWITTER_USERNAME_RE = re.compile('^[a-zA-Z0-9_]{1,15}$')
 
 def _get_digest_twitter_api(max_cache_age, key):
     # We don't actually need to use authentication for any of the data that
@@ -259,3 +262,6 @@ def get_lists(username):
     lists, had_error = fetcher.fetch()
 
     return had_error and None or lists
+
+def is_valid_twitter_username(username):
+    return TWITTER_USERNAME_RE.match(username) is not None

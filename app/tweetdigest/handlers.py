@@ -21,6 +21,9 @@ class ListsHandler(base.handlers.BaseHandler):
         if not username:
             self._write_input_error('Missing "username" parameter')
             return
+        if not data.is_valid_twitter_username(username):
+            self._write_input_error('%s is an invalid Twitter username' % username)
+            return
 
         lists = data.get_lists(username)
         if lists:
@@ -49,6 +52,10 @@ class DigestHandler(base.handlers.BaseHandler):
         if self.request.get('usernames'):
             usernames = re.split('[\\s,]+', self.request.get('usernames'))
             usernames = [u.strip().lower() for u in usernames if u.strip()]
+            for username in usernames:
+                if not data.is_valid_twitter_username(username):
+                    self._write_input_error('%s is an invalid Twitter username' % username)
+                    return
         if self.request.get('list'):
             list = self.request.get('list').strip().lower()
             if '/' not in list:

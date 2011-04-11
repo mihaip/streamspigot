@@ -80,7 +80,7 @@ a, .link {
 
 #container {
   width: 625px;
-  margin: 2em auto 0; 
+  margin: 2em auto 0;
 }
 
 #intro {
@@ -90,7 +90,7 @@ a, .link {
 
 #footer {
   margin-top: 5em;
-  background: #dde8ff;  
+  background: #dde8ff;
 }
 
 #tweetdigest-setup-table {
@@ -101,7 +101,7 @@ a, .link {
 #tweetdigest-usernames-column {
   width: 250px;
   vertical-align: top;
-  text-align: center;  
+  text-align: center;
 }
 
 #tweetdigest-or-column {
@@ -120,7 +120,7 @@ a, .link {
 #tweetdigest-setup-table legend {
   color: #333;
   padding: 0 1em;
-  text-align: center;  
+  text-align: center;
 }
 
 #twitter-lists {
@@ -145,9 +145,10 @@ a, .link {
 }
 
 #digest-links,
-#digest-empty {
+#digest-empty,
+#digest-error {
   margin-top: 1em;
-  text-align: center;  
+  text-align: center;
 }
 
 .feed-icon {
@@ -168,7 +169,8 @@ a, .link {
   color: #333;
 }
 
-#digest-empty .symbol {
+#digest-empty .symbol,
+#digest-error .symbol {
   color: red;
 }
 
@@ -233,7 +235,7 @@ a, .link {
   font-size: 18px;
   font-weight: bold;
   text-decoration: underline;
-  color: #2db300; 
+  color: #2db300;
   margin: 0 0 .25em 0;
 }
 
@@ -277,7 +279,7 @@ a, .link {
 #feedplayback-status,
 #feedplayback-first-item,
 #feedplayback-first-item a {
-  color: #4d5c7f;  
+  color: #4d5c7f;
 }
 
 #feedplayback-setup-table.disabled #feedplayback-enabled-symbol,
