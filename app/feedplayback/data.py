@@ -13,9 +13,9 @@ from datasources import googlereader
 
 class FeedInfoData(db.Model):
     title = db.StringProperty()
-    item_ids = db.StringListProperty()
-    item_timestamps_usec = db.ListProperty(long)
-    
+    item_ids = db.StringListProperty(indexed=False)
+    item_timestamps_usec = db.ListProperty(long, indexed=False)
+
     @classmethod
     def kind(cls):
         return "feedplayback.FeedInfoData"
@@ -41,7 +41,7 @@ class FeedInfo(object):
 
 def get_feed_info(html_or_feed_url):
     feed_url = googlereader.lookup_feed_url(html_or_feed_url)
-    
+
     if not feed_url:
         return None
 
@@ -49,15 +49,15 @@ def get_feed_info(html_or_feed_url):
 
 def get_feed_info_from_feed_url(feed_url):
     feed_info = FeedInfoData.get_by_key_name(feed_url)
-    
+
     if not feed_info:
         title = googlereader.lookup_feed_title(feed_url) or \
             urlparse.urlparse(feed_url).netloc
         item_refs = googlereader.get_feed_item_refs(feed_url)
-        
+
         if not item_refs:
             return {}
-        
+
         feed_info = FeedInfoData(
             key_name=feed_url,
             title=title,
@@ -82,7 +82,7 @@ class SubscriptionData(db.Model):
     # subscriptions to advance.
     frequency_modulo = db.IntegerProperty()
     position = db.IntegerProperty()
-    
+
     @classmethod
     def kind(cls):
         return "feedplayback.SubscriptionData"
@@ -95,7 +95,7 @@ class Subscription(object):
         self.frequency = frequency
         self.frequency_modulo = frequency_modulo
         self.position = position
-    
+
     @staticmethod
     def from_datastore(subscription):
         return Subscription(
@@ -105,7 +105,7 @@ class Subscription(object):
             subscription.frequency,
             subscription.frequency_modulo,
             subscription.position)
-    
+
     def save(self):
         subscription = SubscriptionData(
             key_name=self.id,
@@ -127,37 +127,37 @@ class Subscription(object):
             source_title=CONSTANTS.APP_NAME,
             share=False,
             additional_stream_ids=[self.reader_stream_id])
-        
+
     def advance(self):
         feed_info = get_feed_info_from_feed_url(self.feed_url)
-        
+
         if self.position == len(feed_info.item_ids):
             # TODO(mihaip): insert some kind of "you're done" notification into
             # the stream?
             return
-        
+
         item_id = feed_info.item_ids[self.position]
-        
+
         googlereader.edit_item_tags(
             item_id,
             origin_stream_id='feed/%s' % self.feed_url,
             add_tags=[self.reader_stream_id])
-        
+
         self.position += 1
         self.save()
-        
+
     def get_subscription_feed_url(self):
         return 'http://www.google.com/reader/public/atom/%s' % urllib.quote(self.reader_stream_id.encode('utf-8'))
-    
+
     def get_subscription_reader_url(self):
         return 'http://www.google.com/reader/view/%s' % urllib.quote(self.reader_stream_id.encode('utf-8'))
-    
+
     def as_json_dict(self):
         return {
           'feedUrl': self.get_subscription_feed_url(),
           'readerUrl': self.get_subscription_reader_url(),
         }
-        
+
 def get_modulo_for_frequency(frequency):
     if frequency == '1d':
       return 0
@@ -170,17 +170,17 @@ def get_modulo_for_frequency(frequency):
 
 def get_subscription_by_id(id):
     subscription = SubscriptionData.get_by_key_name(id)
-    
+
     if not subscription:
         return None
-    
+
     return Subscription.from_datastore(subscription)
 
 def get_subscriptions_with_frequency_and_modulo(frequency, frequency_modulo):
     query = SubscriptionData.all()
     query.filter("frequency =", frequency)
     query.filter("frequency_modulo =", frequency_modulo)
-    
+
     subscriptions = []
     for result in query:
         subscriptions.append(Subscription.from_datastore(result))
@@ -203,7 +203,7 @@ def get_start_item_contents(feed_url, start_date):
 
 def create_subscription(feed_url, start_date, frequency):
     feed_info = get_feed_info_from_feed_url(feed_url)
-    
+
     start_position = _get_nearest_item_index(feed_info, start_date)
 
     feed_title = feed_info.title
@@ -214,7 +214,7 @@ def create_subscription(feed_url, start_date, frequency):
     reader_tag_name = '%s (%s)' % (feed_title, subscription_id)
     reader_stream_id = 'user/%s/label/%s' % (
         googlereader.FEED_PLAYBACK_USER_ID, reader_tag_name)
-    
+
     subscription = Subscription(
         subscription_id,
         reader_stream_id,
@@ -222,7 +222,7 @@ def create_subscription(feed_url, start_date, frequency):
         frequency,
         get_modulo_for_frequency(frequency),
         start_position)
-    
+
     subscription.save()
-    
+
     return subscription
