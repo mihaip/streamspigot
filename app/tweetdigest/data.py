@@ -19,7 +19,7 @@ DIGEST_LENGTH = 60 * 60 * 24
 def _get_digest_twitter_api(max_cache_age, key):
     # We don't actually need to use authentication for any of the data that
     # we fetch, but then we end up with IP address-based rate limiting, which
-    # is depleted very quickly on App Engine (where there aren't a lot of 
+    # is depleted very quickly on App Engine (where there aren't a lot of
     # externally visible IP addresses). We therefore authenticate anyway, and we
     # spread that load over a few accounts. To ensure consistency (since
     # python-twitter incorporates the access token in the cache key), we always
@@ -40,7 +40,7 @@ def _get_digest_twitter_api(max_cache_age, key):
         CONSTANTS.APP_URL,
     ))
     return api
-    
+
 class StatusGroup(object):
     def __init__(self, user, statuses):
         self.user = user
@@ -53,7 +53,7 @@ def get_status_text_as_html(status, link_formatter):
         e for e in entities if e.start_index != -1 and e.end_index != -1]
     entities.sort(cmp=lambda e1,e2: e1.start_index - e2.start_index)
     last_entity_end = 0
-    
+
     def add_raw_chunk(chunk):
         text_as_html.append(chunk)
 
@@ -65,16 +65,16 @@ def get_status_text_as_html(status, link_formatter):
         # fixed).
         add_escaped_chunk(
             chunk.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&'))
-    
+
     def add_escaped_chunk(chunk):
         add_raw_chunk(xml.sax.saxutils.escape(chunk))
-    
+
     for e in entities:
       add_tweet_chunk(status.text[last_entity_end:e.start_index])
 
       entity_anchor_text = status.text[e.start_index:e.end_index]
       entity_url = None
-      
+
       if isinstance(e, twitter.Hashtag):
           entity_url = 'search?q=%23' + e.text
       elif isinstance(e, twitter.Url):
@@ -84,7 +84,7 @@ def get_status_text_as_html(status, link_formatter):
               entity_anchor_text = xml.sax.saxutils.escape(entity_url_anchor_text)
       elif isinstance(e, twitter.User):
           entity_url = e.screen_name
-      
+
       if entity_url:
           add_raw_chunk('<a href="')
           add_escaped_chunk(entity_url)
@@ -93,17 +93,17 @@ def get_status_text_as_html(status, link_formatter):
           add_raw_chunk('</a>')
       else:
           add_tweet_chunk(entity_anchor_text)
-      
+
       last_entity_end = e.end_index
-    
+
     add_tweet_chunk(status.text[last_entity_end:])
-    
+
     return ''.join(text_as_html)
 
 def _get_digest_timestamps():
     # From the current time
     now = time.gmtime()
-  
+
     # Go back to midnight
     digest_end_time = calendar.timegm([
       now.tm_year,
@@ -116,15 +116,15 @@ def _get_digest_timestamps():
       now.tm_yday,
       now.tm_isdst
     ])
-  
+
     digest_start_time = digest_end_time - DIGEST_LENGTH
-  
+
     # Twitter data can be as stale as the digest end time, since we don't care
     # about anything more recent (there may be some concurrency issues with
     # parallell invocations, but they're unlikely to actually matter at the load
     # we're expecting.
     max_cache_age = calendar.timegm(now) - digest_end_time
-    
+
     return digest_start_time, digest_end_time, max_cache_age
 
 def _process_digest_statuses(
@@ -135,17 +135,17 @@ def _process_digest_statuses(
         if s.created_at_in_seconds <= digest_end_time and
             s.created_at_in_seconds > digest_start_time
     ]
-    
+
     # Decorate them with the HTML representation of the text and formatted dates
     for s in digest_statuses:
         s.text_as_html = get_status_text_as_html(s, link_formatter)
         s.created_at_formatted_gmt = datetime.datetime.utcfromtimestamp(
             s.created_at_in_seconds).strftime("%I:%M %p")
-    
+
     # Order them in chronological order
     digest_statuses.sort(
         lambda x, y: int(x.created_at_in_seconds - y.created_at_in_seconds))
-  
+
     # Group them by username
     status_groups = []
     for username, statuses in itertools.groupby(
@@ -154,7 +154,7 @@ def _process_digest_statuses(
         status_groups.append(StatusGroup(
             user=statuses[0].user,
             statuses=statuses))
-  
+
     return (status_groups,
             datetime.datetime.fromtimestamp(digest_start_time),
             error_info)
@@ -171,7 +171,7 @@ class TwitterFetcher(object):
             logging.warning('JSON error "%s" for %s', err, self._id())
 
         return [], True
-        
+
 class ListTwitterFetcher(TwitterFetcher):
     def __init__(self, api, list_owner, list_id, digest_start_time):
         self._api = api
@@ -193,7 +193,7 @@ class ListTwitterFetcher(TwitterFetcher):
             if chunk[-1].created_at_in_seconds < self._digest_start_time:
                 break
         return statuses
-            
+
     def _id(self):
         return 'list "%s/%s"' % (self._list_owner, self._list_id)
 
@@ -201,7 +201,7 @@ class UserTwitterFetcher(TwitterFetcher):
     def __init__(self, api, username):
         self._api = api
         self._username = username
- 
+
     def _fetch(self):
         return self._api.GetUserTimeline(
             self._username,
@@ -217,16 +217,16 @@ def get_digest_for_list(list_owner, list_id, link_formatter):
 
     api = _get_digest_twitter_api(
         max_cache_age, key='%s/%s' % (list_owner, list_id))
-    
+
     fetcher = ListTwitterFetcher(api, list_owner, list_id, digest_start_time)
     statuses, had_error = fetcher.fetch()
-    
+
     return _process_digest_statuses(
-        statuses, digest_start_time, digest_end_time, link_formatter, had_error)    
-    
+        statuses, digest_start_time, digest_end_time, link_formatter, had_error)
+
 def get_digest_for_usernames(usernames, link_formatter):
     digest_start_time, digest_end_time, max_cache_age = _get_digest_timestamps()
-  
+
     statuses = []
     error_usernames = []
 
@@ -242,7 +242,20 @@ def get_digest_for_usernames(usernames, link_formatter):
     return _process_digest_statuses(
         statuses, digest_start_time, digest_end_time, link_formatter, error_usernames)
 
+class UserListsTwitterFetcher(TwitterFetcher):
+    def __init__(self, api, username):
+        self._api = api
+        self._username = username
+
+    def _fetch(self):
+        return self._api.GetLists(self._username)
+
+    def _id(self):
+        return 'lists "%s"' % self._username
+
 def get_lists(username):
     api = _get_digest_twitter_api(3600, key=username)
-    return api.GetLists(username)
-    
+    fetcher = UserListsTwitterFetcher(api, username)
+    lists, had_error = fetcher.fetch()
+
+    return had_error and None or lists

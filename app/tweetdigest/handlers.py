@@ -21,9 +21,12 @@ class ListsHandler(base.handlers.BaseHandler):
         if not username:
             self._write_input_error('Missing "username" parameter')
             return
-    
+
         lists = data.get_lists(username)
-        self._write_json([l.slug for l in lists])
+        if lists:
+            self._write_json([l.slug for l in lists])
+        else:
+            self._write_error(502)
 
 class DigestHandler(base.handlers.BaseHandler):
     class OutputTemplate(object):
@@ -42,7 +45,7 @@ class DigestHandler(base.handlers.BaseHandler):
         usernames = []
         list_owner = None
         list_id = None
-        
+
         if self.request.get('usernames'):
             usernames = re.split('[\\s,]+', self.request.get('usernames'))
             usernames = [u.strip().lower() for u in usernames if u.strip()]
@@ -55,17 +58,17 @@ class DigestHandler(base.handlers.BaseHandler):
         output_template = DigestHandler.OUTPUT_TEMPLATES.get(
             self.request.get('output'),
             DigestHandler.OUTPUT_TEMPLATES['atom'])
-        
+
         if not usernames and not list_owner:
             self._write_input_error(
                 'Must provide either a "usernames" or "list" parameter')
             return
-        
+
         if usernames and list_owner:
             self._write_input_error(
                 'Must provide only one of the "usernames" or "list" parameters')
             return
-        
+
         # Generate digest
         if usernames:
             (grouped_statuses, start_date, error_usernames) = \
@@ -102,19 +105,19 @@ class DigestHandler(base.handlers.BaseHandler):
             digest_id = '%s/%s' % (list_owner, list_id)
 
         digest_entry_id = digest_id + '-' + start_date.date().isoformat()
-                    
+
         self._write_template(output_template.template_file, {
             'digest_source': digest_source,
             'digest_errors': digest_errors,
-            'grouped_statuses': grouped_statuses, 
-            
+            'grouped_statuses': grouped_statuses,
+
             'title_date': '%s (GMT)' % start_date.strftime('%A, %B %d, %Y'),
             'feed_url': base_digest_url + '&output=atom',
             'html_url': base_digest_url + '&output=html',
             'digest_id': digest_id,
             'digest_entry_id': digest_entry_id,
             'start_date_iso': start_date.isoformat(),
-            
+
             'digest_contents': base.util.strip_html_whitespace(
                 self._render_template(
                     'tweetdigest/digest-contents.snippet', {
