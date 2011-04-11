@@ -51,8 +51,11 @@ class AdvanceTaskHandler(base.handlers.BaseHandler):
 class PreviewHandler(base.handlers.BaseHandler):
     def get(self):
         url = self.request.get('url')
-        start_date = datetime.datetime.strptime(
-            self.request.get('start-date'), '%Y-%m-%d')
+        try:
+            start_date = datetime.datetime.strptime(
+                self.request.get('start-date'), '%Y-%m-%d')
+        except ValueError:
+            start_date = datetime.datetime(1970, 1, 1)
 
         self._write_json({
             'firstItem': data.get_start_item_contents(url, start_date).as_json_dict(),
@@ -61,8 +64,11 @@ class PreviewHandler(base.handlers.BaseHandler):
 class CreateHandler(base.handlers.BaseHandler):
     def post(self):
         url = self.request.get('url')
-        start_date = datetime.datetime.strptime(
-            self.request.get('start-date'), '%Y-%m-%d')
+        try:
+            start_date = datetime.datetime.strptime(
+                self.request.get('start-date'), '%Y-%m-%d')
+        except ValueError:
+            start_date = datetime.datetime(1970, 1, 1)
         frequency = self.request.get('frequency')
 
         subscription = data.create_subscription(
