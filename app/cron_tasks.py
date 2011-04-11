@@ -17,7 +17,8 @@ import feedplayback.handlers
 
 def main():
     application = webapp.WSGIApplication([
-            ('/cron/feed-playback/advance', feedplayback.handlers.AdvanceHandler),
+            ('/cron/feed-playback/advance', feedplayback.handlers.AdvanceCronHandler),
+            ('/tasks/feed-playback/advance', feedplayback.handlers.AdvanceTaskHandler),
         ],
         debug=True)
     util.run_wsgi_app(application)

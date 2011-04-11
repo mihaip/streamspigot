@@ -13,7 +13,7 @@ handlers:
 - url: /favicon.ico
   static_files: static/favicon.ico
   upload: static/favicon.ico
-  
+
 - url: /googled756c8e5e6bbce3a.html
   static_files: static/googled756c8e5e6bbce3a.html
   upload: static/googled756c8e5e6bbce3a.html
@@ -21,9 +21,9 @@ handlers:
 - url: /robots.txt
   static_files: static/robots.txt
   upload: static/robots.txt
-  
-- url: /cron/.*
-  script: cron.py
+
+- url: /(cron|tasks)/.*
+  script: cron_tasks.py
   login: admin
 
 - url: /_ereporter.*
