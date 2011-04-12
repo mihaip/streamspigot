@@ -32,8 +32,9 @@ class AdvanceCronHandler(base.handlers.BaseHandler):
             frequency, frequency_modulo)
 
         for subscription in subscriptions:
+            id_for_task_name = subscription.id.replace('_', 'UNDERSCORE')
             taskqueue.add(
-                name='feedplayback-advance-subscription-%s' % subscription.id,
+                name='feedplayback-advance-%s' % id_for_task_name,
                 queue_name='feedplayback-advance',
                 url='/tasks/feed-playback/advance',
                 params={'subscription_id': subscription.id})
