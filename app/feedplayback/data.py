@@ -193,7 +193,7 @@ def _get_nearest_item_index(feed_info, date):
         if item_timestamp_usec >= timestamp_usec:
             break
         index += 1
-    return index
+    return min(index, len(feed_info.item_timestamps_usec) - 1)
 
 def get_start_item_contents(feed_url, start_date):
     feed_info = get_feed_info_from_feed_url(feed_url)
