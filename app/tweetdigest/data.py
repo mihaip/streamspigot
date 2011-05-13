@@ -193,7 +193,8 @@ class ListTwitterFetcher(TwitterFetcher):
                 per_page=40,
                 include_entities=True)
             statuses.extend(chunk)
-            if chunk[-1].created_at_in_seconds < self._digest_start_time:
+            if not chunk or \
+                chunk[-1].created_at_in_seconds < self._digest_start_time:
                 break
         return statuses
 
