@@ -29,7 +29,8 @@ def _get_digest_twitter_api(max_cache_age, key):
     # want to consistently use the same access token for the same request, hence
     # the hashing based on the key that's passed in.
     access_token = TWITTER_SERVICE_PROVIDER.access_tokens[
-        zlib.adler32(key) % len(TWITTER_SERVICE_PROVIDER.access_tokens)]
+        zlib.adler32(key.encode('utf-8')) %
+            len(TWITTER_SERVICE_PROVIDER.access_tokens)]
 
     api = twitter.Api(
         consumer_key=TWITTER_SERVICE_PROVIDER.consumer.key,
