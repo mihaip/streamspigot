@@ -124,9 +124,17 @@ class SubscriptionHandler(base.handlers.BaseHandler):
         self._write_template('feedplayback/subscription.html', {
             'feed_title': feed_info.title,
             'feed_url': subscription.feed_url,
+            'subscription_id': subscription_id,
             'subscription_feed_url': subscription.get_subscription_feed_url(),
             'subscription_reader_url': subscription.get_subscription_reader_url(),
             'position': subscription.position + 1,
             'item_count': len(feed_info.item_ids),
             'frequency': _FREQUENCY_DISPLAY_NAMES[subscription.frequency]
         })
+
+class SubscriptionAdvanceHandler(base.handlers.BaseHandler):
+    def post(self):
+        subscription_id = self.request.get('subscription_id')
+        subscription = data.get_subscription_by_id(subscription_id)
+        subscription.advance()
+        self.redirect('/feed-playback/subscription/%s' % subscription_id)
