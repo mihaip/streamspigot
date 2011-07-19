@@ -5,6 +5,8 @@ api_version: 1
 
 builtins:
 - appstats: on
+- remote_api: on
+- datastore_admin: on
 
 handlers:
 - url: /static
@@ -28,6 +30,10 @@ handlers:
 
 - url: /_ereporter.*
   script: $PYTHON_LIB/google/appengine/ext/ereporter/report_generator.py
+  login: admin
+
+- url: /admin/.*
+  script: $PYTHON_LIB/google/appengine/ext/admin
   login: admin
 
 - url: .*
