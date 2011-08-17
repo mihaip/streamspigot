@@ -98,9 +98,9 @@ class TwitterError(Exception):
 
 class Status(object):
   '''A class representing the Status structure used by the twitter API.
-  
+
   The Status structure exposes the following properties:
-  
+
     status.created_at
     status.created_at_in_seconds # read only
     status.favorited
@@ -1160,9 +1160,9 @@ class User(object):
 
 class List(object):
   '''A class representing the List structure used by the twitter API.
-  
+
   The List structure exposes the following properties:
-  
+
     list.id
     list.name
     list.slug
@@ -1519,9 +1519,9 @@ class List(object):
 
 class DirectMessage(object):
   '''A class representing the DirectMessage structure used by the twitter API.
-  
+
   The DirectMessage structure exposes the following properties:
-  
+
     direct_message.id
     direct_message.created_at
     direct_message.created_at_in_seconds # read only
@@ -3260,6 +3260,7 @@ class Api(object):
                       max_id=None,
                       per_page=None,
                       page=None,
+                      include_rts=None,
                       include_entities=None):
     '''Fetch the sequence of public Status messages for members of a list.
 
@@ -3285,6 +3286,9 @@ class Api(object):
       page:
         Specifies the page of results to retrieve.
         Note: there are pagination limits. [Optional]
+      include_rts:
+        If True, the timeline will contain native retweets (if they
+        exist) in addition to the standard stream of tweets. [Optional]
       include_entities:
         If True, each tweet will include a node called "entities,".
         This node offers a variety of metadata about the tweet in a
@@ -3322,6 +3326,8 @@ class Api(object):
       except:
         raise TwitterError("page must be an integer")
 
+    if include_rts:
+      parameters['include_rts'] = 1
     if include_entities:
       parameters['include_entities'] = 1
 
@@ -3643,7 +3649,7 @@ class Api(object):
       use_gzip = self._use_gzip
     else:
       use_gzip = use_gzip_compression
-      
+
     # Set up compression
     if use_gzip and not post_data:
       opener.addheaders.append(('Accept-Encoding', 'gzip'))
@@ -3698,15 +3704,15 @@ class Api(object):
 
     # Always return the latest version
     return url_data
-  
+
   def _LogRateLimitDetails(self, url, response):
     rate_limit_details = []
-    
+
     for header, description in RATE_LIMIT_HEADERS:
       value = response.headers.get(header, None)
       if value:
         rate_limit_details.append('    %s: %s' % (description, value))
-    
+
     logging.info(
         'Requested Twitter URL: %s, rate limit details:\n%s' %
             (url, '\n'.join(rate_limit_details)))

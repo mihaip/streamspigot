@@ -192,6 +192,7 @@ class ListTwitterFetcher(TwitterFetcher):
                 self._list_id,
                 max_id=max_id,
                 per_page=40,
+                include_rts=True,
                 include_entities=True)
             statuses.extend(chunk)
             if not chunk or \
