@@ -52,7 +52,12 @@ class StatusGroup(object):
 
 def get_status_text_as_html(status, link_formatter):
     text_as_html = []
-    entities = list(status.hashtags + status.urls + status.user_mentions)
+    footer_as_html = []
+    entities = list(
+        (status.hashtags or []) +
+        (status.urls or []) +
+        (status.user_mentions or []) +
+        (status.medias or []))
     entities = [
         e for e in entities if e.start_index != -1 and e.end_index != -1]
     entities.sort(cmp=lambda e1,e2: e1.start_index - e2.start_index)
@@ -73,6 +78,9 @@ def get_status_text_as_html(status, link_formatter):
     def add_escaped_chunk(chunk):
         add_raw_chunk(xml.sax.saxutils.escape(chunk))
 
+    def add_footer_raw_chunk(chunk):
+        footer_as_html.append(chunk)
+
     for e in entities:
       add_tweet_chunk(status.text[last_entity_end:e.start_index])
 
@@ -88,6 +96,21 @@ def get_status_text_as_html(status, link_formatter):
               entity_anchor_text = xml.sax.saxutils.escape(entity_url_anchor_text)
       elif isinstance(e, twitter.User):
           entity_url = e.screen_name
+      elif isinstance(e, twitter.Media):
+          entity_url = e.url
+          entity_url_anchor_text = e.display_url or e.expanded_url or e.url
+          if entity_url_anchor_text:
+              entity_anchor_text = xml.sax.saxutils.escape(entity_url_anchor_text)
+          if e.type == 'photo':
+            # Appending /large seems to generate a lightbox view of that image
+            link_url = e.expanded_url + '/large'
+            thumb_url, thumb_width, thumb_height = \
+                e.GetUrlForSize(twitter.Media.THUMB_SIZE)
+            add_footer_raw_chunk(
+                '<a href="%s" border="0">'
+                  '<img src="%s" width="%d" height="%d" alt="">'
+                '</a>' %
+                (link_url , thumb_url, thumb_width, thumb_height))
 
       if entity_url:
           add_raw_chunk('<a href="')
@@ -102,7 +125,10 @@ def get_status_text_as_html(status, link_formatter):
 
     add_tweet_chunk(status.text[last_entity_end:])
 
-    return ''.join(text_as_html)
+    result = ''.join(text_as_html)
+    if footer_as_html:
+      result += '<p>' + ''.join(footer_as_html) + '</p>'
+    return result
 
 def _get_digest_timestamps():
     # From the current time
