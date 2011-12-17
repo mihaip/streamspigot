@@ -117,6 +117,7 @@ class Status(object):
     status.urls
     status.user_mentions
     status.hashtags
+    status.medias
     status.geo
     status.place
     status.coordinates
@@ -138,6 +139,7 @@ class Status(object):
                urls=None,
                user_mentions=None,
                hashtags=None,
+               medias=None,
                geo=None,
                place=None,
                coordinates=None,
@@ -174,6 +176,7 @@ class Status(object):
       urls:
       user_mentions:
       hashtags:
+      medias:
       geo:
       place:
       coordinates:
@@ -198,6 +201,7 @@ class Status(object):
     self.urls = urls
     self.user_mentions = user_mentions
     self.hashtags = hashtags
+    self.medias = medias
     self.geo = geo
     self.place = place
     self.coordinates = coordinates
@@ -595,6 +599,8 @@ class Status(object):
       data['contributors'] = self.contributors
     if self.hashtags:
       data['hashtags'] = [h.text for h in self.hashtags]
+    if self.medias:
+      data['medias'] = [m.media_url for m in self.medias]
     if self.retweeted_status:
       data['retweeted_status'] = self.retweeted_status.AsDict()
     if self.retweet_count:
@@ -625,6 +631,7 @@ class Status(object):
     urls = None
     user_mentions = None
     hashtags = None
+    medias = None
     if 'entities' in data:
       if 'urls' in data['entities']:
         urls = [Url.NewFromJsonDict(u) for u in data['entities']['urls']]
@@ -632,6 +639,8 @@ class Status(object):
         user_mentions = [User.NewFromJsonDict(u) for u in data['entities']['user_mentions']]
       if 'hashtags' in data['entities']:
         hashtags = [Hashtag.NewFromJsonDict(h) for h in data['entities']['hashtags']]
+      if 'media' in data['entities']:
+        medias = [Media.NewFromJsonDict(m) for m in data['entities']['media']]
     return Status(created_at=data.get('created_at', None),
                   favorited=data.get('favorited', None),
                   id=data.get('id', None),
@@ -647,6 +656,7 @@ class Status(object):
                   urls=urls,
                   user_mentions=user_mentions,
                   hashtags=hashtags,
+                  medias=medias,
                   geo=data.get('geo', None),
                   place=data.get('place', None),
                   coordinates=data.get('coordinates', None),
@@ -2031,7 +2041,7 @@ class DirectMessage(object):
                          recipient_screen_name=data.get('recipient_screen_name', None))
 
 class Hashtag(object):
-  ''' A class represeinting a twitter hashtag
+  ''' A class representing a twitter hashtag
   '''
   def __init__(self,
                text=None,
@@ -2055,6 +2065,63 @@ class Hashtag(object):
     return Hashtag(text=data.get('text', None),
                    start_index=data.get('indices', [-1, -1])[0],
                    end_index=data.get('indices', [-1, -1])[1])
+
+class Media(object):
+  ''' A class representing a media entity
+  '''
+
+  LARGE_SIZE = 'large'
+  MEDIUM_SIZE = 'medium'
+  SMALL_SIZE = 'small'
+  THUMB_SIZE = 'thumb'
+
+  def __init__(self,
+               url=None,
+               media_url=None,
+               display_url=None,
+               expanded_url=None,
+               type=None,
+               sizes={},
+               start_index=-1,
+               end_index=-1):
+    self.url = url
+    self.media_url = media_url
+    self.display_url = display_url
+    self.expanded_url = expanded_url
+    self.type = type
+    self.sizes = sizes
+    self.start_index = start_index
+    self.end_index = end_index
+
+  def GetUrlForSize(self, size):
+    return self.media_url + ':' + size, self.sizes[size][0], self.sizes[size][1]
+
+  @staticmethod
+  def NewFromJsonDict(data):
+    '''Create a new instance based on a JSON dict.
+
+    Args:
+      data:
+        A JSON dict, as converted from the JSON in the twitter API
+
+    Returns:
+      A twitter.Media instance
+    '''
+    sizes = {}
+    for size_name, size_dict in data.get('sizes', {}).items():
+      sizes[size_name] = (
+          size_dict.get('w', None),
+          size_dict.get('h', None),
+          size_dict.get('resize', None)
+      )
+    return Media(url=data.get('url', None),
+                 media_url=data.get('media_url', None),
+                 display_url=data.get('display_url', None),
+                 expanded_url=data.get('expanded_url', None),
+                 type=data.get('type', None),
+                 sizes=sizes,
+                 start_index=data.get('indices', [-1, -1])[0],
+                 end_index=data.get('indices', [-1, -1])[1])
 
 class Trend(object):
   ''' A class representing a trending topic
