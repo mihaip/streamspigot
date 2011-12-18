@@ -53,15 +53,6 @@ class StatusGroup(object):
 def get_status_text_as_html(status, link_formatter):
     text_as_html = []
     footer_as_html = []
-    entities = list(
-        (status.hashtags or []) +
-        (status.urls or []) +
-        (status.user_mentions or []) +
-        (status.medias or []))
-    entities = [
-        e for e in entities if e.start_index != -1 and e.end_index != -1]
-    entities.sort(cmp=lambda e1,e2: e1.start_index - e2.start_index)
-    last_entity_end = 0
 
     def add_raw_chunk(chunk):
         text_as_html.append(chunk)
@@ -80,6 +71,27 @@ def get_status_text_as_html(status, link_formatter):
 
     def add_footer_raw_chunk(chunk):
         footer_as_html.append(chunk)
+
+    # For native retweets, render retweeted status, so that the RT prefix is
+    # not counted against the 140 character limit and so that we get media
+    # entities.
+    if status.retweeted_status:
+        status = status.retweeted_status
+        add_raw_chunk('RT: <a href="')
+        add_escaped_chunk(status.user.screen_name)
+        add_raw_chunk('">@')
+        add_escaped_chunk(status.user.screen_name)
+        add_raw_chunk('</a>: ')
+
+    entities = list(
+        (status.hashtags or []) +
+        (status.urls or []) +
+        (status.user_mentions or []) +
+        (status.medias or []))
+    entities = [
+        e for e in entities if e.start_index != -1 and e.end_index != -1]
+    entities.sort(cmp=lambda e1,e2: e1.start_index - e2.start_index)
+    last_entity_end = 0
 
     for e in entities:
       add_tweet_chunk(status.text[last_entity_end:e.start_index])
