@@ -79,7 +79,7 @@ def get_status_text_as_html(status, link_formatter):
         status = status.retweeted_status
         add_raw_chunk('RT: <a href="')
         add_escaped_chunk(status.user.screen_name)
-        add_raw_chunk('">@')
+        add_raw_chunk('" %s>@' % link_formatter.get_attributes())
         add_escaped_chunk(status.user.screen_name)
         add_raw_chunk('</a>: ')
 
