@@ -6,6 +6,7 @@ class IndexHandler(session.SessionApiHandler):
         self._write_template('birdfeeder/index-signed-in.html', {
           'twitter_user': twitter_user,
           'sign_out_path': self._get_path('sign-out'),
+          'timeline_feed_url': self._get_path('feed/timeline/%s' % self._session.feed_id),
         })
 
     def _get_signed_out(self):

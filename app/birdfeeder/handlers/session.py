@@ -56,11 +56,11 @@ class SessionHandler(BaseHandler):
             'Set-Cookie', morsel.output(header='').lstrip())
 
 class SessionApiHandler(SessionHandler):
-    def get(self):
+    def get(self, *args):
         self._dispatch_request(
             lambda: self._get_signed_in(), lambda: self._get_signed_out())
 
-    def post(self):
+    def post(self, *args):
         self._dispatch_request(
             lambda: self._post_signed_in(), lambda: self._post_signed_out())
 

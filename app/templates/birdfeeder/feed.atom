@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  {% for status in statuses %}
+  <entry>
+    <title type="text">{{ status.user.screen_name }}: {{ status.text|escape }}</title>
+    <content type="xhtml" xml:base="http://twitter.com/">
+      <div xmlns="http://www.w3.org/1999/xhtml">
+        {{ status.text|escape }}
+      </div>
+    </content>
+  </entry>
+  {% endfor %}
+</feed>

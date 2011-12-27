@@ -22,22 +22,23 @@ class BaseHandler(webapp.RequestHandler):
             template_file_name,
             template_values={},
             content_type='text/html',
-            charset='utf-8'):
+            charset='UTF-8'):
         self.response.headers['Content-Type'] = '%s; charset=%s' % (content_type, charset)
+        self.response.headers['X-Content-Type-Options'] = 'nosniff'
         self.response.out.write(
             self._render_template(template_file_name, template_values))
 
     def _write_error(self, error_code):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.set_status(error_code)
-    
+
     def _write_not_found(self):
         self._write_error(404)
 
     def _write_input_error(self, error_message):
         self._write_error(400)
         self.response.out.write('Input error: %s' % error_message)
-        
+
     def _write_json(self, obj):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(simplejson.dumps(obj))
