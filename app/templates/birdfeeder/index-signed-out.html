@@ -1,0 +1,25 @@
+{% extends "../base/page.html" %}
+
+{% block title %}{{ APP_NAME|escape}} : Bird Feeder{% endblock %}
+{% block subtitle %}Bird Feeder{% endblock %}
+
+{% block intro %}
+  {% include "intro.snippet" %}
+{% endblock %}
+
+{% block body %}
+
+<p>To get started, sign in with Twitter to allow Bird Feeder access to your
+tweets.</p>
+
+<div id="birdreader-sign-in">
+  <a href="/bird-feeder/sign-in">
+    <img src="/static/twitter-sign-in.png" width="151" height="24" alt="Sign in with Twitter">
+  </a>
+</div>
+{% endblock %}
+
+
+{% block footer %}
+  {% include "footer.snippet" %}
+{% endblock %}

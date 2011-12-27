@@ -295,3 +295,7 @@ a, .link {
 #feedplayback-error .symbol {
   color: red;
 }
+
+#birdreader-sign-in {
+  text-align: center;
+}

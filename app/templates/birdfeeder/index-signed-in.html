@@ -1,0 +1,20 @@
+{% extends "../base/page.html" %}
+
+{% block title %}{{ APP_NAME|escape}} : Bird Feeder{% endblock %}
+{% block subtitle %}Bird Feeder{% endblock %}
+
+{% block intro %}
+  {% include "intro.snippet" %}
+
+  <p>You're signed in as {{ twitter_user.screen_name}}.
+  <a href="/bird-feeder/sign-out">Sign out</a>.</p>
+{% endblock %}
+
+{% block body %}
+TODO
+{% endblock %}
+
+
+{% block footer %}
+  {% include "footer.snippet" %}
+{% endblock %}

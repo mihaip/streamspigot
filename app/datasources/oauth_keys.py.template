@@ -13,6 +13,7 @@ class ServiceProvider(object):
             request_token_url,
             access_token_url,
             authorization_url,
+            authentication_url,
             consumer_key,
             consumer_secret,
             access_tokens,
@@ -20,12 +21,15 @@ class ServiceProvider(object):
         self.request_token_url = request_token_url
         self.access_token_url = access_token_url
         self.authorization_url = authorization_url
+        self.authentication_url = authentication_url
         self.consumer = oauth.Consumer(key=consumer_key, secret=consumer_secret)
         self.access_tokens = access_tokens
         self.test_url = test_url
 
     def get_oauth_client(self, token_index=0):
-        return oauth.Client(self.consumer, self.access_tokens[token_index])
+        access_token = \
+            self.access_tokens and self.access_tokens[token_index] or None
+        return oauth.Client(self.consumer, access_token)
 
 class GoogleServiceProvider(ServiceProvider):
     def __init__(self, scope, consumer_key, consumer_secret, access_tokens):
@@ -34,6 +38,7 @@ class GoogleServiceProvider(ServiceProvider):
             'https://www.google.com/accounts/OAuthGetRequestToken?scope=%s' % urllib.quote(scope),
             'https://www.google.com/accounts/OAuthGetAccessToken',
             'https://www.google.com/accounts/OAuthAuthorizeToken',
+            None,
             consumer_key,
             consumer_secret,
             access_tokens,
@@ -46,11 +51,11 @@ class TwitterServiceProvider(ServiceProvider):
             'https://api.twitter.com/oauth/request_token',
             'https://api.twitter.com/oauth/access_token',
             'https://api.twitter.com/oauth/authorize',
+            'https://api.twitter.com/oauth/authenticate',
             consumer_key,
             consumer_secret,
             access_tokens,
             'http://api.twitter.com/1/account/verify_credentials.json')
-
 
 SERVICE_PROVIDERS = {
   'feedplayback:googlereader': GoogleServiceProvider(
@@ -69,5 +74,9 @@ SERVICE_PROVIDERS = {
           oauth.Token(
               key='###ACCESS_TOKEN_KEY###',
               secret='####ACCESS_TOKEN_SECRET###'),
-      ])
+      ]),
+  'birdfeeder:twitter': TwitterServiceProvider(
+      consumer_key='###CONSUMER_KEY###',
+      consumer_secret='###CONSUMER_SECRET###',
+      access_tokens=[]),
 }
