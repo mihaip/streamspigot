@@ -6,7 +6,8 @@ from google.appengine.api import urlfetch
 
 from oauth_keys import SERVICE_PROVIDERS
 
-READER_OAUTH_CLIENT = SERVICE_PROVIDERS['googlereader'].get_oauth_client()
+READER_OAUTH_CLIENT = \
+    SERVICE_PROVIDERS['feedplayback:googlereader'].get_oauth_client()
 FEED_PLAYBACK_USER_ID = '07254461334580145372'
 
 class ItemRef(object):
@@ -14,7 +15,7 @@ class ItemRef(object):
         self.id = id
         self.timestamp_usec = timestamp_usec
 
-# TODO(mihaip): add more fields as they become necessary        
+# TODO(mihaip): add more fields as they become necessary
 class ItemContents(object):
     def __init__(self, title_html, url):
         self.title_html = title_html
@@ -61,7 +62,7 @@ def get_feed_item_refs(feed_url, oldest_timestamp_usec=None):
       return None
 
     item_refs = []
-    
+
     for json_item_ref in json['itemRefs']:
         item_refs.append(ItemRef(
             json_item_ref['id'], long(json_item_ref['timestampUsec'])))
@@ -90,33 +91,33 @@ def create_note(
       'share': share and 'true' or 'false',
       'linkify': 'false',
     }
-    
+
     if additional_stream_ids:
         params['tags'] = additional_stream_ids
-    
+
     if url:
         params['url'] = url
-        
+
     if source_url:
         params['srcUrl'] = source_url
 
     if source_title:
         params['srcTitle'] = source_title
-      
+
     _post_to_api('item/edit', params)
-    
+
 def set_stream_public(stream_id, is_public):
     _post_to_api('tag/edit', {
         's': stream_id,
         'pub': is_public and 'true' or 'false'
     })
-    
+
 def edit_item_tags(item_id, origin_stream_id, add_tags=[], remove_tags=[]):
     params = {
         'i': item_id,
         's': origin_stream_id,
     }
-    
+
     if add_tags:
         params['a'] = add_tags
     if remove_tags:
@@ -147,21 +148,21 @@ def _post_to_api(path, params):
     url = 'http://www.google.com/reader/api/0/%s?client=streamspigot' % path
     params['T'] = token
     logging.info('Google Reader API POST request: %s %s' % (url, str(params)))
-    
+
     resp, content = READER_OAUTH_CLIENT.request(
         url, 'POST', body=_encode_params(params))
-        
+
     if resp.status != 200:
       logging.warning('POST response: %s\n%s\nto request:%s %s' % (
           str(resp), content, path, str(params)))
       return None
-          
+
     try:
         return simplejson.loads(content)
     except ValueError, err:
         logging.warning('Could not parse response as JSON: %s' % content)
         return None
-    
+
 def _fetch_api_json(path, extra_params={}):
     url = 'http://www.google.com/reader/api/0/' \
         '%s?output=json&client=streamspigot&%s' % (
@@ -176,6 +177,6 @@ def _fetch_api_json(path, extra_params={}):
             return simplejson.loads(response.content)
         except ValueError, err:
             logging.warning('Could not parse response as JSON: %s' % response.content)
-            
+
     return None
-    
+

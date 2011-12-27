@@ -3,7 +3,8 @@ import sys
 from oauth_keys import SERVICE_PROVIDERS
 
 if len(sys.argv) != 2:
-    print "Usage: python test_oauth_access_token.py [googlereader|twitter]"
+    print 'Usage: python get_oauth_access_token.py [%s]' % (
+        '|'.join(SERVICE_PROVIDERS.keys()))
     exit(1)
 
 service_provider = SERVICE_PROVIDERS[sys.argv[1]]

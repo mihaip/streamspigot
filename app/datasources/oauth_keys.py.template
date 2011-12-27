@@ -23,7 +23,7 @@ class ServiceProvider(object):
         self.consumer = oauth.Consumer(key=consumer_key, secret=consumer_secret)
         self.access_tokens = access_tokens
         self.test_url = test_url
-        
+
     def get_oauth_client(self, token_index=0):
         return oauth.Client(self.consumer, self.access_tokens[token_index])
 
@@ -53,7 +53,7 @@ class TwitterServiceProvider(ServiceProvider):
 
 
 SERVICE_PROVIDERS = {
-  'googlereader': GoogleServiceProvider(
+  'feedplayback:googlereader': GoogleServiceProvider(
       'http://www.google.com/reader/api/0/',
       consumer_key='###CONSUMER_KEY###',
       consumer_secret='###CONSUMER_SECRET###',
@@ -62,7 +62,7 @@ SERVICE_PROVIDERS = {
             key='###ACCESS_TOKEN_KEY###',
             secret='####ACCESS_TOKEN_SECRET###'),
       ]),
-  'twitter': TwitterServiceProvider(
+  'tweetdigest:twitter': TwitterServiceProvider(
       consumer_key='###CONSUMER_KEY###',
       consumer_secret='###CONSUMER_SECRET###',
       access_tokens=[

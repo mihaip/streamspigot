@@ -14,7 +14,7 @@ from base.constants import CONSTANTS
 from datasources import twitter, twitterappengine
 from datasources.oauth_keys import SERVICE_PROVIDERS
 
-TWITTER_SERVICE_PROVIDER = SERVICE_PROVIDERS['twitter']
+TWITTER_SERVICE_PROVIDER = SERVICE_PROVIDERS['tweetdigest:twitter']
 DIGEST_LENGTH = 60 * 60 * 24
 
 TWITTER_USERNAME_RE = re.compile('^[a-zA-Z0-9_]{1,15}$')
