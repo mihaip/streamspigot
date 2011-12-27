@@ -15,7 +15,8 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 
 import base.handlers
-import birdfeeder.handlers
+import birdfeeder.handlers.main
+import birdfeeder.handlers.session
 import tweetdigest.handlers
 import feedplayback.handlers
 
@@ -37,10 +38,10 @@ def main():
             ('/feed-playback/subscription/advance', feedplayback.handlers.SubscriptionAdvanceHandler),
             ('/feed-playback/subscription/(.*)', feedplayback.handlers.SubscriptionHandler),
 
-            ('/bird-feeder/?', birdfeeder.handlers.MainHandler),
-            ('/bird-feeder/sign-in', birdfeeder.handlers.SignInHandler),
-            ('/bird-feeder/sign-out', birdfeeder.handlers.SignOutHandler),
-            ('/bird-feeder/callback', birdfeeder.handlers.CallbackHandler),
+            ('/bird-feeder/?', birdfeeder.handlers.main.IndexHandler),
+            ('/bird-feeder/sign-in', birdfeeder.handlers.session.SignInHandler),
+            ('/bird-feeder/sign-out', birdfeeder.handlers.session.SignOutHandler),
+            ('/bird-feeder/callback', birdfeeder.handlers.session.CallbackHandler),
 
             ('/', MainHandler),
         ],

@@ -10,7 +10,7 @@ from base.constants import CONSTANTS
 import base.handlers
 from datasources import twitter, twitterappengine
 from datasources.oauth_keys import SERVICE_PROVIDERS
-import data
+import birdfeeder.data as data
 
 # parse_qsl moved to urlparse module in v2.6
 try:
@@ -21,7 +21,11 @@ except:
 TWITTER_SERVICE_PROVIDER = SERVICE_PROVIDERS['birdfeeder:twitter']
 TWITTER_OAUTH_CLIENT = TWITTER_SERVICE_PROVIDER.get_oauth_client()
 
-class SessionHandler(base.handlers.BaseHandler):
+class BaseHandler(base.handlers.BaseHandler):
+    def _get_path(self, path=''):
+        return '/bird-feeder/%s' % path
+
+class SessionHandler(BaseHandler):
     SESSION_COOKIE_NAME = 'sid'
 
     def _has_request_session(self):
@@ -35,7 +39,7 @@ class SessionHandler(base.handlers.BaseHandler):
         cookie = Cookie.SimpleCookie()
         cookie[self.SESSION_COOKIE_NAME] = session.session_id
         morsel = cookie[self.SESSION_COOKIE_NAME]
-        morsel['path'] = '/'
+        morsel['path'] = self._get_path()
         # TODO(mihaip): expiration?
 
         self.response.headers.add_header(
@@ -51,7 +55,7 @@ class SessionHandler(base.handlers.BaseHandler):
         self.response.headers.add_header(
             'Set-Cookie', morsel.output(header='').lstrip())
 
-class ApiHandler(SessionHandler):
+class SessionApiHandler(SessionHandler):
     def get(self):
         self._dispatch_request(
             lambda: self._get_signed_in(), lambda: self._get_signed_out())
@@ -100,20 +104,11 @@ class ApiHandler(SessionHandler):
     def _post_signed_out(self):
         raise NotImplementedError()
 
-class MainHandler(ApiHandler):
-    def _get_signed_in(self):
-        twitter_user = self._api.GetUser(self._session.twitter_id)
-        self._write_template('birdfeeder/index-signed-in.html', {
-          'twitter_user': twitter_user,
-        })
-
-    def _get_signed_out(self):
-        self._write_template('birdfeeder/index-signed-out.html')
-
-class SignInHandler(base.handlers.BaseHandler):
+class SignInHandler(BaseHandler):
     def get(self):
         request_url = urlparse.urlparse(self.request.url)
-        callback_url = '%s://%s/bird-feeder/callback' % (request_url.scheme, request_url.netloc)
+        callback_url = '%s://%s%s' % (
+            request_url.scheme, request_url.netloc, self._get_path('callback'))
         resp, content = TWITTER_OAUTH_CLIENT.request(
             TWITTER_SERVICE_PROVIDER.request_token_url,
             'POST',
@@ -187,9 +182,9 @@ class CallbackHandler(SessionHandler):
 
         self._set_request_session(session)
 
-        self.redirect('/bird-feeder')
+        self.redirect(self._get_path())
 
 class SignOutHandler(SessionHandler):
     def get(self):
         self._remove_request_session()
-        self.redirect('/bird-feeder')
+        self.redirect(self._get_path())

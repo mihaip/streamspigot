@@ -7,7 +7,7 @@
   {% include "intro.snippet" %}
 
   <p>You're signed in as {{ twitter_user.screen_name}}.
-  <a href="/bird-feeder/sign-out">Sign out</a>.</p>
+  <a href="{{ sign_out_path }}">Sign out</a>.</p>
 {% endblock %}
 
 {% block body %}
