@@ -1,14 +1,13 @@
-import base64
 import datetime
 import logging
 import time
 import urllib
 import urlparse
-import uuid
 
 from google.appengine.ext import db
 
 from base.constants import CONSTANTS
+import base.util
 from datasources import googlereader
 
 class FeedInfoData(db.Model):
@@ -207,9 +206,7 @@ def create_subscription(feed_url, start_date, frequency):
     start_position = _get_nearest_item_index(feed_info, start_date)
 
     feed_title = feed_info.title
-    # Compact encoding of a UUID
-    subscription_id = base64.urlsafe_b64encode(
-        uuid.uuid4().bytes).replace('=', '')
+    subscription_id = base.util.generate_id('s')
 
     reader_tag_name = '%s (%s)' % (feed_title, subscription_id)
     reader_stream_id = 'user/%s/label/%s' % (
