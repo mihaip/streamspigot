@@ -25,12 +25,19 @@ class TimelineFeedHandler(FeedHandler):
         user = self._api.GetUser(self._session.twitter_id)
         statuses = self._api.GetFriendsTimeline(
             count=10, retweets=True, include_entities=True)
-        statuses = datasources.twitterdisplay.DisplayStatus.wrap(statuses)
+        # We don't actually want statuses grouped, instead we want one status
+        # per item.
+        status_groups = [
+            datasources.twitterdisplay.StatusGroup(
+                user=status.user, statuses=[status])
+            for status in statuses
+        ]
+
         self._write_template('birdfeeder/feed.atom', {
               'feed_title': '@%s Twitter Timeline' % user.screen_name,
               'updated_date_iso': datetime.datetime.utcnow().isoformat(),
               'feed_url': self.request.url,
-              'statuses': statuses,
+              'status_groups': status_groups,
             },
-            content_type='text/xml')
+            content_type='application/atom+xml')
 

@@ -1,4 +1,5 @@
 import datetime
+import itertools
 import xml.sax.saxutils
 
 from base.constants import CONSTANTS
@@ -6,6 +7,13 @@ from datasources import twitter
 
 _BASE_TWITTER_URL = 'https://twitter.com'
 _LINK_ATTRIBUTES = 'style="color:%s"' % CONSTANTS.ANCHOR_COLOR
+
+class StatusGroup(object):
+    def __init__(self, user, statuses):
+        self.user = user
+        self.statuses = statuses
+        self.display_statuses = DisplayStatus.wrap(statuses)
+        self.status_pairs = itertools.izip(self.statuses, self.display_statuses)
 
 class DisplayStatus(object):
     def __init__(self, status):

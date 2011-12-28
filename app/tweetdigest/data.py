@@ -45,14 +45,6 @@ def _get_digest_twitter_api(max_cache_age, key):
     ))
     return api
 
-class StatusGroup(object):
-    def __init__(self, user, statuses):
-        self.user = user
-        self.statuses = statuses
-        self.display_statuses = \
-            datasources.twitterdisplay.DisplayStatus.wrap(statuses)
-        self.status_pairs = itertools.izip(self.statuses, self.display_statuses)
-
 def _get_digest_timestamps():
     # From the current time
     now = time.gmtime()
@@ -98,7 +90,7 @@ def _process_digest_statuses(
     for username, statuses in itertools.groupby(
         digest_statuses, lambda status: status.user.id):
         statuses = list(statuses)
-        status_groups.append(StatusGroup(
+        status_groups.append(datasources.twitterdisplay.StatusGroup(
             user=statuses[0].user,
             statuses=statuses))
 

@@ -1,3 +1,4 @@
+{% spaceless %}
 <?xml version="1.0"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>{{ feed_url }}</id>
@@ -14,18 +15,25 @@
   <author>
     <name>{{ APP_NAME }} : Bird Feeder</name>
   </author>
-  {% for status in statuses %}
-    <entry>
-      <id>{{ status.permalink }}</id>
-      <link rel="alternate" href="{{ status.permalink }}" type="text/html"/>
-      <title type="text">{{ status.title_as_text }}</title>
-      <published>{{ status.created_at_iso }}Z</published>
-      <updated>{{ status.created_at_iso }}Z</updated>
-      <content type="xhtml" xml:base="http://twitter.com/">
-        <div xmlns="http://www.w3.or4g/1999/xhtml">
-          {{ status.body_as_html|safe }}
-        </div>
-      </content>
-    </entry>
+  {% for status_group in status_groups %}
+    {% with status_group.display_statuses.0 as display_status %}
+      <entry>
+        <id>{{ display_status.permalink }}</id>
+        <link rel="alternate" href="{{ display_status.permalink }}" type="text/html"/>
+        <title type="text">{{ display_status.title_as_text }}</title>
+        <published>{{ display_status.created_at_iso }}Z</published>
+        <updated>{{ display_status.created_at_iso }}Z</updated>
+        <content type="xhtml" xml:base="http://twitter.com/">
+          <div xmlns="http://www.w3.org/1999/xhtml">
+            <table style="border-spacing:0;border-collapse:collapse;font-family:sans-serif;color:{{ BUBBLE_TEXT_COLOR }}" cellpadding="0">
+              {% with '0' as bottom_margin %}
+                {% include 'base/status-group.snippet' %}
+              {% endwith %}
+            </table>
+          </div>
+        </content>
+      </entry>
+    {% endwith %}
   {% endfor %}
 </feed>
+{% endspaceless %}
