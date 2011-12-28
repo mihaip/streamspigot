@@ -51,6 +51,7 @@ class StatusGroup(object):
         self.statuses = statuses
         self.display_statuses = \
             datasources.twitterdisplay.DisplayStatus.wrap(statuses)
+        self.status_pairs = itertools.izip(self.statuses, self.display_statuses)
 
 def _get_digest_timestamps():
     # From the current time

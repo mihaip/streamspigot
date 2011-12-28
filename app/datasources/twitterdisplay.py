@@ -8,12 +8,8 @@ _BASE_TWITTER_URL = 'https://twitter.com'
 _LINK_ATTRIBUTES = 'style="color:%s"' % CONSTANTS.ANCHOR_COLOR
 
 class DisplayStatus(object):
-
     def __init__(self, status):
         self._status = status
-        # TODO(mihaip): this is lame, and should be removed once the templates
-        # are switched to Django 1.2
-        status.display_status = self
 
     def permalink(self, base_url=_BASE_TWITTER_URL):
         return '%s/%s/status/%s' % (
