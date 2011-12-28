@@ -21,9 +21,11 @@ except:
 TWITTER_SERVICE_PROVIDER = SERVICE_PROVIDERS['birdfeeder:twitter']
 TWITTER_OAUTH_CLIENT = TWITTER_SERVICE_PROVIDER.get_oauth_client()
 
+BASE_PATH = '/bird-feeder'
+
 class BaseHandler(base.handlers.BaseHandler):
     def _get_path(self, path=''):
-        return '/bird-feeder/%s' % path
+        return '%s/%s' % (BASE_PATH, path)
 
 class SessionHandler(BaseHandler):
     SESSION_COOKIE_NAME = 'sid'
@@ -39,7 +41,7 @@ class SessionHandler(BaseHandler):
         cookie = Cookie.SimpleCookie()
         cookie[self.SESSION_COOKIE_NAME] = session.session_id
         morsel = cookie[self.SESSION_COOKIE_NAME]
-        morsel['path'] = self._get_path()
+        morsel['path'] = BASE_PATH
         # TODO(mihaip): expiration?
 
         self.response.headers.add_header(
@@ -49,7 +51,7 @@ class SessionHandler(BaseHandler):
         cookie = Cookie.SimpleCookie()
         cookie[self.SESSION_COOKIE_NAME] = 'expired'
         morsel = cookie[self.SESSION_COOKIE_NAME]
-        morsel['path'] = '/'
+        morsel['path'] = BASE_PATH
         morsel['expires'] = 'Sat, 1-Jan-2000 00:00:00'
 
         self.response.headers.add_header(
