@@ -24,7 +24,7 @@ class TimelineFeedHandler(FeedHandler):
     def _get_signed_in(self):
         user = self._api.GetUser(self._session.twitter_id)
         statuses = self._api.GetFriendsTimeline(
-            count=10, retweets=True, include_entities=True)
+            count=50, retweets=True, include_entities=True)
         # We don't actually want statuses grouped, instead we want one status
         # per item.
         status_groups = [
