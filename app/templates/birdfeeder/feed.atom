@@ -1,13 +1,17 @@
 <?xml version="1.0"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   {% for status in statuses %}
-  <entry>
-    <title type="text">{{ status.user.screen_name }}: {{ status.text|escape }}</title>
-    <content type="xhtml" xml:base="http://twitter.com/">
-      <div xmlns="http://www.w3.org/1999/xhtml">
-        {{ status.text|escape }}
-      </div>
-    </content>
-  </entry>
+    <entry>
+      <id>{{ status.permalink|escape }}</id>
+      <link rel="alternate" href="{{ status.permalink|escape }}" type="text/html"/>
+      <title type="text">{{ status.title_as_text|escape }}</title>
+      <published>{{ status.created_at_iso }}Z</published>
+      <updated>{{ status.created_at_iso }}Z</updated>
+      <content type="xhtml" xml:base="http://twitter.com/">
+        <div xmlns="http://www.w3.or4g/1999/xhtml">
+          {{ status.body_as_html }}
+        </div>
+      </content>
+    </entry>
   {% endfor %}
 </feed>

@@ -1,4 +1,5 @@
 import birdfeeder.data as data
+import datasources.twitterdisplay
 import session
 
 # Overrides the session accessors from SessionHandler to key the session
@@ -21,6 +22,7 @@ class TimelineFeedHandler(FeedHandler):
     def _get_signed_in(self):
         statuses = self._api.GetFriendsTimeline(
             count=10, retweets=True, include_entities=True)
+        statuses = datasources.twitterdisplay.DisplayStatus.wrap(statuses)
         self._write_template('birdfeeder/feed.atom', {
               'statuses': statuses,
             },

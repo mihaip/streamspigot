@@ -6,11 +6,6 @@ import base.handlers
 import base.util
 import data
 
-class LinkFormatter(object):
-    def get_attributes(self):
-        return 'style="color:%s"' % CONSTANTS.ANCHOR_COLOR
-LINK_FORMATTER = LinkFormatter()
-
 class MainHandler(base.handlers.BaseHandler):
     def get(self):
         self._write_template('tweetdigest/index.html')
@@ -79,12 +74,10 @@ class DigestHandler(base.handlers.BaseHandler):
         # Generate digest
         if usernames:
             (grouped_statuses, start_date, error_usernames) = \
-                data.get_digest_for_usernames(
-                    usernames, LINK_FORMATTER)
+                data.get_digest_for_usernames(usernames)
         else:
             (grouped_statuses, start_date, had_error) = \
-                data.get_digest_for_list(
-                    list_owner, list_id, LINK_FORMATTER)
+                data.get_digest_for_list(list_owner, list_id)
 
         # Template parameters
         digest_errors = None

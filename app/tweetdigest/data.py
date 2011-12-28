@@ -5,7 +5,6 @@ import logging
 import os
 import re
 import time
-import xml.sax.saxutils
 import zlib
 
 from google.appengine.api import urlfetch
@@ -13,6 +12,7 @@ from google.appengine.api import urlfetch
 from base.constants import CONSTANTS
 from datasources import twitter, twitterappengine
 from datasources.oauth_keys import SERVICE_PROVIDERS
+import datasources.twitterdisplay
 
 TWITTER_SERVICE_PROVIDER = SERVICE_PROVIDERS['tweetdigest:twitter']
 DIGEST_LENGTH = 60 * 60 * 24
@@ -49,98 +49,8 @@ class StatusGroup(object):
     def __init__(self, user, statuses):
         self.user = user
         self.statuses = statuses
-
-def get_status_text_as_html(status, link_formatter):
-    text_as_html = []
-    footer_as_html = []
-
-    def add_raw_chunk(chunk):
-        text_as_html.append(chunk)
-
-    def add_tweet_chunk(chunk):
-        # Twitter escapes < and > in status texts, but not & (see
-        # http://code.google.com/p/twitter-api/issues/detail?id=1695). Unescape
-        # then and re-escape everything so that we can have a consistent level
-        # of escaping (we also unescape &amp; in case the Twitter bug does get
-        # fixed).
-        add_escaped_chunk(
-            chunk.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&'))
-
-    def add_escaped_chunk(chunk):
-        add_raw_chunk(xml.sax.saxutils.escape(chunk))
-
-    def add_footer_raw_chunk(chunk):
-        footer_as_html.append(chunk)
-
-    # For native retweets, render retweeted status, so that the RT prefix is
-    # not counted against the 140 character limit and so that we get media
-    # entities.
-    if status.retweeted_status:
-        status = status.retweeted_status
-        add_raw_chunk('RT: <a href="')
-        add_escaped_chunk(status.user.screen_name)
-        add_raw_chunk('" %s>@' % link_formatter.get_attributes())
-        add_escaped_chunk(status.user.screen_name)
-        add_raw_chunk('</a>: ')
-
-    entities = list(
-        (status.hashtags or []) +
-        (status.urls or []) +
-        (status.user_mentions or []) +
-        (status.medias or []))
-    entities = [
-        e for e in entities if e.start_index != -1 and e.end_index != -1]
-    entities.sort(cmp=lambda e1,e2: e1.start_index - e2.start_index)
-    last_entity_end = 0
-
-    for e in entities:
-      add_tweet_chunk(status.text[last_entity_end:e.start_index])
-
-      entity_anchor_text = status.text[e.start_index:e.end_index]
-      entity_url = None
-
-      if isinstance(e, twitter.Hashtag):
-          entity_url = 'search?q=%23' + e.text
-      elif isinstance(e, twitter.Url):
-          entity_url = e.url
-          entity_url_anchor_text = e.display_url or e.expanded_url or e.url
-          if entity_url_anchor_text:
-              entity_anchor_text = xml.sax.saxutils.escape(entity_url_anchor_text)
-      elif isinstance(e, twitter.User):
-          entity_url = e.screen_name
-      elif isinstance(e, twitter.Media):
-          entity_url = e.url
-          entity_url_anchor_text = e.display_url or e.expanded_url or e.url
-          if entity_url_anchor_text:
-              entity_anchor_text = xml.sax.saxutils.escape(entity_url_anchor_text)
-          if e.type == 'photo':
-            # Appending /large seems to generate a lightbox view of that image
-            link_url = e.expanded_url + '/large'
-            thumb_url, thumb_width, thumb_height = \
-                e.GetUrlForSize(twitter.Media.THUMB_SIZE)
-            add_footer_raw_chunk(
-                '<a href="%s" border="0">'
-                  '<img src="%s" width="%d" height="%d" alt="">'
-                '</a>' %
-                (link_url , thumb_url, thumb_width, thumb_height))
-
-      if entity_url:
-          add_raw_chunk('<a href="')
-          add_escaped_chunk(entity_url)
-          add_raw_chunk('" %s>' % link_formatter.get_attributes())
-          add_tweet_chunk(entity_anchor_text)
-          add_raw_chunk('</a>')
-      else:
-          add_tweet_chunk(entity_anchor_text)
-
-      last_entity_end = e.end_index
-
-    add_tweet_chunk(status.text[last_entity_end:])
-
-    result = ''.join(text_as_html)
-    if footer_as_html:
-      result += '<p>' + ''.join(footer_as_html) + '</p>'
-    return result
+        self.display_statuses = \
+            datasources.twitterdisplay.DisplayStatus.wrap(statuses)
 
 def _get_digest_timestamps():
     # From the current time
@@ -170,19 +80,13 @@ def _get_digest_timestamps():
     return digest_start_time, digest_end_time, max_cache_age
 
 def _process_digest_statuses(
-    statuses, digest_start_time, digest_end_time, link_formatter, error_info):
+    statuses, digest_start_time, digest_end_time, error_info):
     # Filter them for the ones that fall in the window
     digest_statuses = [
         s for s in statuses
         if s.created_at_in_seconds <= digest_end_time and
             s.created_at_in_seconds > digest_start_time
     ]
-
-    # Decorate them with the HTML representation of the text and formatted dates
-    for s in digest_statuses:
-        s.text_as_html = get_status_text_as_html(s, link_formatter)
-        s.created_at_formatted_gmt = datetime.datetime.utcfromtimestamp(
-            s.created_at_in_seconds).strftime("%I:%M %p")
 
     # Order them in chronological order
     digest_statuses.sort(
@@ -256,7 +160,7 @@ class UserTwitterFetcher(TwitterFetcher):
     def _id(self):
         return 'user "%s"' % self._username
 
-def get_digest_for_list(list_owner, list_id, link_formatter):
+def get_digest_for_list(list_owner, list_id):
     digest_start_time, digest_end_time, max_cache_age = _get_digest_timestamps()
 
     api = _get_digest_twitter_api(
@@ -266,9 +170,9 @@ def get_digest_for_list(list_owner, list_id, link_formatter):
     statuses, had_error = fetcher.fetch()
 
     return _process_digest_statuses(
-        statuses, digest_start_time, digest_end_time, link_formatter, had_error)
+        statuses, digest_start_time, digest_end_time, had_error)
 
-def get_digest_for_usernames(usernames, link_formatter):
+def get_digest_for_usernames(usernames):
     digest_start_time, digest_end_time, max_cache_age = _get_digest_timestamps()
 
     statuses = []
@@ -284,7 +188,7 @@ def get_digest_for_usernames(usernames, link_formatter):
             statuses.extend(user_statuses)
 
     return _process_digest_statuses(
-        statuses, digest_start_time, digest_end_time, link_formatter, error_usernames)
+        statuses, digest_start_time, digest_end_time, error_usernames)
 
 class UserListsTwitterFetcher(TwitterFetcher):
     def __init__(self, api, username):

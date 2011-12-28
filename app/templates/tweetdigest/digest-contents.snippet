@@ -16,8 +16,8 @@
           <div style="background: {{ BUBBLE_COLOR }};margin:0 0 1.5em 0">
             {% for status in status_group.statuses %}
               <div style="padding:0.5em;{% if not forloop.first %} border-top:solid 1px {{ BUBBLE_SEPARATOR_COLOR }} {% endif %}">
-                {{ status.text_as_html }}
-                
+                {{ status.display_status.body_as_html }}
+
                 <div style="font-size:0.8em;text-align:right;margin:0.2em 0 0 0">
                   <a href="/{{ status.user.screen_name|escape }}/status/{{ status.id|escape }}"
                     {#  Only include the full date as a tooltip if using relative (script) dates, since otherwise it's a repetition #}
@@ -25,18 +25,18 @@
                         title="{{ status.created_at|escape }}"
                     {% endif %}
                      style="color:{{ ANCHOR_COLOR }}">
-                    {% if use_relative_dates %}{{ status.relative_created_at|escape }}{% else %}at {{ status.created_at_formatted_gmt|escape }} GMT{% endif %}</a>
+                    {% if use_relative_dates %}{{ status.relative_created_at|escape }}{% else %}at {{ status.display_status.created_at_formatted_gmt|escape }} GMT{% endif %}</a>
                   from {{ status.source|striptags }}
                   {%if status.in_reply_to_status_id %}
                     <a href="{{ status.in_reply_to_screen_name|escape }}/status/{{ status.in_reply_to_status_id }}" style="color:{{ ANCHOR_COLOR }}">in reply to {{ status.in_reply_to_screen_name|escape }}</a>
                   {% endif %}
                 </div>
-                
+
               </div>
             {% endfor %}
           </div>
         </td>
-      </tr>    
+      </tr>
     {% endfor %}
   {% else %}
     <tr>
