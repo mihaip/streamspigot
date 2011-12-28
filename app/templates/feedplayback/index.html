@@ -1,10 +1,10 @@
-{% extends "../base/page.html" %}
+{% extends "base/page.html" %}
 
-{% block title %}{{ APP_NAME|escape}} : Feed Playback{% endblock %}
+{% block title %}{{ APP_NAME }} : Feed Playback{% endblock %}
 {% block subtitle %}Feed Playback{% endblock %}
 
 {% block intro %}
-  <p>This <a href="/">{{ APP_NAME|escape }}</a> tool lets you read blogs (or
+  <p>This <a href="/">{{ APP_NAME }}</a> tool lets you read blogs (or
   anything else with an RSS or Atom feed) from the beginning. In addition to
   being useful for newly-discovered blogs with big archives, it also works
   well for <a href="http://sysadvent.blogspot.com/" class="sample-feed">topical</a>
@@ -13,7 +13,7 @@
   if you want to learn
   <a href="http://daily-scala.blogspot.com/" class="sample-feed">something</a>
   <a href="http://52weeksofux.com/" class="sample-feed">new</a>.</p>
-  
+
   <p>Simply enter the URL of the blog or feed that you wish to play back,
   and (optionally) pick a start date and update frequency if you don't want to
   read it from the beginning. Once the playback is setup, you'll get an Atom
@@ -21,7 +21,7 @@
 {% endblock %}
 
 {% block body %}
-<div class="symbol">&#8675;</div>  
+<div class="symbol">&#8675;</div>
 
 <form id="feedplayback-setup-form">
   <table id="feedplayback-setup-table" class="disabled">
@@ -63,7 +63,7 @@
         </select>
       </td>
     </tr>
-  
+
     <tr>
       <td class="label"></td>
       <td>
@@ -93,7 +93,7 @@
     <div id="feedplayback-error-details" class="hidden">
       Status code: <span id="feedplayback-error-details-status"></span><br>
       Response: <pre id="feedplayback-error-details-response"></pre>
-    </div>    
+    </div>
   </div>
 </div>
 {% endblock %}
@@ -103,7 +103,7 @@
   <p>The tool uses Google Reader's feed archive to get data, which means that
   if a blog predates Google Reader (which launched in October 2005) it may
   be missing posts.</p>
-  
+
   <p>The Atom feed that is generated is a Google Reader tag feed. This means
   that Reader metadata about the original post (who shared or liked it,
   published and crawl date, etc.) is preserved, and content is not duplicated.

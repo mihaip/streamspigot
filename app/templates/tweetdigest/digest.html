@@ -1,11 +1,11 @@
-{% extends "../base/page.html" %}
+{% extends "base/page.html" %}
 
-{% block title %}{{ APP_NAME|escape }}: Tweet Digest for {{ title_date|escape }}{% endblock %}
+{% block title %}{{ APP_NAME }}: Tweet Digest for {{ title_date }}{% endblock %}
 
 {% block head %}
-<link href="{{ feed_url|escape }}"
+<link href="{{ feed_url }}"
       rel="alternate"
-      title="Tweet Digest of {{ digest_source|striptags|escape }} - {{ APP_NAME|escape }}"
+      title="Tweet Digest of {{ digest_source|striptags }} - {{ APP_NAME }}"
       type="application/atom+xml">
 <script src="/static/main.js"></script>
 <link rel="stylesheet" type="text/css" href="/static/main.css">
@@ -23,24 +23,24 @@
 {% endblock %}
 
 {% block subtitle %}Tweet Digest{% endblock %}
-{% block subsubtitle %}for {{ title_date|escape }}{% endblock %}
+{% block subsubtitle %}for {{ title_date }}{% endblock %}
 
 {% block intro %}
-  <p>This is a digest of {{ digest_source }}. It is also available
-  <a href="{{ feed_url|escape }}" class="feed-link">as a feed</a>.</p>
+  <p>This is a digest of {{ digest_source|safe }}. It is also available
+  <a href="{{ feed_url }}" class="feed-link">as a feed</a>.</p>
 {% endblock %}
 
 {% block body %}
 <div id="content">
-  {{ digest_contents }}
+  {{ digest_contents|safe }}
 </div>
 {% endblock %}
 
 {% block footer %}
 {% if digest_errors %}
-  <p class="errors">{{ digest_errors }}</p>
+  <p class="errors">{{ digest_errors|safe }}</p>
 {% endif %}
 <p>To create a new digest, see the
-<a href="{{ APP_URL|escape }}/tweet-digest">Tweet Digest tool</a> on
-<a href="{{ APP_URL|escape }}">{{ APP_NAME|escape }}</a>.</p>
+<a href="{{ APP_URL }}/tweet-digest">Tweet Digest tool</a> on
+<a href="{{ APP_URL }}">{{ APP_NAME }}</a>.</p>
 {% endblock %}

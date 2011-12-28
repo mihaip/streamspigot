@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>{% block title %}{{ APP_NAME|escape }}{% endblock %}</title>
+	<title>{% block title %}{{ APP_NAME }}{% endblock %}</title>
 	<link rel="stylesheet" type="text/css" href="/static/main.css">
 	<script src="/static/closure-lite.js"></script>
 	<script src="/static/main.js"></script>
@@ -16,13 +16,13 @@
       ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
       var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
     })();
-  </script>	
+  </script>
   {% endif %}
 </head>
 <body>
 
 <div id="header">
-  <a href="/" id="title"><h1>{{ APP_NAME|escape }}</h1></a>
+  <a href="/" id="title"><h1>{{ APP_NAME }}</h1></a>
   <div id="subtitle">
     {% block subtitle %}{% endblock %}
     <div id="subsubtitle">{% block subsubtitle %}{% endblock %}</div>
@@ -33,9 +33,9 @@
   <div id="intro" class="block">
     {% block intro %}{% endblock %}
   </div>
-  
+
   {% block body %}{% endblock %}
-  
+
   <div id="footer" class="block">
     {% block footer %}{% endblock %}
   </div>

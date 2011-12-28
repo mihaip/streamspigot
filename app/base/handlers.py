@@ -1,20 +1,33 @@
 import os
 
+from django.conf import settings
 from django.utils import simplejson
+from django.template.loader import get_template
+from django.template import Context
 from google.appengine.ext import webapp
-from google.appengine.ext.webapp import template
 
 import base.constants
 
 class BaseHandler(webapp.RequestHandler):
     def _render_template(self, template_file_name, template_values={}):
-        template_path = os.path.join(
-            os.path.dirname(__file__), '..', 'templates', template_file_name)
+        # Temporarily insert the template's directory into the template path,
+        # so that templates in the same directory may be included without
+        # needing their full path
+        previous_template_paths = list(settings.TEMPLATE_DIRS)
+        template_directory = os.path.join(
+            settings.TEMPLATE_DIRS[0], os.path.dirname(template_file_name))
+        settings.TEMPLATE_DIRS += (template_directory,)
+
+        template = get_template(template_file_name)
         template_values.update(base.constants.CONSTANTS)
-        rendered_template = template.render(template_path, template_values)
+        rendered_template = template.render(Context(template_values))
         # Django templates are returned as utf-8 encoded by default
         if not isinstance(rendered_template, unicode):
           rendered_template = unicode(rendered_template, 'utf-8')
+
+        # Restore template path.
+        settings.TEMPLATE_DIRS = previous_template_paths
+
         return rendered_template
 
     def _write_template(

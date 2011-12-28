@@ -2,14 +2,14 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   {% for status in statuses %}
     <entry>
-      <id>{{ status.permalink|escape }}</id>
-      <link rel="alternate" href="{{ status.permalink|escape }}" type="text/html"/>
-      <title type="text">{{ status.title_as_text|escape }}</title>
+      <id>{{ status.permalink }}</id>
+      <link rel="alternate" href="{{ status.permalink }}" type="text/html"/>
+      <title type="text">{{ status.title_as_text }}</title>
       <published>{{ status.created_at_iso }}Z</published>
       <updated>{{ status.created_at_iso }}Z</updated>
       <content type="xhtml" xml:base="http://twitter.com/">
         <div xmlns="http://www.w3.or4g/1999/xhtml">
-          {{ status.body_as_html }}
+          {{ status.body_as_html|safe }}
         </div>
       </content>
     </entry>

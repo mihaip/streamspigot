@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <id>tag:persistent.info,2007:/twitter-digest/{{ digest_id|escape }}</id>
-  <link rel="self" href="{{ feed_url|escape }}"/>
-  <link rel="alternate" type="text/html" href="{{ html_url|escape }}"/>
-  <title>Tweet Digest of {{ digest_source|striptags|escape }} - {{ APP_NAME|escape }}</title>
+  <id>tag:persistent.info,2007:/twitter-digest/{{ digest_id }}</id>
+  <link rel="self" href="{{ feed_url }}"/>
+  <link rel="alternate" type="text/html" href="{{ html_url }}"/>
+  <title>Tweet Digest of {{ digest_source|striptags }} - {{ APP_NAME }}</title>
   <updated>{{ start_date_iso }}Z</updated>
   <author>
-    <name>{{ APP_NAME|escape }}</name>
+    <name>{{ APP_NAME }}</name>
   </author>
   <entry>
-    <id>tag:persistent.info,2007:/twitter-digest/{{ digest_entry_id|escape }}</id>
-    <title type="text">Tweet Digest for {{ title_date|escape }}</title>
+    <id>tag:persistent.info,2007:/twitter-digest/{{ digest_entry_id }}</id>
+    <title type="text">Tweet Digest for {{ title_date }}</title>
     <updated>{{ start_date_iso }}Z</updated>
-    <link rel="alternate" type="text/html" href="{{ html_url|escape }}"/>
+    <link rel="alternate" type="text/html" href="{{ html_url }}"/>
     <content type="xhtml" xml:base="http://twitter.com/">
       <div xmlns="http://www.w3.org/1999/xhtml">
-        {{ digest_contents }}
+        {{ digest_contents|safe }}
         {% if digest_errors %}
-          <p style="padding:.5em;background:#fdd;">{{ digest_errors }}</p>
-        {% endif %}        
+          <p style="padding:.5em;background:#fdd;">{{ digest_errors|safe }}</p>
+        {% endif %}
       </div>
     </content>
   </entry>
