@@ -1,3 +1,5 @@
+import datetime
+
 import birdfeeder.data as data
 import datasources.twitterdisplay
 import session
@@ -20,10 +22,14 @@ class FeedHandler(session.SessionApiHandler):
 
 class TimelineFeedHandler(FeedHandler):
     def _get_signed_in(self):
+        user = self._api.GetUser(self._session.twitter_id)
         statuses = self._api.GetFriendsTimeline(
             count=10, retweets=True, include_entities=True)
         statuses = datasources.twitterdisplay.DisplayStatus.wrap(statuses)
         self._write_template('birdfeeder/feed.atom', {
+              'feed_title': '@%s Twitter Timeline' % user.screen_name,
+              'updated_date_iso': datetime.datetime.utcnow().isoformat(),
+              'feed_url': self.request.url,
               'statuses': statuses,
             },
             content_type='text/xml')

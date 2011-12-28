@@ -1,5 +1,19 @@
 <?xml version="1.0"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
+  <id>{{ feed_url }}</id>
+  <link rel="self" href="{{ feed_url }}"/>
+  <link rel="alternate" href="{{ APP_URL }}/bird-feeder" type="text/html"/>
+  <title>{{ feed_title }} - {{ APP_NAME }} : Bird Feeder</title>
+  <updated>{{ updated_date_iso }}Z</updated>
+  {% comment %}
+    We could put in a per-post author name with the Twitter user's screen name,
+    but that would just duplicate information in the body. By only having a
+    feed-level author, the feed is still valid, but Google Reader won't display
+    a per-post author line.
+  {% endcomment %}
+  <author>
+    <name>{{ APP_NAME }} : Bird Feeder</name>
+  </author>
   {% for status in statuses %}
     <entry>
       <id>{{ status.permalink }}</id>
