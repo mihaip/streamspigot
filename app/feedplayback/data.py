@@ -1,4 +1,3 @@
-import datetime
 import logging
 import time
 import urllib
@@ -17,7 +16,7 @@ class FeedInfoData(db.Model):
 
     @classmethod
     def kind(cls):
-        return "feedplayback.FeedInfoData"
+        return 'feedplayback.FeedInfoData'
 
 class FeedInfo(object):
     def __init__(self, feed_url, title, item_ids, item_timestamps_usec):
@@ -84,7 +83,7 @@ class SubscriptionData(db.Model):
 
     @classmethod
     def kind(cls):
-        return "feedplayback.SubscriptionData"
+        return 'feedplayback.SubscriptionData'
 
 class Subscription(object):
     def __init__(self, id, reader_stream_id, feed_url, frequency, frequency_modulo, position):
@@ -177,8 +176,8 @@ def get_subscription_by_id(id):
 
 def get_subscriptions_with_frequency_and_modulo(frequency, frequency_modulo):
     query = SubscriptionData.all()
-    query.filter("frequency =", frequency)
-    query.filter("frequency_modulo =", frequency_modulo)
+    query.filter('frequency =', frequency)
+    query.filter('frequency_modulo =', frequency_modulo)
 
     subscriptions = []
     for result in query:
