@@ -8,6 +8,12 @@ from datasources import twitter
 _BASE_TWITTER_URL = 'https://twitter.com'
 _LINK_ATTRIBUTES = 'style="color:%s"' % CONSTANTS.ANCHOR_COLOR
 
+# Twitter escapes < and > in status texts, but not & (see
+# http://code.google.com/p/twitter-api/issues/detail?id=1695). To be safe, we
+# unescape &amp too, in case the Twitter bug does get fixed.
+def _unescape_tweet_chunk(chunk):
+    return chunk.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&')
+
 class StatusGroup(object):
     def __init__(self, user, statuses):
         self.user = user
@@ -27,7 +33,9 @@ class DisplayStatus(object):
         return self.url(base_url='')
 
     def title_as_text(self):
-        return '%s: %s' % (self._status.user.screen_name, self._status.text)
+        return '%s: %s' % (
+            self._status.user.screen_name,
+            _unescape_tweet_chunk(self._status.text))
 
     def created_at_formatted_gmt(self):
         return datetime.datetime.utcfromtimestamp(
@@ -46,13 +54,9 @@ class DisplayStatus(object):
             text_as_html.append(chunk)
 
         def add_tweet_chunk(chunk):
-            # Twitter escapes < and > in status texts, but not & (see
-            # http://code.google.com/p/twitter-api/issues/detail?id=1695). Unescape
-            # then and re-escape everything so that we can have a consistent level
-            # of escaping (we also unescape &amp; in case the Twitter bug does get
-            # fixed).
-            add_escaped_chunk(
-                chunk.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&'))
+            # Unescape then and re-escape everything so that we can have a
+            # consistent level of escaping.
+            add_escaped_chunk(_unescape_tweet_chunk(chunk))
 
         def add_escaped_chunk(chunk):
             add_raw_chunk(xml.sax.saxutils.escape(chunk))
