@@ -7,8 +7,8 @@ from google.appengine.api import memcache
 from google.appengine.ext import db
 
 class _DbCacheEntry(db.Model):
-    value = db.BlobProperty(required=True)
-    timestamp = db.DateTimeProperty(required=True, auto_now=True)
+    value = db.BlobProperty(required=True, indexed=False)
+    timestamp = db.DateTimeProperty(required=True, auto_now=True, indexed=False)
 
 class DbCache(object):
     '''Simple cache on top of Google App Engine's datastore'''
@@ -18,7 +18,7 @@ class DbCache(object):
             return entry.value
         else:
             return None
-  
+
     def Set(self, key, data):
         entry = _DbCacheEntry.get_by_key_name(key)
         if not entry:
@@ -28,7 +28,7 @@ class DbCache(object):
         else:
             entry.value = data
         entry.put()
-  
+
     def GetCachedTime(self, key):
         entry = _DbCacheEntry.get_by_key_name(key)
         if entry:
@@ -40,11 +40,11 @@ class DbCache(object):
                 return None
             except:
               return None
-      
+
             return time.mktime(entry.timestamp.utctimetuple())
         else:
             return None
-    
+
         return None
 
 class MemcacheCache(object):
@@ -63,4 +63,3 @@ class MemcacheCache(object):
         if values:
             return values[0]
         return None
-    

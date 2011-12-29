@@ -10,7 +10,7 @@ import base.util
 from datasources import googlereader
 
 class FeedInfoData(db.Model):
-    title = db.StringProperty()
+    title = db.StringProperty(indexed=False)
     item_ids = db.StringListProperty(indexed=False)
     item_timestamps_usec = db.ListProperty(long, indexed=False)
 
@@ -71,15 +71,15 @@ def get_feed_info_from_feed_url(feed_url):
         item_timestamps_usec=feed_info.item_timestamps_usec)
 
 class SubscriptionData(db.Model):
-    reader_stream_id = db.StringProperty()
-    feed_url = db.StringProperty()
+    reader_stream_id = db.StringProperty(indexed=False)
+    feed_url = db.StringProperty(indexed=False)
     frequency = db.StringProperty()
     # Remainder of days-since-epoch of subscription creation divided by update
     # frequency (i.e. modulo of 2 for every other day, modulo of 7 for weekly),
     # so that we can figure out for the daily cron job invocation which
     # subscriptions to advance.
     frequency_modulo = db.IntegerProperty()
-    position = db.IntegerProperty()
+    position = db.IntegerProperty(indexed=False)
 
     @classmethod
     def kind(cls):
