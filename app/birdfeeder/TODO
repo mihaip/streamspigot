@@ -1,0 +1,30 @@
+todo:
+- make sure that JsonProperty is not pretty-printed (and gzip?)
+- catch exceptions when fetching timeline tweets
+- reply and retweet links
+- inline other images
+- use larger size for inline images
+- Twitter Streaming API/PSHB proxy (in Go)
+- If-Modified-Since support in feed handler
+- allow feed ID to be revoked
+- use user timezone to format timestamps (instead of GMT)
+- "scavenger" to delete old tweets
+- make twitter API cache interface more efficient (right now it does two RPCs for cache hits, one to get the timestamp, one for the data)
+- remove URLs (especially if at end?) from title snippet
+
+done:
+- update oauth_template
+- require less repetition of /bird-feeder in paths
+- clean up handlers.py
+- basic feed handler
+- html formatting for feed handler
+- switch to django 1.2
+- fix django 1.2 TODO(s)
+- userpic and other tweet data into body
+- reset of Atom feed elements (validate)
+- increase item count
+- "view in Google Reader" link for feeds
+- separate fetching of tweets from feed serving
+- rename/refactor data.Stream and data.Status
+- cron updater
+- cron PSHB pinger
