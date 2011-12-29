@@ -82,6 +82,7 @@ def update_timeline(session):
 
     if not unknown_status_ids:
         logging.info('  No new statuses')
+        stream.put()
         # Even though there were no new statuses to store, the timeline still
         # had new tweets, so we want the hub to be pinged.
         return True
@@ -102,21 +103,23 @@ def update_timeline(session):
 def ping_hub(urls):
     for i in xrange(0, len(urls), HUB_URL_BATCH_SIZE):
       chunk = urls[i:i + HUB_URL_BATCH_SIZE]
-      logging.info(chunk)
-      logging.info('Pinging %s for %d URLs' % (CONSTANTS.HUB_URL, len(chunk)))
+      logging.info('Pinging %s for %d URLs...' % (CONSTANTS.HUB_URL, len(chunk)))
 
       data = urllib.urlencode({
               'hub.url': chunk,
               'hub.mode': 'publish'
           },
           doseq=True)
+
       try:
           response = urllib2.urlopen(CONSTANTS.HUB_URL, data)
       except (IOError, urllib2.HTTPError), e:
           if hasattr(e, 'code') and e.code == 204:
+              logging.info('...Success')
               continue
           error = ''
           if hasattr(e, 'read'):
               error = e.read()
           logging.warning('Error from hub: %s, Response: "%s"' % (e, error))
+      logging.info('No 204 response')
 
