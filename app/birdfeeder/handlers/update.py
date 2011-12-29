@@ -1,17 +1,32 @@
 import logging
 import time
+import urllib
+import urllib2
 
 from google.appengine.ext import db
 
+from base.constants import CONSTANTS
 import base.handlers
 from birdfeeder import data
 
 RECENT_STATUS_INTERVAL_SEC = 10 * 60
 
+HUB_URL_BATCH_SIZE = 100
+
 class UpdateCronHandler(base.handlers.BaseHandler):
     def get(self):
+        ping_feed_urls = []
         for session in data.Session.all():
-            update_timeline(session)
+            had_updates = update_timeline(session)
+            if had_updates:
+                # TODO(mihaip): share feed URL generation with main.py
+                feed_url = '%s/bird-feeder/feed/timeline/%s' % (
+                    CONSTANTS.APP_URL, session.feed_id)
+                ping_feed_urls.append(feed_url)
+
+        logging.info('%d feeds need update' % len(ping_feed_urls))
+
+        ping_hub(ping_feed_urls)
 
         self.response.out.write('OK')
 
@@ -55,7 +70,7 @@ def update_timeline(session):
 
     if not new_status_ids:
         logging.info('  No new status IDs')
-        return
+        return False
 
     logging.info('  %d new status IDs for this stream' % len(new_status_ids))
 
@@ -67,7 +82,9 @@ def update_timeline(session):
 
     if not unknown_status_ids:
         logging.info('  No new statuses')
-        return
+        # Even though there were no new statuses to store, the timeline still
+        # had new tweets, so we want the hub to be pinged.
+        return True
     logging.info('  %d new statuses' % len(unknown_status_ids))
 
     unknown_statuses = [
@@ -80,6 +97,26 @@ def update_timeline(session):
     # we will still attempt to recreate the items on the next fetch.
     stream.put()
 
+    return True
 
+def ping_hub(urls):
+    for i in xrange(0, len(urls), HUB_URL_BATCH_SIZE):
+      chunk = urls[i:i + HUB_URL_BATCH_SIZE]
+      logging.info(chunk)
+      logging.info('Pinging %s for %d URLs' % (CONSTANTS.HUB_URL, len(chunk)))
 
+      data = urllib.urlencode({
+              'hub.url': chunk,
+              'hub.mode': 'publish'
+          },
+          doseq=True)
+      try:
+          response = urllib2.urlopen(CONSTANTS.HUB_URL, data)
+      except (IOError, urllib2.HTTPError), e:
+          if hasattr(e, 'code') and e.code == 204:
+              continue
+          error = ''
+          if hasattr(e, 'read'):
+              error = e.read()
+          logging.warning('Error from hub: %s, Response: "%s"' % (e, error))
 
