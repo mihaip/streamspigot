@@ -1,14 +1,11 @@
 import Cookie
 import logging
-import os
 import urllib
 import urlparse
 
 import datasources.oauth2 as oauth
 
-from base.constants import CONSTANTS
 import base.handlers
-from datasources import twitter, twitterappengine
 from datasources.oauth_keys import SERVICE_PROVIDERS
 import birdfeeder.data as data
 
@@ -72,27 +69,13 @@ class SessionApiHandler(SessionHandler):
 
             if session:
                 self._session = session
-                self._api = self._create_api()
+                self._api = session.create_api()
                 signed_in()
                 return
             else:
                 self._remove_request_session()
 
         signed_out()
-
-    def _create_api(self):
-        api = twitter.Api(
-            consumer_key=TWITTER_SERVICE_PROVIDER.consumer.key,
-            consumer_secret=TWITTER_SERVICE_PROVIDER.consumer.secret,
-            access_token_key=self._session.oauth_token,
-            access_token_secret=self._session.oauth_token_secret,
-            cache=twitterappengine.MemcacheCache())
-        api.SetCacheTimeout(60) # In seconds. TODO(mihaip): configure?
-        api.SetUserAgent('StreamSpigot/%s (+%s)' % (
-            os.environ.get('CURRENT_VERSION_ID', '1'),
-            CONSTANTS.APP_URL,
-        ))
-        return api
 
     def _get_signed_in(self):
         raise NotImplementedError()

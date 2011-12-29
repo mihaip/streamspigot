@@ -42,3 +42,7 @@ cron:
 - description: 7d/6
   url: /cron/feed-playback/advance?frequency=7d&frequency_modulo=6
   schedule: every day 09:00
+
+- description: Bird Feeder periodic update
+  url: /cron/bird-feeder/update
+  schedule: every 20 minutes

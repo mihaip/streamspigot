@@ -18,12 +18,15 @@ sys.path.insert(0, DATASOURCES_DIR)
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 
+import birdfeeder.handlers.update
 import feedplayback.handlers
 
 def main():
     application = webapp.WSGIApplication([
             ('/cron/feed-playback/advance', feedplayback.handlers.AdvanceCronHandler),
             ('/tasks/feed-playback/advance', feedplayback.handlers.AdvanceTaskHandler),
+
+            ('/cron/bird-feeder/update', birdfeeder.handlers.update.UpdateCronHandler),
         ],
         debug=True)
     util.run_wsgi_app(application)

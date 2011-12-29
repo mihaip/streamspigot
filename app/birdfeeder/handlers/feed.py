@@ -1,8 +1,13 @@
 import datetime
+import logging
+import time
 
-import birdfeeder.data as data
+from birdfeeder import data
 import datasources.twitterdisplay
 import session
+
+FEED_STATUS_INTERVAL_SEC = 24 * 60 * 60 # One day
+MIN_FEED_ITEMS = 10
 
 # Overrides the session accessors from SessionHandler to key the session
 # on the feed ID in the URL, instead of the SID cookie.
@@ -22,9 +27,27 @@ class FeedHandler(session.SessionApiHandler):
 
 class TimelineFeedHandler(FeedHandler):
     def _get_signed_in(self):
-        user = self._api.GetUser(self._session.twitter_id)
-        statuses = self._api.GetFriendsTimeline(
-            count=50, retweets=True, include_entities=True)
+        twitter_id = self._session.twitter_id
+        logging.info('Serving feed for %s' % twitter_id)
+        user = self._api.GetUser(twitter_id)
+
+        stream = data.StreamData.get_timeline_for_user(twitter_id)
+
+        # We want the feed to have all tweets from the past day, but also at
+        # at least 10 items.
+        feed_status_ids = []
+        threshold_time = time.time() - FEED_STATUS_INTERVAL_SEC
+        for status_id, status_timestamp_sec in stream.status_pairs():
+            if status_timestamp_sec < threshold_time and \
+                    len(feed_status_ids) >= MIN_FEED_ITEMS:
+                break
+            feed_status_ids.append(status_id)
+
+        logging.info('  Feed has %d items' % len(feed_status_ids))
+
+        status_data = data.StatusData.get_by_status_ids(feed_status_ids)
+        statuses = [s.to_status() for s in status_data]
+
         # We don't actually want statuses grouped, instead we want one status
         # per item.
         status_groups = [
