@@ -3,7 +3,7 @@
   <id>{{ feed_url }}</id>
   <link rel="self" href="{{ feed_url }}"/>
   <link rel="alternate" href="{{ APP_URL }}/bird-feeder" type="text/html"/>
-  <link rel="hub" href="{{ HUB_URL }}">
+  <link rel="hub" href="{{ HUB_URL }}"/>
   <title>{{ feed_title }} - {{ APP_NAME }} : Bird Feeder</title>
   <updated>{{ updated_date_iso }}Z</updated>
   {% comment %}
