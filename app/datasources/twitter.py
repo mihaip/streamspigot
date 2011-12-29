@@ -146,7 +146,8 @@ class Status(object):
                contributors=None,
                retweeted=None,
                retweeted_status=None,
-               retweet_count=None):
+               retweet_count=None,
+               original_json_dict=None):
     '''An object to hold a Twitter status message.
 
     This class is normally instantiated by the twitter.Api class and
@@ -208,6 +209,7 @@ class Status(object):
     self.contributors = contributors
     self.retweeted_status = retweeted_status
     self.retweet_count = retweet_count
+    self.original_json_dict = original_json_dict
 
   def GetCreatedAt(self):
     '''Get the time this status message was posted.
@@ -662,7 +664,8 @@ class Status(object):
                   coordinates=data.get('coordinates', None),
                   contributors=data.get('contributors', None),
                   retweeted_status=retweeted_status,
-                  retweet_count=data.get('retweet_count', None))
+                  retweet_count=data.get('retweet_count', None),
+                  original_json_dict=data)
 
 
 class User(object):
@@ -2704,8 +2707,8 @@ class Api(object):
     parameters = {}
     if count is not None:
       try:
-        if int(count) > 100:
-          raise TwitterError("'count' may not be greater than 100")
+        if int(count) > 200:
+          raise TwitterError("'count' may not be greater than 200")
       except ValueError:
         raise TwitterError("'count' must be an integer")
       parameters['count'] = count
