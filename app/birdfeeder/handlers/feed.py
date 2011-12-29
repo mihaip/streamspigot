@@ -36,12 +36,13 @@ class TimelineFeedHandler(FeedHandler):
         # We want the feed to have all tweets from the past day, but also at
         # at least 10 items.
         feed_status_ids = []
-        threshold_time = time.time() - FEED_STATUS_INTERVAL_SEC
-        for status_id, status_timestamp_sec in stream.status_pairs():
-            if status_timestamp_sec < threshold_time and \
-                    len(feed_status_ids) >= MIN_FEED_ITEMS:
-                break
-            feed_status_ids.append(status_id)
+        if stream:
+            threshold_time = time.time() - FEED_STATUS_INTERVAL_SEC
+            for status_id, status_timestamp_sec in stream.status_pairs():
+                if status_timestamp_sec < threshold_time and \
+                        len(feed_status_ids) >= MIN_FEED_ITEMS:
+                    break
+                feed_status_ids.append(status_id)
 
         logging.info('  Feed has %d items' % len(feed_status_ids))
 
