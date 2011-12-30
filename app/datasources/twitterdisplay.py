@@ -1,5 +1,6 @@
 import datetime
 import itertools
+import re
 import xml.sax.saxutils
 
 from base.constants import CONSTANTS
@@ -7,6 +8,7 @@ from datasources import twitter
 
 _BASE_TWITTER_URL = 'https://twitter.com'
 _LINK_ATTRIBUTES = 'style="color:%s"' % CONSTANTS.ANCHOR_COLOR
+_WHITESPACE_RE = re.compile('\\s+')
 
 # Twitter escapes < and > in status texts, but not & (see
 # http://code.google.com/p/twitter-api/issues/detail?id=1695). To be safe, we
@@ -33,9 +35,9 @@ class DisplayStatus(object):
         return self.url(base_url='')
 
     def title_as_text(self):
-        return '%s: %s' % (
-            self._status.user.screen_name,
-            _unescape_tweet_chunk(self._status.text))
+        title_text = _unescape_tweet_chunk(self._status.text)
+        title_text = _WHITESPACE_RE.sub(' ', title_text)
+        return '%s: %s' % (self._status.user.screen_name, title_text)
 
     def created_at_formatted_gmt(self):
         return datetime.datetime.utcfromtimestamp(

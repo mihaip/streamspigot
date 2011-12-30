@@ -28,3 +28,4 @@ done:
 - rename/refactor data.Stream and data.Status
 - cron updater
 - cron PSHB pinger
+- remove newlines from titles
