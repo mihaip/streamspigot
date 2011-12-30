@@ -3,6 +3,7 @@ import time
 import urllib
 import urllib2
 
+from google.appengine.api import taskqueue
 from google.appengine.ext import db
 
 from base.constants import CONSTANTS
@@ -15,20 +16,28 @@ HUB_URL_BATCH_SIZE = 100
 
 class UpdateCronHandler(base.handlers.BaseHandler):
     def get(self):
-        ping_feed_urls = []
+        update_task_count = 0
         for session in data.Session.all():
-            had_updates = update_timeline(session)
-            if had_updates:
-                # TODO(mihaip): share feed URL generation with main.py
-                feed_url = '%s/bird-feeder/feed/timeline/%s' % (
-                    CONSTANTS.APP_URL, session.feed_id)
-                ping_feed_urls.append(feed_url)
+            update_task_count += 1
+            taskqueue.add(
+                queue_name='birdfeeder-update',
+                url='/tasks/bird-feeder/update',
+                params=session.as_dict())
 
-        logging.info('%d feeds need update' % len(ping_feed_urls))
+        self.response.out.write('Started %d updates' % update_task_count)
 
-        ping_hub(ping_feed_urls)
-
-        self.response.out.write('OK')
+class UpdateTaskHandler(base.handlers.BaseHandler):
+    def post(self):
+        session = data.Session.from_request(self.request)
+        had_updates = update_timeline(session)
+        if had_updates:
+            # TODO(mihaip): share feed URL generation with main.py
+            feed_url = '%s/bird-feeder/feed/timeline/%s' % (
+                CONSTANTS.APP_URL, session.feed_id)
+            ping_hub([feed_url])
+        self.response.out.write(
+            'Updated %s, %s updates' %
+                (session.twitter_id, had_updates and 'had' or 'didn\'t have'))
 
 def update_timeline(session):
     logging.info('Updating %s' % session.twitter_id)

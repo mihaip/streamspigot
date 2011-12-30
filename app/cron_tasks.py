@@ -27,6 +27,7 @@ def main():
             ('/tasks/feed-playback/advance', feedplayback.handlers.AdvanceTaskHandler),
 
             ('/cron/bird-feeder/update', birdfeeder.handlers.update.UpdateCronHandler),
+            ('/tasks/bird-feeder/update', birdfeeder.handlers.update.UpdateTaskHandler),
         ],
         debug=True)
     util.run_wsgi_app(application)

@@ -44,6 +44,15 @@ class Session(db.Model):
       self.oauth_token = oauth_token
       self.oauth_token_secret = oauth_token_secret
 
+    def as_dict(self):
+        return {
+          'session_id': self.session_id,
+          'twitter_id': self.twitter_id,
+          'feed_id': self.feed_id,
+          'oauth_token': self.oauth_token,
+          'oauth_token_secret': self.oauth_token_secret,
+        }
+
     def create_api(self):
         api = twitter.Api(
             consumer_key=TWITTER_SERVICE_PROVIDER.consumer.key,
@@ -78,6 +87,15 @@ class Session(db.Model):
     @staticmethod
     def get_by_feed_id(feed_id):
       return Session.all().filter('feed_id = ', feed_id).get()
+
+    @staticmethod
+    def from_request(request):
+        return Session(
+            session_id=request.get('session_id'),
+            twitter_id=request.get('twitter_id'),
+            feed_id=request.get('feed_id'),
+            oauth_token=request.get('oauth_token'),
+            oauth_token_secret=request.get('oauth_token_secret'))
 
     @classmethod
     def kind(cls):

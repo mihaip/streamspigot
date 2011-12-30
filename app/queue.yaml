@@ -2,3 +2,7 @@ queue:
 - name: feedplayback-advance
   rate: 1/s
   bucket_size: 1
+
+- name: birdfeeder-update
+  rate: 1/s
+  bucket_size: 1
