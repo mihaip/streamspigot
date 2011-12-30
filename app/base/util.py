@@ -1,6 +1,8 @@
 import base64
+import logging
 import re
 import uuid
+import zlib
 
 from django.utils import simplejson
 from django.utils.html import strip_spaces_between_tags
@@ -26,8 +28,13 @@ class JsonProperty(db.Property):
 
     def get_value_for_datastore(self, model_instance):
         value = self.__get__(model_instance, model_instance.__class__)
-        value = simplejson.dumps(value)
+        value = simplejson.dumps(value, separators=(',',':'))
+        value = zlib.compress(value)
         return db.Blob(value)
 
     def make_value_from_datastore(self, value):
+        # Not all values are compressed, ones that aren't always start with
+        # a brace (the opening of the object literal).
+        if value[0] != '{':
+            value = zlib.decompress(value)
         return simplejson.loads(str(value))

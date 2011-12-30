@@ -1,5 +1,4 @@
 todo:
-- make sure that JsonProperty is not pretty-printed (and gzip?)
 - catch exceptions when fetching timeline tweets
 - reply and retweet links
 - inline other images
@@ -29,3 +28,4 @@ done:
 - cron updater
 - cron PSHB pinger
 - remove newlines from titles
+- make sure that JsonProperty is not pretty-printed (and gzip?)
