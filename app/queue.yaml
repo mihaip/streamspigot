@@ -1,4 +1,4 @@
 queue:
 - name: feedplayback-advance
-  rate: 10/s
-  bucket_size: 20
+  rate: 1/s
+  bucket_size: 1

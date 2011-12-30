@@ -1,4 +1,6 @@
 todo:
+- parallelize twitter fetches in cron update
+- drop status ID/timestamps older than 24 hours from StreamData
 - catch exceptions when fetching timeline tweets
 - reply and retweet links
 - inline other images
@@ -7,7 +9,7 @@ todo:
 - If-Modified-Since support in feed handler
 - allow feed ID to be revoked
 - use user timezone to format timestamps (instead of GMT)
-- "scavenger" to delete old tweets
+- "scavenger" to delete old tweets from StatusData?
 - make twitter API cache interface more efficient (right now it does two RPCs for cache hits, one to get the timestamp, one for the data)
 - remove URLs (especially if at end?) from title snippet
 
