@@ -1,6 +1,7 @@
 import datetime
 import itertools
 import re
+import urlparse
 import xml.sax.saxutils
 
 from base.constants import CONSTANTS
@@ -22,6 +23,17 @@ class StatusGroup(object):
         self.statuses = statuses
         self.display_statuses = DisplayStatus.wrap(statuses)
         self.status_pairs = itertools.izip(self.statuses, self.display_statuses)
+
+def _get_thumbnail_info(url):
+    thumb_url = None
+    thumb_width = None
+    thumb_height = None
+
+    parsed_url = urlparse.urlparse(url)
+    if parsed_url.netloc == 'yfrog.com':
+        thumb_url = '%s:iphone' % url
+
+    return thumb_url, thumb_width, thumb_height
 
 class DisplayStatus(object):
     def __init__(self, status):
@@ -66,6 +78,24 @@ class DisplayStatus(object):
         def add_footer_raw_chunk(chunk):
             footer_as_html.append(chunk)
 
+        def add_footer_thumbnail_chunk(
+                link_url, thumb_url, thumb_width, thumb_height):
+            img_attributes = ''
+            if thumb_width and thumb_height:
+                img_attributes = ' width="%d" height="%d"' % (
+                    thumb_width, thumb_height)
+            add_footer_raw_chunk(
+                '<a href="%s" border="0">'
+                  '<img src="%s" alt=""%s/>'
+                '</a>' %
+                (link_url , thumb_url, img_attributes))
+
+        def maybe_add_thumbnail_chunk(url):
+            thumb_url, thumb_width, thumb_height = _get_thumbnail_info(url)
+            if thumb_url:
+                add_footer_thumbnail_chunk(
+                    url, thumb_url, thumb_width, thumb_height)
+
         # For native retweets, render retweeted status, so that the RT prefix is
         # not counted against the 140 character limit and so that we get media
         # entities.
@@ -100,6 +130,7 @@ class DisplayStatus(object):
               entity_url_anchor_text = e.display_url or e.expanded_url or e.url
               if entity_url_anchor_text:
                   entity_anchor_text = xml.sax.saxutils.escape(entity_url_anchor_text)
+              maybe_add_thumbnail_chunk(e.expanded_url or e.url)
           elif isinstance(e, twitter.User):
               entity_url = e.screen_name
           elif isinstance(e, twitter.Media):
@@ -112,11 +143,7 @@ class DisplayStatus(object):
                 link_url = e.expanded_url + '/large'
                 thumb_url, thumb_width, thumb_height = \
                     e.GetUrlForSize(twitter.Media.THUMB_SIZE)
-                add_footer_raw_chunk(
-                    '<a href="%s" border="0">'
-                      '<img src="%s" width="%d" height="%d" alt=""/>'
-                    '</a>' %
-                    (link_url , thumb_url, thumb_width, thumb_height))
+                add_footer_thumbnail_chunk(link_url , thumb_url, thumb_width, thumb_height)
 
           if entity_url:
               add_raw_chunk('<a href="')

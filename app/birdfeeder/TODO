@@ -1,8 +1,8 @@
 todo:
+- add more inline image providers
 - drop status ID/timestamps older than 24 hours from StreamData
 - catch exceptions when fetching timeline tweets
 - reply and retweet links
-- inline other images
 - use larger size for inline images
 - Twitter Streaming API/PSHB proxy (in Go)
 - If-Modified-Since support in feed handler
@@ -32,3 +32,4 @@ done:
 - make sure that JsonProperty is not pretty-printed (and gzip?)
 - parallelize twitter fetches in cron update
 - single feed refresh admin ui
+- inline other images
