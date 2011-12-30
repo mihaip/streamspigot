@@ -9,6 +9,7 @@ from google.appengine.ext import db
 from base.constants import CONSTANTS
 import base.handlers
 from birdfeeder import data
+import birdfeeder.handlers.feed
 
 RECENT_STATUS_INTERVAL_SEC = 10 * 60
 
@@ -38,6 +39,23 @@ class UpdateTaskHandler(base.handlers.BaseHandler):
         self.response.out.write(
             'Updated %s, %s updates' %
                 (session.twitter_id, had_updates and 'had' or 'didn\'t have'))
+
+# Helper handler (for development) that updates a single user's timeline and
+# refreshes their feed within a single request.
+class UpdateFeedToolHandler(base.handlers.BaseHandler):
+    def get(self):
+        session = data.Session.get_by_twitter_id(self.request.get('twitter_id'))
+
+        update_timeline(session)
+
+        # We render the feed handler inline instead of redirecting to it, so
+        # that a browser reload will allow this handler (which also updates)
+        # to be triggered
+        feed_handler = birdfeeder.handlers.feed.TimelineFeedHandler()
+        feed_handler._session = session
+        feed_handler._api = session.create_api()
+        feed_handler.initialize(self.request, self.response)
+        feed_handler._get_signed_in()
 
 def update_timeline(session):
     logging.info('Updating %s' % session.twitter_id)

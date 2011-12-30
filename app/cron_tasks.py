@@ -28,6 +28,7 @@ def main():
 
             ('/cron/bird-feeder/update', birdfeeder.handlers.update.UpdateCronHandler),
             ('/tasks/bird-feeder/update', birdfeeder.handlers.update.UpdateTaskHandler),
+            ('/tools/bird-feeder/update-feed', birdfeeder.handlers.update.UpdateFeedToolHandler),
         ],
         debug=True)
     util.run_wsgi_app(application)

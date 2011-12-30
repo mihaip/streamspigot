@@ -1,5 +1,4 @@
 todo:
-- single feed refresh admin ui
 - drop status ID/timestamps older than 24 hours from StreamData
 - catch exceptions when fetching timeline tweets
 - reply and retweet links
@@ -32,3 +31,4 @@ done:
 - remove newlines from titles
 - make sure that JsonProperty is not pretty-printed (and gzip?)
 - parallelize twitter fetches in cron update
+- single feed refresh admin ui

@@ -24,7 +24,7 @@ handlers:
   static_files: static/robots.txt
   upload: static/robots.txt
 
-- url: /(cron|tasks)/.*
+- url: /(cron|tasks|tools)/.*
   script: cron_tasks.py
   login: admin
 
