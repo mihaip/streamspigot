@@ -10,9 +10,8 @@ import zlib
 from google.appengine.api import urlfetch
 
 from base.constants import CONSTANTS
-from datasources import twitter, twitterappengine
+from datasources import twitter, twitterappengine, twitterdisplay
 from datasources.oauth_keys import SERVICE_PROVIDERS
-import datasources.twitterdisplay
 
 TWITTER_SERVICE_PROVIDER = SERVICE_PROVIDERS['tweetdigest:twitter']
 DIGEST_LENGTH = 60 * 60 * 24
@@ -90,9 +89,10 @@ def _process_digest_statuses(
     for username, statuses in itertools.groupby(
         digest_statuses, lambda status: status.user.id):
         statuses = list(statuses)
-        status_groups.append(datasources.twitterdisplay.StatusGroup(
+        status_groups.append(twitterdisplay.DisplayStatusGroup(
             user=statuses[0].user,
-            statuses=statuses))
+            statuses=statuses,
+            thumbnail_size=twitterdisplay.SMALL_THUMBNAIL))
 
     return (status_groups,
             datetime.datetime.fromtimestamp(digest_start_time),

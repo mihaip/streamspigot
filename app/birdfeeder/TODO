@@ -3,7 +3,6 @@ todo:
 - drop status ID/timestamps older than 24 hours from StreamData
 - catch exceptions when fetching timeline tweets
 - reply and retweet links
-- use larger size for inline images
 - Twitter Streaming API/PSHB proxy (in Go)
 - If-Modified-Since support in feed handler
 - allow feed ID to be revoked
@@ -11,6 +10,13 @@ todo:
 - "scavenger" to delete old tweets from StatusData?
 - make twitter API cache interface more efficient (right now it does two RPCs for cache hits, one to get the timestamp, one for the data)
 - remove URLs (especially if at end?) from title snippet
+
+thumbnail URLs to support:
+- flic.kr/flickr.com
+- twitpic.com
+- i.imgur.com
+- youtube.com/youtu.be
+- vimeo.com
 
 done:
 - update oauth_template
@@ -33,3 +39,4 @@ done:
 - parallelize twitter fetches in cron update
 - single feed refresh admin ui
 - inline other images
+- use larger size for inline images in birdfeeder, smaller in twitter digest

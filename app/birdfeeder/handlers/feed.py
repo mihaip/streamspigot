@@ -3,7 +3,7 @@ import logging
 import time
 
 from birdfeeder import data
-import datasources.twitterdisplay
+from datasources import twitterdisplay
 import session
 
 FEED_STATUS_INTERVAL_SEC = 24 * 60 * 60 # One day
@@ -52,8 +52,10 @@ class TimelineFeedHandler(FeedHandler):
         # We don't actually want statuses grouped, instead we want one status
         # per item.
         status_groups = [
-            datasources.twitterdisplay.StatusGroup(
-                user=status.user, statuses=[status])
+            twitterdisplay.DisplayStatusGroup(
+                user=status.user,
+                statuses=[status],
+                thumbnail_size=twitterdisplay.LARGE_THUMBNAIL)
             for status in statuses
         ]
 

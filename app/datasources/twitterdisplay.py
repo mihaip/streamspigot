@@ -11,33 +11,58 @@ _BASE_TWITTER_URL = 'https://twitter.com'
 _LINK_ATTRIBUTES = 'style="color:%s"' % CONSTANTS.ANCHOR_COLOR
 _WHITESPACE_RE = re.compile('\\s+')
 
+_YFROG_PATH_RE = re.compile('/(\\w+).*')
+_INSTAGRAM_PATH_RE = re.compile('/p/(\\w+).*')
+
+LARGE_THUMBNAIL = 'large'
+SMALL_THUMBNAIL = 'small'
+
 # Twitter escapes < and > in status texts, but not & (see
 # http://code.google.com/p/twitter-api/issues/detail?id=1695). To be safe, we
 # unescape &amp too, in case the Twitter bug does get fixed.
 def _unescape_tweet_chunk(chunk):
     return chunk.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&')
 
-class StatusGroup(object):
-    def __init__(self, user, statuses):
-        self.user = user
-        self.statuses = statuses
-        self.display_statuses = DisplayStatus.wrap(statuses)
-        self.status_pairs = itertools.izip(self.statuses, self.display_statuses)
-
-def _get_thumbnail_info(url):
+def _get_thumbnail_info(url, size):
     thumb_url = None
     thumb_width = None
     thumb_height = None
 
     parsed_url = urlparse.urlparse(url)
-    if parsed_url.netloc == 'yfrog.com':
-        thumb_url = '%s:iphone' % url
+    hostname = parsed_url.netloc
+    if hostname == 'yfrog.com':
+        match = _YFROG_PATH_RE.match(parsed_url.path)
+        if match:
+            thumb_url = 'http://yfrog.com/%s' % match.group(1)
+            if size == SMALL_THUMBNAIL:
+                thumb_url += ':small'
+            else:
+                thumb_url += ':iphone'
+    elif hostname == 'instagr.am':
+        match = _INSTAGRAM_PATH_RE.match(parsed_url.path)
+        if match:
+            thumb_url = 'http://instagr.am/p/%s/media' % match.group(1)
+            if size == SMALL_THUMBNAIL:
+                thumb_url += '?size=t'
+                thumb_width = 150
+                thumb_height = 150
+            else:
+                thumb_width = 306
+                thumb_height = 306
 
     return thumb_url, thumb_width, thumb_height
 
+class DisplayStatusGroup(object):
+    def __init__(self, user, statuses, thumbnail_size):
+        self.user = user
+        self.statuses = statuses
+        self.display_statuses = DisplayStatus.wrap(statuses, thumbnail_size)
+        self.status_pairs = itertools.izip(self.statuses, self.display_statuses)
+
 class DisplayStatus(object):
-    def __init__(self, status):
+    def __init__(self, status, thumbnail_size):
         self._status = status
+        self._thumbnail_size = thumbnail_size
 
     def permalink(self, base_url=_BASE_TWITTER_URL):
         return '%s/%s/status/%s' % (
@@ -86,12 +111,13 @@ class DisplayStatus(object):
                     thumb_width, thumb_height)
             add_footer_raw_chunk(
                 '<a href="%s" border="0">'
-                  '<img src="%s" alt=""%s/>'
+                  '<img src="%s" alt="" style="padding:2px"%s/>'
                 '</a>' %
                 (link_url , thumb_url, img_attributes))
 
         def maybe_add_thumbnail_chunk(url):
-            thumb_url, thumb_width, thumb_height = _get_thumbnail_info(url)
+            thumb_url, thumb_width, thumb_height = \
+                _get_thumbnail_info(url, self._thumbnail_size)
             if thumb_url:
                 add_footer_thumbnail_chunk(
                     url, thumb_url, thumb_width, thumb_height)
@@ -141,9 +167,11 @@ class DisplayStatus(object):
               if e.type == 'photo':
                 # Appending /large seems to generate a lightbox view of that image
                 link_url = e.expanded_url + '/large'
-                thumb_url, thumb_width, thumb_height = \
-                    e.GetUrlForSize(twitter.Media.THUMB_SIZE)
-                add_footer_thumbnail_chunk(link_url , thumb_url, thumb_width, thumb_height)
+                thumb_url, thumb_width, thumb_height = e.GetUrlForSize(
+                    self._thumbnail_size == SMALL_THUMBNAIL and
+                        twitter.Media.THUMB_SIZE or twitter.Media.MEDIUM_SIZE)
+                add_footer_thumbnail_chunk(
+                    link_url , thumb_url, thumb_width, thumb_height)
 
           if entity_url:
               add_raw_chunk('<a href="')
@@ -164,5 +192,5 @@ class DisplayStatus(object):
         return result
 
     @staticmethod
-    def wrap(statuses):
-        return [DisplayStatus(s) for s in statuses]
+    def wrap(statuses, thumbnail_size):
+        return [DisplayStatus(s, thumbnail_size) for s in statuses]
