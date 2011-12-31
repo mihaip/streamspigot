@@ -3,7 +3,7 @@ import logging
 import time
 
 from birdfeeder import data
-from datasources import twitterdisplay
+from datasources import thumbnails, twitterdisplay
 import session
 
 FEED_STATUS_INTERVAL_SEC = 24 * 60 * 60 # One day
@@ -55,7 +55,7 @@ class TimelineFeedHandler(FeedHandler):
             twitterdisplay.DisplayStatusGroup(
                 user=status.user,
                 statuses=[status],
-                thumbnail_size=twitterdisplay.LARGE_THUMBNAIL)
+                thumbnail_size=thumbnails.LARGE_THUMBNAIL)
             for status in statuses
         ]
 

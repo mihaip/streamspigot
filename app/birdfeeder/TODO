@@ -12,11 +12,11 @@ todo:
 - remove URLs (especially if at end?) from title snippet
 
 thumbnail URLs to support:
-- flic.kr/flickr.com
 - twitpic.com
 - i.imgur.com
 - youtube.com/youtu.be
 - vimeo.com
+- 4sq.com
 
 done:
 - update oauth_template
@@ -40,3 +40,4 @@ done:
 - single feed refresh admin ui
 - inline other images
 - use larger size for inline images in birdfeeder, smaller in twitter digest
+- flic.kr/flickr.com
