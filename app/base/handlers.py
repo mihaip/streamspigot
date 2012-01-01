@@ -1,3 +1,4 @@
+import logging
 import os
 
 from django.conf import settings
@@ -10,6 +11,17 @@ import base.constants
 
 class BaseHandler(webapp.RequestHandler):
     def _render_template(self, template_file_name, template_values={}):
+        # Even though we set the DJANGO_SETTINGS_MODULE environment variable in
+        # both main.py and cron_tasks.py, there appear to be other app
+        # entrypoints that cause it to get started without the environment
+        # variable set. Since rendering templates is the only Django
+        # functionality we actually need, as a workaround we set the environment
+        # variable here.
+        # TODO(mihaip): figure out why this is happening
+        if 'DJANGO_SETTINGS_MODULE' not in os.environ:
+            logging.error('DJANGO_SETTINGS_MODULE was not in the environment')
+            os.environ['DJANGO_SETTINGS_MODULE'] = 'django_settings'
+
         # Temporarily insert the template's directory into the template path,
         # so that templates in the same directory may be included without
         # needing their full path

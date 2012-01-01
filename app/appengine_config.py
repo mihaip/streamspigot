@@ -1,5 +1,8 @@
 import logging
 
+from google.appengine.dist import use_library
+use_library('django', '1.2')
+
 appstats_RECORD_FRACTION = .1
 
 class BlockingMiddleware(object):
