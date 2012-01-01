@@ -12,6 +12,7 @@ _FLICKR_LONG_PATH_RE = re.compile('(/\\d+/\\d+_[a-f0-9]+)(_.)?(\\....)')
 _FLICKR_PHOTO_PAGE_PATH_RE = re.compile('/photos/[^/]+/(\d+).*')
 _FLICKR_SHORT_ID_ALPHABET ='123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
 _IMGUR_PATH_RE = re.compile('/(\\w+)(\\....).*')
+_TWITPIC_PATH_RE = re.compile('/(\\w+).*')
 
 def _get_short_flickr_photo_id(photo_id):
     result = ''
@@ -99,5 +100,16 @@ def get_thumbnail_info(url, size):
             thumb_url = '%s://%s/%s%s%s' % (
                 parsed_url.scheme, hostname, match.group(1),
                 (need_small and 's' or 'l'), match.group(2))
+    elif hostname == 'twitpic.com':
+        # See http://dev.twitpic.com/docs/thumbnails/ (the 'large' size isn't
+        # documented there, but it is what twitter.com seems to use).
+        match = _TWITPIC_PATH_RE.match(path)
+        if match:
+            thumb_url = 'http://twitpic.com/show/%s/%s' % (
+                need_small and 'thumb' or 'large',
+                match.group(1))
+            if need_small:
+                thumb_width = 150
+                thumb_height = 150
 
     return thumb_url, thumb_width, thumb_height

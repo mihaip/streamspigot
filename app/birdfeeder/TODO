@@ -10,7 +10,6 @@ todo:
 - remove URLs (especially if at end?) from title snippet
 
 thumbnail URLs to support:
-- twitpic.com
 - youtube.com/youtu.be
 - vimeo.com
 - 4sq.com
@@ -41,3 +40,4 @@ done:
 - i.imgur.com
 - why does /tweet-digest/digest?usernames=pogue&output=atom take 65ms (only 8ms in RPCs)
 - make twitter API cache interface more efficient (right now it does two RPCs for cache hits, one to get the timestamp, one for the data)
+- twitpic.com
