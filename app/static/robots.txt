@@ -1,3 +1,4 @@
 User-agent: *
 Disallow: /tweet-digest/digest
 Disallow: /feed-playback/subscription
+Disallow: /bird-feeder/feed/
