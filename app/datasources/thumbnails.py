@@ -11,6 +11,7 @@ _FLICKR_LONG_HOSTNAME_RE = re.compile('farm\\d+\\.static\\.?flickr\\.com')
 _FLICKR_LONG_PATH_RE = re.compile('(/\\d+/\\d+_[a-f0-9]+)(_.)?(\\....)')
 _FLICKR_PHOTO_PAGE_PATH_RE = re.compile('/photos/[^/]+/(\d+).*')
 _FLICKR_SHORT_ID_ALPHABET ='123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
+_IMGUR_PATH_RE = re.compile('/(\\w+)(\\....).*')
 
 def _get_short_flickr_photo_id(photo_id):
     result = ''
@@ -29,6 +30,7 @@ def get_thumbnail_info(url, size):
     thumb_url = None
     thumb_width = None
     thumb_height = None
+    need_small = size == SMALL_THUMBNAIL
 
     parsed_url = urlparse.urlparse(url)
     hostname = parsed_url.netloc
@@ -38,7 +40,7 @@ def get_thumbnail_info(url, size):
         match = _YFROG_PATH_RE.match(path)
         if match:
             thumb_url = 'http://yfrog.com/%s' % match.group(1)
-            if size == SMALL_THUMBNAIL:
+            if need_small:
                 thumb_url += ':small'
             else:
                 thumb_url += ':iphone'
@@ -47,7 +49,7 @@ def get_thumbnail_info(url, size):
         match = _INSTAGRAM_PATH_RE.match(path)
         if match:
             thumb_url = 'http://instagr.am/p/%s/media' % match.group(1)
-            if size == SMALL_THUMBNAIL:
+            if need_small:
                 thumb_url += '?size=t'
                 thumb_width = 150
                 thumb_height = 150
@@ -75,7 +77,7 @@ def get_thumbnail_info(url, size):
                 thumb_url = url
             else:
                 thumb_url = '%s://%s%s' % (parsed_url.scheme, hostname, path_prefix)
-                if size == SMALL_THUMBNAIL:
+                if need_small:
                     thumb_url += '_t'
                 thumb_url += extension
     elif hostname == 'www.flickr.com':
@@ -88,5 +90,14 @@ def get_thumbnail_info(url, size):
             # a short URL-style thumbnail for it.
             short_photo_id = _get_short_flickr_photo_id(photo_id)
             thumb_url = get_thumb_url_for_short_photo_id(short_photo_id)
+    elif hostname.startswith('i.') and hostname.endswith('.imgur.com'):
+        # See http://webapps.stackexchange.com/questions/16103. We don't use
+        # a strict hostname comparison so that we can handle "Pro" imgur
+        # instances too (e.g. i.stack.imgur.com).
+        match = _IMGUR_PATH_RE.match(path)
+        if match:
+            thumb_url = '%s://%s/%s%s%s' % (
+                parsed_url.scheme, hostname, match.group(1),
+                (need_small and 's' or 'l'), match.group(2))
 
     return thumb_url, thumb_width, thumb_height

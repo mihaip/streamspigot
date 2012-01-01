@@ -1,5 +1,5 @@
 todo:
-- add more inline image providers
+- why does /tweet-digest/digest?usernames=pogue&output=atom take 65ms (only 8ms in RPCs) -- template parsing?
 - drop status ID/timestamps older than 24 hours from StreamData
 - catch exceptions when fetching timeline tweets
 - reply and retweet links
@@ -13,7 +13,6 @@ todo:
 
 thumbnail URLs to support:
 - twitpic.com
-- i.imgur.com
 - youtube.com/youtu.be
 - vimeo.com
 - 4sq.com
@@ -41,3 +40,4 @@ done:
 - inline other images
 - use larger size for inline images in birdfeeder, smaller in twitter digest
 - flic.kr/flickr.com
+- i.imgur.com
