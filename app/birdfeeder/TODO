@@ -1,5 +1,4 @@
 todo:
-- why does /tweet-digest/digest?usernames=pogue&output=atom take 65ms (only 8ms in RPCs) -- template parsing?
 - drop status ID/timestamps older than 24 hours from StreamData
 - catch exceptions when fetching timeline tweets
 - reply and retweet links
@@ -8,7 +7,6 @@ todo:
 - allow feed ID to be revoked
 - use user timezone to format timestamps (instead of GMT)
 - "scavenger" to delete old tweets from StatusData?
-- make twitter API cache interface more efficient (right now it does two RPCs for cache hits, one to get the timestamp, one for the data)
 - remove URLs (especially if at end?) from title snippet
 
 thumbnail URLs to support:
@@ -41,3 +39,5 @@ done:
 - use larger size for inline images in birdfeeder, smaller in twitter digest
 - flic.kr/flickr.com
 - i.imgur.com
+- why does /tweet-digest/digest?usernames=pogue&output=atom take 65ms (only 8ms in RPCs)
+- make twitter API cache interface more efficient (right now it does two RPCs for cache hits, one to get the timestamp, one for the data)

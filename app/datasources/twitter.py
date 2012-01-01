@@ -2736,7 +2736,8 @@ class Api(object):
                       count=None,
                       page=None,
                       include_rts=None,
-                      include_entities=None):
+                      include_entities=None,
+                      trim_user=None):
     '''Fetch the sequence of public Status messages for a single user.
 
     The twitter.Api instance must be authenticated if the user is private.
@@ -2776,6 +2777,9 @@ class Api(object):
         This node offers a variety of metadata about the tweet in a
         discreet structure, including: user_mentions, urls, and
         hashtags. [Optional]
+      trim_user:
+        If True, full user data will not be present per Status (the User object
+        will have an ID only). [Optional]
 
     Returns:
       A sequence of Status instances, one for each message up to count
@@ -2823,6 +2827,9 @@ class Api(object):
 
     if include_entities:
       parameters['include_entities'] = 1
+
+    if trim_user:
+      parameters['trim_user'] = 1
 
     json = self._FetchUrl(url, parameters=parameters)
     data = self._ParseAndCheckTwitter(json)

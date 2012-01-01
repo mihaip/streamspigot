@@ -49,17 +49,40 @@ class DbCache(object):
 
 class MemcacheCache(object):
     '''Simple cache on top of Google App Engine's memcache service'''
+
+    def __init__(self):
+        # Keep track of the most recently read or written cache entry. For cache
+        # hits, python-twitter will end up calling GetCachedTime and then
+        # immediately Get. Keeping track of the last request allows the second
+        # memcache RPC to be avoided.
+        self._last_request_key = None
+        self._last_request_value = None
+
     def Get(self, key):
+        if key == self._last_request_key:
+          return self._last_request_value
+        else:
+          self._last_request_key = None
+          self._last_request_value = None
+
         values = memcache.get(key)
         if values:
+            self._last_request_key = key
+            self._last_request_value = values[1]
             return values[1]
         return None
 
     def Set(self, key, data):
+        self._last_request_key = key
+        self._last_request_value = data
         memcache.set(key, [time.time(), data])
 
     def GetCachedTime(self, key):
         values = memcache.get(key)
         if values:
+            self._last_request_key = key
+            self._last_request_value = values[1]
             return values[0]
+        self._last_request_key = None
+        self._last_request_value = None
         return None

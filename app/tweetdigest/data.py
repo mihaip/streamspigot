@@ -139,16 +139,52 @@ class ListTwitterFetcher(TwitterFetcher):
         return 'list "%s/%s"' % (self._list_owner, self._list_id)
 
 class UserTwitterFetcher(TwitterFetcher):
-    def __init__(self, api, username):
+    def __init__(self, api, username, digest_start_time, digest_end_time):
         self._api = api
         self._username = username
+        self._digest_start_time = digest_start_time
+        self._digest_end_time = digest_end_time
 
     def _fetch(self):
-        return self._api.GetUserTimeline(
+        # We pass in trim_user=True since all of the returned statuses will have
+        # the same user object in the response. This makes parsing of the
+        # response JSON quite a bit slower (and also eats up space in the cache).
+        timeline = self._api.GetUserTimeline(
             self._username,
             count=40,
             include_rts=True,
-            include_entities=True)
+            include_entities=True,
+            trim_user=True)
+
+        # We do the filtering now, so that we don't look up user objects that
+        # we don't need.
+        timeline = [
+            s for s in timeline
+            if s.created_at_in_seconds <= self._digest_end_time and
+                s.created_at_in_seconds > self._digest_start_time
+        ]
+
+        if timeline:
+          # Look up the requesting user and attach the fully-populated User
+          # instance to the returned statuses.
+          user = self._api.GetUser(self._username)
+          for status in timeline:
+              status.user = user
+              # https://dev.twitter.com/docs/api/1/get/statuses/user_timeline
+              # claims that "If you're using the trim_user parameter in
+              # conjunction with include_rts, the retweets will still contain a
+              # full user object." However, that doesn't seem to be the case,
+              # and retweeted statuses don't have fully-populated user (reported
+              # as https://dev.twitter.com/issues/178).
+              # If we don't appear to have a fully-populated user, we do the
+              # look up ourselves (lookups are one at a time instead of batched
+              # for all the retweeted users so that there's a higher likelihood
+              # of getting a cache hit).
+              retweeted_status = status.retweeted_status
+              if retweeted_status and not retweeted_status.user.screen_name:
+                  retweeted_status.user = \
+                      self._api.GetUser(retweeted_status.user.id)
+        return timeline
 
     def _id(self):
         return 'user "%s"' % self._username
@@ -173,7 +209,7 @@ def get_digest_for_usernames(usernames):
 
     for username in usernames:
         api = _get_digest_twitter_api(max_cache_age, key=username)
-        fetcher = UserTwitterFetcher(api, username)
+        fetcher = UserTwitterFetcher(api, username, digest_start_time, digest_end_time)
         user_statuses, had_error = fetcher.fetch()
         if had_error:
             error_usernames.append(username)
