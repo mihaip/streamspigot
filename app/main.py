@@ -22,6 +22,7 @@ from google.appengine.ext.webapp import util
 import base.handlers
 import birdfeeder.handlers.main
 import birdfeeder.handlers.feed
+import birdfeeder.handlers.pinger
 import birdfeeder.handlers.session
 import tweetdigest.handlers
 import feedplayback.handlers
@@ -49,6 +50,8 @@ def main():
             ('/bird-feeder/sign-out', birdfeeder.handlers.session.SignOutHandler),
             ('/bird-feeder/callback', birdfeeder.handlers.session.CallbackHandler),
             ('/bird-feeder/feed/timeline/(.*)', birdfeeder.handlers.feed.TimelineFeedHandler),
+            ('/bird-feeder/pinger/following', birdfeeder.handlers.pinger.FollowingHandler),
+            ('/bird-feeder/pinger/ping', birdfeeder.handlers.pinger.PingHandler),
 
             ('/', MainHandler),
         ],

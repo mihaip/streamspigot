@@ -59,7 +59,7 @@ class Session(db.Model):
             consumer_secret=TWITTER_SERVICE_PROVIDER.consumer.secret,
             access_token_key=self.oauth_token,
             access_token_secret=self.oauth_token_secret,
-            cache=twitterappengine.MemcacheCache())
+            cache=None)
         api.SetCacheTimeout(60) # In seconds. TODO(mihaip): configure?
         api.SetUserAgent('StreamSpigot/%s (+%s)' % (
             os.environ.get('CURRENT_VERSION_ID', '1'),
@@ -173,3 +173,62 @@ class StatusData(db.Model):
     def kind(cls):
         return 'birdfeeder.StatusData'
 
+class FollowingData(db.Model):
+    following_map = base.util.JsonProperty(indexed=False, required=True)
+
+    _SINGLETON_ID = 'following_data'
+
+    _following_map = None
+
+    @staticmethod
+    def get_following_list():
+        if FollowingData._is_stale():
+            FollowingData._update()
+
+        return list(FollowingData._following_map.keys())
+
+    @staticmethod
+    def get_following_twitter_ids(twitter_id):
+        if FollowingData._is_stale():
+            FollowingData._update()
+
+        return FollowingData._following_map.get(twitter_id, [])
+
+    @staticmethod
+    def _is_stale():
+        # TODO(mihaip): refresh every day or so
+        return FollowingData._following_map == None
+
+    @staticmethod
+    def _update():
+        stored_data = FollowingData.get_by_key_name(FollowingData._SINGLETON_ID)
+
+        if stored_data:
+            # The serialized following data ends up having its keys converted to
+            # strings; convert them to numbers when deserializing.
+            FollowingData._following_map = {}
+            for twitter_id, following_twitter_ids in stored_data.following_map.items():
+                twitter_id = int(twitter_id)
+                FollowingData._following_map[twitter_id] = following_twitter_ids
+            return
+
+        following_map = {}
+        for session in Session.all():
+            twitter_id = int(session.twitter_id)
+            following_twitter_ids = session.create_api().GetFriendIDs()['ids']
+            for following_twitter_id in following_twitter_ids:
+                following_map.setdefault(following_twitter_id, []).append(twitter_id)
+            # Users are also considered to be following themselves (since their
+            # updates update their timeline).
+            following_map.setdefault(twitter_id, []).append(twitter_id)
+
+        stored_data = FollowingData(
+            key_name=FollowingData._SINGLETON_ID,
+            following_map=following_map)
+        stored_data.put()
+
+        FollowingData._following_map = following_map
+
+    @classmethod
+    def kind(cls):
+        return 'birdfeeder.FollowingData'

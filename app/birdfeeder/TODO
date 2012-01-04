@@ -1,4 +1,5 @@
 todo:
+- refresh following data both server-side and in birdpinger periodically
 - drop status ID/timestamps older than 24 hours from StreamData
 - catch exceptions when fetching timeline tweets
 - reply and retweet links
@@ -43,3 +44,6 @@ done:
 - why does /tweet-digest/digest?usernames=pogue&output=atom take 65ms (only 8ms in RPCs)
 - make twitter API cache interface more efficient (right now it does two RPCs for cache hits, one to get the timestamp, one for the data)
 - twitpic.com
+- filter out @mentions and retweets in birdpinger
+- "authenticate" birdpinger by requiring a secret token in all requests
+- remove 60 second cache from Bird Feeder API instances
