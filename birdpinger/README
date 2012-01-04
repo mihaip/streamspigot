@@ -1,0 +1,12 @@
+To build and run
+
+1. Install Go per http://golang.org/doc/install.html
+2. git clone https://github.com/hoisie/httplib.go.git
+3. cd httplib.go
+4. gomake install
+5. git clone https://github.com/hoisie/twitterstream.git
+6. cd twitterstream
+7. gomake install
+8. cd birdpinger
+9. gomake
+10. ./birdpinger --twitter_username=[username] --twitter_password=[password]

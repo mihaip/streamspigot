@@ -1,2 +1,4 @@
 *.pyc
 app/datasources/oauth_keys.py
+*.[68]
+birdpinger/birdpinger
