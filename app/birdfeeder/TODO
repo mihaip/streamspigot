@@ -1,5 +1,6 @@
 todo:
 - refresh following data both server-side and in birdpinger periodically
+- reduce update cron job frequency
 - drop status ID/timestamps older than 24 hours from StreamData
 - catch exceptions when fetching timeline tweets
 - reply and retweet links
@@ -16,6 +17,7 @@ thumbnail URLs to support:
 - 4sq.com
 - ow.ly/i (from https://twitter.com/doriegreenspan/status/153033123968466944)
 - lockerz.com (from https://twitter.com/wednesdaychef/status/153099094968123392)
+- cl.ly (from http://twitter.com/krave/status/154684703570530304) - thumbs.cl.ly per http://developer.getcloudapp.com/view-item
 
 done:
 - update oauth_template
@@ -47,3 +49,4 @@ done:
 - filter out @mentions and retweets in birdpinger
 - "authenticate" birdpinger by requiring a secret token in all requests
 - remove 60 second cache from Bird Feeder API instances
+- tweak instagram URL: http://instagr.am/p/eb-bo/ (from http://twitter.com/jenna/status/154676233131659264)

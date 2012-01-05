@@ -5,7 +5,7 @@ LARGE_THUMBNAIL = 'large'
 SMALL_THUMBNAIL = 'small'
 
 _YFROG_PATH_RE = re.compile('/(\\w+).*')
-_INSTAGRAM_PATH_RE = re.compile('/p/(\\w+).*')
+_INSTAGRAM_PATH_RE = re.compile('/p/([\\w\\-]+).*')
 _FLICKR_SHORT_PATH_RE = re.compile('/p/(\\w+).*')
 _FLICKR_LONG_HOSTNAME_RE = re.compile('farm\\d+\\.static\\.?flickr\\.com')
 _FLICKR_LONG_PATH_RE = re.compile('(/\\d+/\\d+_[a-f0-9]+)(_.)?(\\....)')
