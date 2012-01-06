@@ -45,4 +45,4 @@ cron:
 
 - description: Bird Feeder periodic update
   url: /cron/bird-feeder/update
-  schedule: every 20 minutes
+  schedule: every 60 minutes
