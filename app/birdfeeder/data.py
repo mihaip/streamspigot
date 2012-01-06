@@ -40,9 +40,12 @@ class Session(db.Model):
     oauth_token_secret = db.TextProperty(indexed=False)
 
     def update(self, oauth_token, oauth_token_secret):
-      self.session_id = _generate_session_id()
-      self.oauth_token = oauth_token
-      self.oauth_token_secret = oauth_token_secret
+        self.session_id = _generate_session_id()
+        self.oauth_token = oauth_token
+        self.oauth_token_secret = oauth_token_secret
+
+    def reset_feed_id(self):
+        self.feed_id = _generate_feed_id()
 
     def as_dict(self):
         return {

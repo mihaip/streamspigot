@@ -296,6 +296,10 @@ a, .link {
   color: red;
 }
 
-#birdreader-sign-in {
+#birdfeeder-sign-in {
   text-align: center;
+}
+
+#birdfeeder-feed-container.disabled {
+  opacity: .5;
 }

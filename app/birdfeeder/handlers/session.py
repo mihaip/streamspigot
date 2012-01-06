@@ -173,3 +173,9 @@ class SignOutHandler(SessionHandler):
     def get(self):
         self._remove_request_session()
         self.redirect(self._get_path())
+
+class ResetFeedIdHandler(SessionApiHandler):
+    def _post_signed_in(self):
+        self._session.reset_feed_id()
+        self._session.put()
+        self.response.out.write('OK')

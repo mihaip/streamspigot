@@ -11,12 +11,22 @@
 {% endblock %}
 
 {% block body %}
-<a href="{{ timeline_feed_url }}" class="feed-link">Timeline feed</a>
--
-<a href="{{ timeline_reader_url }}">View in Google Reader</a>
+
+<div id="birdfeeder-feed-container">
+  <a href="{{ timeline_feed_url }}" class="feed-link">Timeline feed</a>
+  -
+  <a href="{{ timeline_reader_url }}">View in Google Reader</a>
+</div>
 {% endblock %}
 
 
 {% block footer %}
   {% include "footer.snippet" %}
+
+  If that happens, you may wish to <span class="link"
+  id="birdfeeder-reset-feed-id">reset</span> your feed URL (the old items will
+  still be available under the old URL, but new items will only come in on the
+  new URL).
+
+  <script>streamspigot.birdfeeder.init();</script>
 {% endblock %}

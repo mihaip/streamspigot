@@ -11,6 +11,7 @@ goog.require('goog.string');
 
 goog.provide('streamspigot.tweetdigest');
 goog.provide('streamspigot.feedplayback');
+goog.provide('streamspigot.birdfeeder');
 goog.provide('streamspigot.util');
 
 streamspigot.tweetdigest.TWITTER_USERNAME_RE = /^[a-zA-Z0-9_]{1,15}$/;
@@ -396,6 +397,31 @@ streamspigot.feedplayback.setup = function(event) {
             goog.string.htmlEscape(responseText);
       },
       data);
+};
+
+streamspigot.birdfeeder.init = function() {
+  goog.events.listen(
+      goog.dom.$('birdfeeder-reset-feed-id'),
+      goog.events.EventType.CLICK,
+      streamspigot.birdfeeder.resetFeedId);
+};
+
+streamspigot.birdfeeder.resetFeedId = function() {
+  var feedContainerNode = goog.dom.$('birdfeeder-feed-container');
+  goog.dom.classes.add(feedContainerNode, 'disabled');
+
+  goog.net.XhrIo.send(
+      '/bird-feeder/reset-feed-id',
+      function(e) {
+        var xhr = e.target;
+        if (xhr.isSuccess()) {
+          window.location.reload();
+        } else {
+          goog.dom.classes.remove(feedContainerNode, 'disabled');
+          alert('Could not reset the feed URL: ' + xhr.getStatus());
+        }
+      },
+      'POST')
 };
 
 streamspigot.util.fetchJson = function(url, jsonCallback, errorCallback, opt_postData) {
