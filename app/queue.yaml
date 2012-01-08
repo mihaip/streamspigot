@@ -4,5 +4,5 @@ queue:
   bucket_size: 1
 
 - name: birdfeeder-update
-  rate: 1/s
-  bucket_size: 1
+  rate: 5/s
+  bucket_size: 5

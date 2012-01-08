@@ -4,7 +4,6 @@ todo:
 - drop status ID/timestamps older than 24 hours from StreamData
 - catch exceptions when fetching timeline tweets
 - reply and retweet links
-- Twitter Streaming API/PSHB proxy (in Go)
 - If-Modified-Since support in feed handler
 - use user timezone to format timestamps (instead of GMT)
 - "scavenger" to delete old tweets from StatusData?
@@ -50,3 +49,4 @@ done:
 - remove 60 second cache from Bird Feeder API instances
 - tweak instagram URL: http://instagr.am/p/eb-bo/ (from http://twitter.com/jenna/status/154676233131659264)
 - allow feed ID to be revoked
+- Twitter Streaming API/PSHB proxy (in Go)

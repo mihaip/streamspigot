@@ -74,18 +74,19 @@ func main() {
 		// Streaming API will also notify when tweets of theirs are retweeted or
 		// replied to).
 		if _, inMap := followingUserIdMap[tweet.User.Id]; inMap {
-			go pingUser(tweet.User.Id, pingUrl)
+			go pingUser(tweet.User.Id, tweet.Id, pingUrl)
 		}
 	}
 }
 
-func pingUser(twitterId int64, pingUrl string) {
-	fmt.Printf("Pinging for update by user %d...\n", twitterId)
+func pingUser(twitterId int64, statusId int64, pingUrl string) {
+	fmt.Printf("Pinging for update %d by user %d...\n", statusId, twitterId)
 
 	resp, postErr := http.PostForm(
 		pingUrl,
 		url.Values{
 			"update_twitter_id": {fmt.Sprintf("%d", twitterId)},
+			"update_status_id":  {fmt.Sprintf("%d", statusId)},
 			"secret":            {*streamSpigotSecret},
 		})
 	if postErr != nil {

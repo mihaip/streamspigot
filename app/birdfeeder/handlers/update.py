@@ -15,6 +15,15 @@ RECENT_STATUS_INTERVAL_SEC = 10 * 60
 
 HUB_URL_BATCH_SIZE = 100
 
+# When we get a ping, we don't start updates right away, since the timeline REST
+# API endpoint often won't return a status that the Streaming API just notified
+# us about (replication delays on Twitter's end?).
+PING_UPDATE_DELAY_SEC = 2
+
+# If we still don't see the expected status ID, then we try again a few times
+# (delaying retries by retry count * update delay)
+PING_UPDATE_RETRY_MAX = 5
+
 class UpdateCronHandler(base.handlers.BaseHandler):
     def get(self):
         update_task_count = 0
@@ -30,7 +39,8 @@ class UpdateCronHandler(base.handlers.BaseHandler):
 class UpdateTaskHandler(base.handlers.BaseHandler):
     def post(self):
         session = data.Session.from_request(self.request)
-        had_updates = update_timeline(session)
+        had_updates, status_ids = update_timeline(session)
+
         if had_updates:
             # TODO(mihaip): share feed URL generation with main.py
             feed_url = '%s/bird-feeder/feed/timeline/%s' % (
@@ -39,6 +49,44 @@ class UpdateTaskHandler(base.handlers.BaseHandler):
         self.response.out.write(
             'Updated %s, %s updates' %
                 (session.twitter_id, had_updates and 'had' or 'didn\'t have'))
+
+        # If this update was triggered in response to a ping, see if we actually
+        # got the status that we were looking for, otherwise we have to try
+        # again.
+        try:
+            expected_status_id = int(self.request.get('expected_status_id'))
+            update_retry_count = int(self.request.get('update_retry_count'))
+
+            logging.info('Looking for expected status %d...' % expected_status_id)
+
+            if expected_status_id in status_ids:
+                logging.info('...found')
+                return
+
+            if update_retry_count == PING_UPDATE_RETRY_MAX:
+                logging.info('...not found, and no retries left')
+                return
+
+            update_retry_count += 1
+
+            logging.info('...not found, queuing the %d-th retry' %
+                update_retry_count)
+
+            params = {
+                'expected_status_id': expected_status_id,
+                'update_retry_count': update_retry_count,
+            }
+            params.update(dict(session.as_dict()))
+
+            taskqueue.add(
+                queue_name='birdfeeder-update',
+                url='/tasks/bird-feeder/update',
+                countdown=update_retry_count * PING_UPDATE_DELAY_SEC,
+                params=params)
+        except ValueError:
+            # Ignore mising/invalid values
+            return
+
 
 # Helper handler (for development) that updates a single user's timeline and
 # refreshes their feed within a single request.
@@ -97,7 +145,7 @@ def update_timeline(session):
 
     if not new_status_ids:
         logging.info('  No new status IDs')
-        return False
+        return False, stream.status_ids
 
     logging.info('  %d new status IDs for this stream' % len(new_status_ids))
 
@@ -112,7 +160,7 @@ def update_timeline(session):
         stream.put()
         # Even though there were no new statuses to store, the timeline still
         # had new tweets, so we want the hub to be pinged.
-        return True
+        return True, stream.status_ids
     logging.info('  %d new statuses' % len(unknown_status_ids))
 
     unknown_statuses = [
@@ -125,7 +173,7 @@ def update_timeline(session):
     # we will still attempt to recreate the items on the next fetch.
     stream.put()
 
-    return True
+    return True, stream.status_ids
 
 def ping_hub(urls):
     for i in xrange(0, len(urls), HUB_URL_BATCH_SIZE):
