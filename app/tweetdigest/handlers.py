@@ -44,6 +44,11 @@ class DigestHandler(base.handlers.BaseHandler):
         list_owner = None
         list_id = None
 
+        start_date, end_date = data.get_digest_dates()
+
+        if self._handle_not_modified(last_modified_date=end_date):
+            return
+
         if self.request.get('usernames'):
             usernames = re.split('[\\s,]+', self.request.get('usernames'))
             usernames = [u.strip().lower() for u in usernames if u.strip()]
@@ -73,10 +78,10 @@ class DigestHandler(base.handlers.BaseHandler):
 
         # Generate digest
         if usernames:
-            (grouped_statuses, start_date, error_usernames) = \
+            grouped_statuses, error_usernames = \
                 data.get_digest_for_usernames(usernames)
         else:
-            (grouped_statuses, start_date, had_error) = \
+            grouped_statuses, had_error = \
                 data.get_digest_for_list(list_owner, list_id)
 
         # Template parameters
@@ -105,6 +110,10 @@ class DigestHandler(base.handlers.BaseHandler):
             digest_id = '%s/%s' % (list_owner, list_id)
 
         digest_entry_id = digest_id + '-' + start_date.date().isoformat()
+
+        self._add_caching_headers(
+            last_modified_date=end_date,
+            max_age_sec=data.DIGEST_LENGTH_SEC)
 
         self._write_template(output_template.template_file, {
             'digest_source': digest_source,

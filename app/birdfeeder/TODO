@@ -1,10 +1,11 @@
 todo:
+- cache user data so that feed fetches involve no twitter RPCs
+- If-Modified-Since support in feed handler
 - refresh following data both server-side and in birdpinger periodically
 - reduce update cron job frequency
 - drop status ID/timestamps older than 24 hours from StreamData
 - catch exceptions when fetching timeline tweets
 - reply and retweet links
-- If-Modified-Since support in feed handler
 - use user timezone to format timestamps (instead of GMT)
 - "scavenger" to delete old tweets from StatusData?
 - remove URLs (especially if at end?) from title snippet

@@ -14,7 +14,7 @@ from datasources import thumbnails, twitter, twitterappengine, twitterdisplay
 from datasources.oauth_keys import SERVICE_PROVIDERS
 
 TWITTER_SERVICE_PROVIDER = SERVICE_PROVIDERS['tweetdigest:twitter']
-DIGEST_LENGTH = 60 * 60 * 24
+DIGEST_LENGTH_SEC = 60 * 60 * 24
 
 TWITTER_USERNAME_RE = re.compile('^[a-zA-Z0-9_]{1,15}$')
 
@@ -61,7 +61,7 @@ def _get_digest_timestamps():
       now.tm_isdst
     ])
 
-    digest_start_time = digest_end_time - DIGEST_LENGTH
+    digest_start_time = digest_end_time - DIGEST_LENGTH_SEC
 
     # Twitter data can be as stale as the digest end time, since we don't care
     # about anything more recent (there may be some concurrency issues with
@@ -70,6 +70,11 @@ def _get_digest_timestamps():
     max_cache_age = calendar.timegm(now) - digest_end_time
 
     return digest_start_time, digest_end_time, max_cache_age
+
+def get_digest_dates():
+    digest_start_time, digest_end_time, max_cache_age = _get_digest_timestamps()
+    return (datetime.datetime.fromtimestamp(digest_start_time),
+        datetime.datetime.fromtimestamp(digest_end_time))
 
 def _process_digest_statuses(
     statuses, digest_start_time, digest_end_time, error_info):
@@ -94,9 +99,7 @@ def _process_digest_statuses(
             statuses=statuses,
             thumbnail_size=thumbnails.SMALL_THUMBNAIL))
 
-    return (status_groups,
-            datetime.datetime.fromtimestamp(digest_start_time),
-            error_info)
+    return status_groups, error_info
 
 class TwitterFetcher(object):
     def fetch(self):

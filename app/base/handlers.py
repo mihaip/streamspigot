@@ -1,5 +1,9 @@
+import datetime
+import email
 import logging
 import os
+import time
+import wsgiref.handlers
 
 from django.conf import settings
 from django.utils import simplejson
@@ -67,3 +71,28 @@ class BaseHandler(webapp.RequestHandler):
     def _write_json(self, obj):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(simplejson.dumps(obj))
+
+    def _handle_not_modified(self, last_modified_date):
+        if 'If-Modified-Since' not in self.request.headers:
+            return False
+
+        if_modified_since_tuple = email.utils.parsedate(self.request.headers['If-Modified-Since'])
+        if not if_modified_since_tuple:
+            return False
+        if_modified_since = datetime.datetime(*if_modified_since_tuple[:6])
+        if if_modified_since < last_modified_date:
+            return False
+
+        self.response.set_status(304)
+        return True
+
+    def _add_caching_headers(self, last_modified_date, max_age_sec):
+        def format_date(date):
+            return wsgiref.handlers.format_date_time(
+                time.mktime(date.timetuple()))
+
+        self.response.headers['Last-Modified'] = format_date(last_modified_date)
+        self.response.headers['Expires'] = format_date(
+            last_modified_date + datetime.timedelta(seconds=max_age_sec))
+        self.response.headers['Cache-Control'] = 'public, max-age=%d' % max_age_sec
+
