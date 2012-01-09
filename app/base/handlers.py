@@ -23,7 +23,7 @@ class BaseHandler(webapp.RequestHandler):
         # variable here.
         # TODO(mihaip): figure out why this is happening
         if 'DJANGO_SETTINGS_MODULE' not in os.environ:
-            logging.error('DJANGO_SETTINGS_MODULE was not in the environment')
+            logging.warning('DJANGO_SETTINGS_MODULE was not in the environment')
             os.environ['DJANGO_SETTINGS_MODULE'] = 'django_settings'
 
         # Temporarily insert the template's directory into the template path,
