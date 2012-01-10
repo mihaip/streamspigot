@@ -12,6 +12,14 @@ _CONSECUTIVE_WHITESPACE_RE = re.compile('[\\s]+')
 _TAG_WHITESPACE_RE1 = re.compile('>[\\s]+<([^a])')
 _TAG_WHITESPACE_RE2 = re.compile('>[\\s]+<a')
 
+# Per http://www.w3.org/TR/REC-xml/#charsets XML disallows all control
+# characters...
+_CONTROL_CHARACTER_MAP = dict.fromkeys(range(32))
+# ...except for
+del _CONTROL_CHARACTER_MAP[0x9] # tab,
+del _CONTROL_CHARACTER_MAP[0xA] # line feed,
+del _CONTROL_CHARACTER_MAP[0xD] # and newline.
+
 def strip_html_whitespace(html):
     html = strip_spaces_between_tags(html)
     html = _CONSECUTIVE_WHITESPACE_RE.sub(' ', html)
@@ -22,6 +30,9 @@ def strip_html_whitespace(html):
 def generate_id(prefix):
     return prefix + base64.urlsafe_b64encode(
         uuid.uuid4().bytes).replace('=', '')
+
+def strip_control_characters(s):
+    return s.translate(_CONTROL_CHARACTER_MAP)
 
 class JsonProperty(db.Property):
     data_type = db.Blob

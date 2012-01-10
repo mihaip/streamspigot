@@ -1,4 +1,6 @@
 todo:
+- see why Ann's feed doesn't use PSHB in Reader
+- check if @ replies missing in birdpinger is Twitter's fault or tweetstream's
 - cache user data so that feed fetches involve no twitter RPCs
 - If-Modified-Since support in feed handler
 - refresh following data both server-side and in birdpinger periodically
@@ -51,3 +53,4 @@ done:
 - tweak instagram URL: http://instagr.am/p/eb-bo/ (from http://twitter.com/jenna/status/154676233131659264)
 - allow feed ID to be revoked
 - Twitter Streaming API/PSHB proxy (in Go)
+- strip control characters in tweets

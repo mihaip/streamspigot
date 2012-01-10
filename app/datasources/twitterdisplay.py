@@ -4,6 +4,7 @@ import re
 import xml.sax.saxutils
 
 from base.constants import CONSTANTS
+import base.util
 from datasources import thumbnails, twitter
 
 _BASE_TWITTER_URL = 'https://twitter.com'
@@ -38,6 +39,7 @@ class DisplayStatus(object):
     def title_as_text(self):
         title_text = _unescape_tweet_chunk(self._status.text)
         title_text = _WHITESPACE_RE.sub(' ', title_text)
+        title_text = base.util.strip_control_characters(title_text)
         return '%s: %s' % (self._status.user.screen_name, title_text)
 
     def created_at_formatted_gmt(self):
@@ -59,7 +61,11 @@ class DisplayStatus(object):
         def add_tweet_chunk(chunk):
             # Unescape then and re-escape everything so that we can have a
             # consistent level of escaping.
-            add_escaped_chunk(_unescape_tweet_chunk(chunk))
+            # We also remove control characters (which are not allowed in XML)
+            # now, instead of earlier, since otherwise all of the entity offsets
+            # would be wrong.
+            add_escaped_chunk(base.util.strip_control_characters(
+                _unescape_tweet_chunk(chunk)))
 
         def add_escaped_chunk(chunk):
             add_raw_chunk(xml.sax.saxutils.escape(chunk))
