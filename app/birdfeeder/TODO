@@ -20,7 +20,6 @@ thumbnail URLs to support:
 - vimeo.com
 - 4sq.com
 - ow.ly/i (from https://twitter.com/doriegreenspan/status/153033123968466944)
-- cl.ly (from http://twitter.com/krave/status/154684703570530304) - thumbs.cl.ly per http://developer.getcloudapp.com/view-item
 
 done:
 - update oauth_template
@@ -57,3 +56,4 @@ done:
 - Twitter Streaming API/PSHB proxy (in Go)
 - strip control characters in tweets
 - lockerz.com (from https://twitter.com/wednesdaychef/status/153099094968123392)
+- cl.ly (from http://twitter.com/krave/status/154684703570530304)

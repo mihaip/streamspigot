@@ -130,5 +130,8 @@ def get_thumbnail_info(url, size):
             if need_small:
                 thumb_width = 150
                 thumb_height = 150
+    elif hostname == 'cl.ly':
+        # See http://developer.getcloudapp.com/view-item
+        thumb_url = 'http://thumbs.cl.ly%s' % path
 
     return thumb_url, thumb_width, thumb_height
