@@ -1,4 +1,5 @@
 import re
+import urllib
 import urlparse
 
 LARGE_THUMBNAIL = 'large'
@@ -14,6 +15,7 @@ _FLICKR_SHORT_ID_ALPHABET ='123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRST
 _IMGUR_PATH_RE = re.compile('/(\\w+)(\\....).*')
 _IMGUR_GALLERY_PATH_RE = re.compile('/(gallery/)(\\w+).*')
 _TWITPIC_PATH_RE = re.compile('/(\\w+).*')
+_LOCKERZ_PATH_RE = re.compile('/s/\\w+.*')
 
 def _get_short_flickr_photo_id(photo_id):
     result = ''
@@ -115,6 +117,16 @@ def get_thumbnail_info(url, size):
             thumb_url = 'http://twitpic.com/show/%s/%s' % (
                 need_small and 'thumb' or 'large',
                 match.group(1))
+            if need_small:
+                thumb_width = 150
+                thumb_height = 150
+    elif hostname == 'lockerz.com':
+        # See http://support.lockerz.com/entries/350297-image-from-url
+        match = _LOCKERZ_PATH_RE.match(path)
+        if match:
+            thumb_url = 'http://api.plixi.com/api/tpapi.svc/imagefromurl?url=%s&size=%s' % (
+                urllib.quote(url),
+                need_small and 'small' or 'medium')
             if need_small:
                 thumb_width = 150
                 thumb_height = 150
