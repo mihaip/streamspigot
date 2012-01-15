@@ -1,6 +1,7 @@
 import itertools
 import os
 
+from google.appengine.api import taskqueue
 from google.appengine.ext import db
 
 from base.constants import CONSTANTS
@@ -69,6 +70,24 @@ class Session(db.Model):
             CONSTANTS.APP_URL,
         ))
         return api
+
+    def enqueue_update_task(
+            self,
+            countdown=None,
+            expected_status_id=None,
+            update_retry_count=None):
+        params = {}
+        if expected_status_id is not None:
+            params['expected_status_id'] = expected_status_id
+        if update_retry_count is not None:
+            params['update_retry_count'] = update_retry_count
+        params.update(self.as_dict())
+
+        taskqueue.add(
+            queue_name='birdfeeder-update',
+            url='/tasks/bird-feeder/update',
+            countdown=countdown,
+            params=params)
 
     @staticmethod
     def create(twitter_id, oauth_token, oauth_token_secret):

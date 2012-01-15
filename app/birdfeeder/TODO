@@ -1,5 +1,4 @@
 todo:
-- kick off feed update when first signing in
 - add timestamps to birdpinger
 - see why Ann's feed doesn't use PSHB in Reader
 - check if @ replies missing in birdpinger is Twitter's fault or tweetstream's
@@ -57,3 +56,4 @@ done:
 - lockerz.com (from https://twitter.com/wednesdaychef/status/153099094968123392)
 - cl.ly (from http://twitter.com/krave/status/154684703570530304)
 - If-Modified-Since support in feed handler
+- kick off feed update when first signing in

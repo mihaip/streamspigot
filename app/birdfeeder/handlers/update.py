@@ -29,10 +29,7 @@ class UpdateCronHandler(base.handlers.BaseHandler):
         update_task_count = 0
         for session in data.Session.all():
             update_task_count += 1
-            taskqueue.add(
-                queue_name='birdfeeder-update',
-                url='/tasks/bird-feeder/update',
-                params=session.as_dict())
+            session.enqueue_update_task()
 
         self.response.out.write('Started %d updates' % update_task_count)
 
@@ -72,17 +69,10 @@ class UpdateTaskHandler(base.handlers.BaseHandler):
             logging.info('...not found, queuing the %d-th retry' %
                 update_retry_count)
 
-            params = {
-                'expected_status_id': expected_status_id,
-                'update_retry_count': update_retry_count,
-            }
-            params.update(dict(session.as_dict()))
-
-            taskqueue.add(
-                queue_name='birdfeeder-update',
-                url='/tasks/bird-feeder/update',
+            session.enqueue_update_task(
                 countdown=update_retry_count * PING_UPDATE_DELAY_SEC,
-                params=params)
+                expected_status_id=expected_status_id,
+                update_retry_count=update_retry_count)
         except ValueError:
             # Ignore mising/invalid values
             return

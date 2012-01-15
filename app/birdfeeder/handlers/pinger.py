@@ -1,6 +1,5 @@
 import logging
 
-from google.appengine.api import taskqueue
 
 import base.handlers
 from birdfeeder import data
@@ -32,17 +31,11 @@ class PingHandler(base.handlers.BaseHandler):
         for following_twitter_id in following_twitter_ids:
             logging.info('Queueing update for %d' % following_twitter_id)
             session = data.Session.get_by_twitter_id(str(following_twitter_id))
-            params = {
-                'expected_status_id': update_status_id,
-                'update_retry_count': 0,
-            }
-            params.update(dict(session.as_dict()))
 
-            taskqueue.add(
-                queue_name='birdfeeder-update',
-                url='/tasks/bird-feeder/update',
+            session.enqueue_update_task(
                 countdown=birdfeeder.handlers.update.PING_UPDATE_DELAY_SEC,
-                params=params)
+                expected_status_id=update_status_id,
+                update_retry_count=0)
 
         self.response.out.write(
             'Queued %d updates' % len(following_twitter_ids))

@@ -164,6 +164,7 @@ class CallbackHandler(SessionHandler):
             session = data.Session.create(
                 twitter_id, access_token, access_token_secret)
         session.put()
+        session.enqueue_update_task()
 
         self._set_request_session(session)
 
