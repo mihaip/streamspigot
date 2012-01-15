@@ -1,4 +1,5 @@
 todo:
+- trigger a Reader crawlondemand when first generating a feed (or resetting the ID)
 - add timestamps to birdpinger
 - see why Ann's feed doesn't use PSHB in Reader
 - check if @ replies missing in birdpinger is Twitter's fault or tweetstream's
@@ -18,6 +19,7 @@ thumbnail URLs to support:
 - vimeo.com
 - 4sq.com
 - ow.ly/i (from https://twitter.com/doriegreenspan/status/153033123968466944)
+- img.ly (from http://twitter.com/mrgan/status/157981871307886592)
 
 done:
 - update oauth_template
@@ -57,3 +59,4 @@ done:
 - cl.ly (from http://twitter.com/krave/status/154684703570530304)
 - If-Modified-Since support in feed handler
 - kick off feed update when first signing in
+- show username that the feed is being generated for on homepage
