@@ -1,3 +1,4 @@
+import calendar
 import datetime
 import logging
 import time
@@ -7,6 +8,7 @@ from datasources import thumbnails, twitterdisplay
 import session
 
 FEED_STATUS_INTERVAL_SEC = 24 * 60 * 60 # One day
+IF_MODIFIED_SINCE_INTERVAL_SEC = 60 * 60 # One hour
 MIN_FEED_ITEMS = 10
 
 # Overrides the session accessors from SessionHandler to key the session
@@ -33,11 +35,28 @@ class TimelineFeedHandler(FeedHandler):
 
         stream = data.StreamData.get_timeline_for_user(twitter_id)
 
+        threshold_time = time.time() - FEED_STATUS_INTERVAL_SEC
+
+        # It's wasteful to serve the hub the full set of items in the feed, so
+        # we use a variant of the feed windowing technique described at
+        # http://code.google.com/p/pubsubhubbub/wiki/PublisherEfficiency#Feed_windowing
+        # to only give it new items. We treat the If-Modified-Since header as
+        # an indication of the items that the hub already has, but we allow one
+        # hour of overlap, in case of items getting dropped, replication delay,
+        # cosmic rays, etc.
+        if self._user_agent_contains('appid: pubsubhubbub'):
+            if_modified_since = self._get_if_modified_since()
+            if if_modified_since:
+                logging.info('If-Modified-Since: %d' % if_modified_since)
+                threshold_time = if_modified_since - IF_MODIFIED_SINCE_INTERVAL_SEC
+                # Since we're serving a partial response, we don't want proxies
+                # caching it.
+                self.response.headers['Cache-Control'] = 'private'
+
         # We want the feed to have all tweets from the past day, but also at
         # at least 10 items.
         feed_status_ids = []
         if stream:
-            threshold_time = time.time() - FEED_STATUS_INTERVAL_SEC
             for status_id, status_timestamp_sec in stream.status_pairs():
                 if status_timestamp_sec < threshold_time and \
                         len(feed_status_ids) >= MIN_FEED_ITEMS:
@@ -59,11 +78,14 @@ class TimelineFeedHandler(FeedHandler):
             for status in statuses
         ]
 
+        updated_date = datetime.datetime.utcnow()
+
         self._write_template('birdfeeder/feed.atom', {
               'feed_title': '@%s Twitter Timeline' % user.screen_name,
-              'updated_date_iso': datetime.datetime.utcnow().isoformat(),
+              'updated_date_iso': updated_date.isoformat(),
               'feed_url': self.request.url,
               'status_groups': status_groups,
             },
             content_type='application/atom+xml')
 
+        self._add_last_modified_header(updated_date)

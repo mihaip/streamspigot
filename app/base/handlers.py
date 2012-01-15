@@ -13,6 +13,9 @@ from google.appengine.ext import webapp
 
 import base.constants
 
+def _format_rfc_1123_date(date):
+    return wsgiref.handlers.format_date_time(time.mktime(date.timetuple()))
+
 class BaseHandler(webapp.RequestHandler):
     def _render_template(self, template_file_name, template_values={}):
         # Even though we set the DJANGO_SETTINGS_MODULE environment variable in
@@ -72,27 +75,41 @@ class BaseHandler(webapp.RequestHandler):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(simplejson.dumps(obj))
 
-    def _handle_not_modified(self, last_modified_date):
+    def _get_if_modified_since(self):
         if 'If-Modified-Since' not in self.request.headers:
+            return None
+
+        if_modified_since_tuple = email.utils.parsedate_tz(
+            self.request.headers['If-Modified-Since'])
+        if not if_modified_since_tuple:
+            return None
+        return email.utils.mktime_tz(if_modified_since_tuple)
+
+    def _handle_not_modified(self, last_modified_date):
+        if_modified_since = self._get_if_modified_since()
+        if not if_modified_since:
             return False
 
-        if_modified_since_tuple = email.utils.parsedate(self.request.headers['If-Modified-Since'])
-        if not if_modified_since_tuple:
-            return False
-        if_modified_since = datetime.datetime(*if_modified_since_tuple[:6])
+        if_modified_since = datetime.datetime.utcfromtimestamp(if_modified_since)
         if if_modified_since < last_modified_date:
             return False
 
         self.response.set_status(304)
         return True
 
+    def _add_last_modified_header(self, last_modified_date):
+        self.response.headers['Last-Modified'] = \
+            _format_rfc_1123_date(last_modified_date)
+
     def _add_caching_headers(self, last_modified_date, max_age_sec):
-        def format_date(date):
-            return wsgiref.handlers.format_date_time(
-                time.mktime(date.timetuple()))
-
-        self.response.headers['Last-Modified'] = format_date(last_modified_date)
-        self.response.headers['Expires'] = format_date(
+        self._add_last_modified_header(last_modified_date)
+        self.response.headers['Expires'] = _format_rfc_1123_date(
             last_modified_date + datetime.timedelta(seconds=max_age_sec))
-        self.response.headers['Cache-Control'] = 'public, max-age=%d' % max_age_sec
+        self.response.headers['Cache-Control'] = \
+            'public, max-age=%d' % max_age_sec
 
+    def _user_agent_contains(self, s):
+        if 'User-Agent' not in self.request.headers:
+            return False
+
+        return self.request.headers['User-Agent'].find(s) != -1

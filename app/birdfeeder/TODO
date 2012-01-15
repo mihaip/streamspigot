@@ -4,7 +4,6 @@ todo:
 - see why Ann's feed doesn't use PSHB in Reader
 - check if @ replies missing in birdpinger is Twitter's fault or tweetstream's
 - cache user data so that feed fetches involve no twitter RPCs
-- If-Modified-Since support in feed handler
 - refresh following data both server-side and in birdpinger periodically
 - reduce update cron job frequency
 - drop status ID/timestamps older than 24 hours from StreamData
@@ -57,3 +56,4 @@ done:
 - strip control characters in tweets
 - lockerz.com (from https://twitter.com/wednesdaychef/status/153099094968123392)
 - cl.ly (from http://twitter.com/krave/status/154684703570530304)
+- If-Modified-Since support in feed handler
