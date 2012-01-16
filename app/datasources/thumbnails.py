@@ -1,6 +1,14 @@
+import logging
 import re
+import sys
 import urllib
 import urlparse
+# parse_qsl moved to urlparse module in v2.6
+try:
+  from urlparse import parse_qsl
+except:
+  from cgi import parse_qsl
+
 
 LARGE_THUMBNAIL = 'large'
 SMALL_THUMBNAIL = 'small'
@@ -31,6 +39,11 @@ def get_thumbnail_info(url, size):
         return 'http://flic.kr/p/img/%s_%s.jpg' % (
             short_photo_id, size == SMALL_THUMBNAIL and 't' or 'm')
 
+    def get_youtube_thumb_url(video_id):
+        # See http://stackoverflow.com/questions/2068344
+        return 'http://img.youtube.com/vi/%s/%s.jpg' % (
+            video_id, need_small and 'default' or 'hqdefault')
+
     thumb_url = None
     thumb_width = None
     thumb_height = None
@@ -39,6 +52,8 @@ def get_thumbnail_info(url, size):
     parsed_url = urlparse.urlparse(url)
     hostname = parsed_url.netloc
     path = parsed_url.path
+    query = dict(parse_qsl(parsed_url.query))
+
     if hostname == 'yfrog.com':
         # See http://yfrog.com/page/api
         match = _YFROG_PATH_RE.match(path)
@@ -133,5 +148,32 @@ def get_thumbnail_info(url, size):
     elif hostname == 'cl.ly':
         # See http://developer.getcloudapp.com/view-item
         thumb_url = 'http://thumbs.cl.ly%s' % path
+    elif hostname == 'youtube.com' or hostname == 'www.youtube.com':
+        if path == '/watch' and 'v' in query:
+            thumb_url = get_youtube_thumb_url(query['v'])
+    elif hostname == 'youtu.be':
+        thumb_url = get_youtube_thumb_url(path[1:])
 
     return thumb_url, thumb_width, thumb_height
+
+def get_iframe_info(url):
+    iframe_url = None
+    iframe_width = None
+    iframe_height = None
+
+    parsed_url = urlparse.urlparse(url)
+    hostname = parsed_url.netloc
+    path = parsed_url.path
+    query = dict(parse_qsl(parsed_url.query))
+
+    if hostname == 'youtube.com' or hostname == 'www.youtube.com':
+        if path == '/watch' and 'v' in query:
+            iframe_url = 'http://www.youtube.com/embed/%s' % query['v']
+            iframe_width = 560
+            iframe_height = 315
+    elif hostname == 'youtu.be':
+        iframe_url = 'http://www.youtube.com/embed/%s' % path[1:]
+        iframe_width = 560
+        iframe_height = 315
+
+    return iframe_url, iframe_width, iframe_height

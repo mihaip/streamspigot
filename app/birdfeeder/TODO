@@ -14,7 +14,6 @@ todo:
 - @mentions feed
 
 thumbnail URLs to support:
-- youtube.com/youtu.be
 - vimeo.com
 - 4sq.com
 - ow.ly/i (from https://twitter.com/doriegreenspan/status/153033123968466944)
@@ -60,3 +59,4 @@ done:
 - kick off feed update when first signing in
 - show username that the feed is being generated for on homepage
 - refresh following data both server-side and in birdpinger periodically
+- youtube.com/youtu.be
