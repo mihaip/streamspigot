@@ -1,4 +1,6 @@
+import datetime
 import itertools
+import logging
 import os
 
 from google.appengine.api import taskqueue
@@ -197,10 +199,13 @@ class StatusData(db.Model):
 
 class FollowingData(db.Model):
     following_map = base.util.JsonProperty(indexed=False, required=True)
+    last_update_time = db.DateTimeProperty(auto_now=True)
 
     _SINGLETON_ID = 'following_data'
+    _REFRESH_INTERVAL = datetime.timedelta(hours=1)
 
     _following_map = None
+    _last_update_time = None
 
     @staticmethod
     def get_following_list():
@@ -218,8 +223,12 @@ class FollowingData(db.Model):
 
     @staticmethod
     def _is_stale():
-        # TODO(mihaip): refresh every day or so
-        return FollowingData._following_map == None
+        if (FollowingData._following_map is None or
+            FollowingData._last_update_time is None):
+            return True
+
+        data_age = datetime.datetime.utcnow() - FollowingData._last_update_time
+        return data_age > FollowingData._REFRESH_INTERVAL
 
     @staticmethod
     def _update():
@@ -232,7 +241,9 @@ class FollowingData(db.Model):
             for twitter_id, following_twitter_ids in stored_data.following_map.items():
                 twitter_id = int(twitter_id)
                 FollowingData._following_map[twitter_id] = following_twitter_ids
-            return
+            FollowingData._last_update_time = stored_data.last_update_time
+            if not FollowingData._is_stale():
+                return
 
         following_map = {}
         for session in Session.all():
@@ -250,6 +261,7 @@ class FollowingData(db.Model):
         stored_data.put()
 
         FollowingData._following_map = following_map
+        FollowingData._last_update_time = stored_data.last_update_time
 
     @classmethod
     def kind(cls):

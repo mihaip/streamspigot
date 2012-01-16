@@ -4,7 +4,6 @@ todo:
 - see why Ann's feed doesn't use PSHB in Reader
 - check if @ replies missing in birdpinger is Twitter's fault or tweetstream's
 - cache user data so that feed fetches involve no twitter RPCs
-- refresh following data both server-side and in birdpinger periodically
 - reduce update cron job frequency
 - drop status ID/timestamps older than 24 hours from StreamData
 - catch exceptions when fetching timeline tweets
@@ -60,3 +59,4 @@ done:
 - If-Modified-Since support in feed handler
 - kick off feed update when first signing in
 - show username that the feed is being generated for on homepage
+- refresh following data both server-side and in birdpinger periodically

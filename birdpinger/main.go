@@ -7,10 +7,13 @@ import (
 	"io/ioutil"
 	"json"
 	"os"
+	"time"
 	"url"
 
 	"twitterstream"
 )
+
+const followingListUpdateIntervalNanosec = 1 * 60 * 60 * 1e9 // 1 hour
 
 var twitterUsername *string = flag.String("twitter_username", "", "Twitter account username to use to connect to the Streaming API")
 var twitterPassword *string = flag.String("twitter_password", "", "Password for the Twitter account")
@@ -29,6 +32,44 @@ func main() {
 	followingUrl := fmt.Sprintf("%sfollowing?secret=%s", baseUrl, url.QueryEscape(*streamSpigotSecret))
 	pingUrl := baseUrl + "ping"
 
+	var followingUserIds []int64
+	var followingUserIdMap map[int64]bool
+
+	stream := make(chan *twitterstream.Tweet)
+	updateFollowingListTick := time.Tick(followingListUpdateIntervalNanosec)
+
+	client := twitterstream.NewClient(*twitterUsername, *twitterPassword)
+
+	updateFollowingList := func() {
+		followingUserIds, followingUserIdMap = getFollowingList(followingUrl)
+
+		fmt.Printf("Tracking updates for %d users...\n", len(followingUserIds))
+
+		client.Close()
+		err := client.Follow(followingUserIds, stream)
+		if err != nil {
+			fmt.Println(err.String())
+		}
+	}
+
+	updateFollowingList()
+
+	for {
+		select {
+		case <-updateFollowingListTick:
+			updateFollowingList()
+		case tweet := <-stream:
+			// We ignore tweets that come from users that we're not following (the
+			// Streaming API will also notify when tweets of theirs are retweeted or
+			// replied to).
+			if _, inMap := followingUserIdMap[tweet.User.Id]; inMap {
+				go pingUser(tweet.User.Id, tweet.Id, pingUrl)
+			}
+		}
+	}
+}
+
+func getFollowingList(followingUrl string) (followingUserIds []int64, followingUserIdMap map[int64]bool) {
 	resp, getErr := http.Get(followingUrl)
 	if getErr != nil {
 		fmt.Printf("Got error %s when trying to fetch following list\n", getErr)
@@ -48,35 +89,17 @@ func main() {
 	}
 	resp.Body.Close()
 
-	var followingUserIds []int64
 	jsonErr := json.Unmarshal(contents, &followingUserIds)
 	if jsonErr != nil {
 		fmt.Printf("Got error %s when trying to decode JSON\n", jsonErr)
 		os.Exit(1)
 	}
 
-	followingUserIdMap := make(map[int64]bool)
+	followingUserIdMap = make(map[int64]bool)
 	for _, v := range followingUserIds {
 		followingUserIdMap[v] = true
 	}
-
-	fmt.Printf("Tracking updates for %d users...\n", len(followingUserIds))
-
-	stream := make(chan *twitterstream.Tweet)
-	client := twitterstream.NewClient(*twitterUsername, *twitterPassword)
-	err := client.Follow(followingUserIds, stream)
-	if err != nil {
-		fmt.Println(err.String())
-	}
-	for {
-		tweet := <-stream
-		// We ignore tweets that come from users that we're not following (the
-		// Streaming API will also notify when tweets of theirs are retweeted or
-		// replied to).
-		if _, inMap := followingUserIdMap[tweet.User.Id]; inMap {
-			go pingUser(tweet.User.Id, tweet.Id, pingUrl)
-		}
-	}
+	return
 }
 
 func pingUser(twitterId int64, statusId int64, pingUrl string) {
