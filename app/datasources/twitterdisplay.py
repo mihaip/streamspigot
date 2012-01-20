@@ -101,7 +101,7 @@ class DisplayStatus(object):
                 iframe_attributes = ' width="%d" height="%d"' % (
                     iframe_width, iframe_height)
             add_footer_raw_chunk(
-                '<iframe src="%s" frameborder="0"%s allowfullscreen></iframe>'
+                '<iframe src="%s" frameborder="0"%s allowfullscreen="true"></iframe>'
                 % (iframe_url, iframe_attributes))
 
         def maybe_add_thumbnail_chunk(url):
