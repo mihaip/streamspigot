@@ -1,3 +1,4 @@
+import itertools
 import logging
 import time
 import urllib
@@ -12,6 +13,11 @@ from birdfeeder import data
 import birdfeeder.handlers.feed
 
 RECENT_STATUS_INTERVAL_SEC = 10 * 60
+
+# Statuses older than this interval will be removed from the ID list that is
+# persisted, to avoid it growing uncontrollably. This value should be at least
+# as big as FEED_STATUS_INTERVAL_SEC from feeds.py
+OLD_STATUS_INTERVAL_SEC = 24 * 60 * 60 # One day
 
 HUB_URL_BATCH_SIZE = 100
 
@@ -121,9 +127,21 @@ def update_timeline(session):
 
     logging.info('  %d new status IDs for this stream' % len(new_status_ids))
 
-    stream.status_ids = new_status_ids + stream.status_ids
-    stream.status_timestamps_sec = \
-        new_status_timestamps_sec + stream.status_timestamps_sec
+    dropped_status_ids = 0
+    combined_status_ids = list(new_status_ids)
+    combined_status_timestamps_sec = list(new_status_timestamps_sec)
+    threshold_time = time.time() - OLD_STATUS_INTERVAL_SEC
+    for status_id, timestamp_sec in itertools.izip(stream.status_ids, stream.status_timestamps_sec):
+        if timestamp_sec >= threshold_time:
+            combined_status_ids.append(status_id)
+            combined_status_timestamps_sec.append(timestamp_sec)
+        else:
+            dropped_status_ids += 1
+
+    logging.info('  Dropped %d old status IDs' % dropped_status_ids)
+
+    stream.status_ids = combined_status_ids
+    stream.status_timestamps_sec = combined_status_timestamps_sec
 
     unknown_status_ids = data.StatusData.get_unknown_status_ids(new_status_ids)
 

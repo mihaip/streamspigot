@@ -1,11 +1,9 @@
 todo:
-- encoding bug in https://twitter.com/#!/smcbride/status/158634839388590080
 - trigger a Reader crawlondemand when first generating a feed (or resetting the ID)
 - add timestamps to birdpinger
 - see why Ann's feed doesn't use PSHB in Reader
 - cache user data so that feed fetches involve no twitter RPCs
 - reduce update cron job frequency
-- drop status ID/timestamps older than 24 hours from StreamData
 - catch exceptions when fetching timeline tweets
 - reply and retweet links
 - use user timezone to format timestamps (instead of GMT)
@@ -64,3 +62,5 @@ done:
 - youtube.com/youtu.be
 - check if @ replies missing in birdpinger is Twitter's fault or tweetstream's
 - convert newlines to html
+- encoding bug in https://twitter.com/#!/smcbride/status/158634839388590080 - hub dropped the < when giving it to schedule_crawler?
+- drop status ID/timestamps older than 24 hours from StreamData
