@@ -1,8 +1,9 @@
 todo:
+- encoding bug in https://twitter.com/#!/smcbride/status/158634839388590080
+- convert newlines to html
 - trigger a Reader crawlondemand when first generating a feed (or resetting the ID)
 - add timestamps to birdpinger
 - see why Ann's feed doesn't use PSHB in Reader
-- check if @ replies missing in birdpinger is Twitter's fault or tweetstream's
 - cache user data so that feed fetches involve no twitter RPCs
 - reduce update cron job frequency
 - drop status ID/timestamps older than 24 hours from StreamData
@@ -18,6 +19,7 @@ thumbnail URLs to support:
 - 4sq.com
 - ow.ly/i (from https://twitter.com/doriegreenspan/status/153033123968466944)
 - img.ly (from http://twitter.com/mrgan/status/157981871307886592)
+- pic.twitter.com (when manually inserted into tweets, it doesn't show up as a media entity - http://twitter.com/redrockcoffee/status/157687607613071360)
 
 done:
 - update oauth_template
@@ -60,3 +62,4 @@ done:
 - show username that the feed is being generated for on homepage
 - refresh following data both server-side and in birdpinger periodically
 - youtube.com/youtu.be
+- check if @ replies missing in birdpinger is Twitter's fault or tweetstream's

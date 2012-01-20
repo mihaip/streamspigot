@@ -61,11 +61,21 @@ class DisplayStatus(object):
         def add_tweet_chunk(chunk):
             # Unescape then and re-escape everything so that we can have a
             # consistent level of escaping.
+            chunk = _unescape_tweet_chunk(chunk)
+
             # We also remove control characters (which are not allowed in XML)
             # now, instead of earlier, since otherwise all of the entity offsets
             # would be wrong.
-            add_escaped_chunk(base.util.strip_control_characters(
-                _unescape_tweet_chunk(chunk)))
+            chunk = base.util.strip_control_characters(chunk)
+
+            # HTML-escape
+            chunk = xml.sax.saxutils.escape(chunk)
+
+            # Convert newlines to HTML (Twitter seems to normalize all line
+            # endings to \n).
+            chunk = chunk.replace('\n', '<br>')
+
+            add_raw_chunk(chunk)
 
         def add_escaped_chunk(chunk):
             add_raw_chunk(xml.sax.saxutils.escape(chunk))
