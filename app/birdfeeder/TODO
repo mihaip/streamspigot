@@ -1,6 +1,5 @@
 todo:
 - encoding bug in https://twitter.com/#!/smcbride/status/158634839388590080
-- convert newlines to html
 - trigger a Reader crawlondemand when first generating a feed (or resetting the ID)
 - add timestamps to birdpinger
 - see why Ann's feed doesn't use PSHB in Reader
@@ -13,6 +12,7 @@ todo:
 - "scavenger" to delete old tweets from StatusData?
 - remove URLs (especially if at end?) from title snippet
 - @mentions feed
+- prune null values and useless keys (e.g. profile_background_image_url_https) from persisted statuses
 
 thumbnail URLs to support:
 - vimeo.com
@@ -63,3 +63,4 @@ done:
 - refresh following data both server-side and in birdpinger periodically
 - youtube.com/youtu.be
 - check if @ replies missing in birdpinger is Twitter's fault or tweetstream's
+- convert newlines to html

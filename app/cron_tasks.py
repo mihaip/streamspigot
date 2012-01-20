@@ -18,6 +18,7 @@ sys.path.insert(0, DATASOURCES_DIR)
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 
+import birdfeeder.handlers.tools
 import birdfeeder.handlers.update
 import feedplayback.handlers
 
@@ -28,7 +29,8 @@ def main():
 
             ('/cron/bird-feeder/update', birdfeeder.handlers.update.UpdateCronHandler),
             ('/tasks/bird-feeder/update', birdfeeder.handlers.update.UpdateTaskHandler),
-            ('/tools/bird-feeder/update-feed', birdfeeder.handlers.update.UpdateFeedToolHandler),
+            ('/tools/bird-feeder/update-feed', birdfeeder.handlers.tools.UpdateFeedHandler),
+            ('/tools/bird-feeder/status/(\d+)', birdfeeder.handlers.tools.StatusHandler),
         ],
         debug=True)
     util.run_wsgi_app(application)
