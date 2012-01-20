@@ -4,7 +4,7 @@ To build and run
 2. git clone https://github.com/hoisie/httplib.go.git
 3. cd httplib.go
 4. gomake install
-5. git clone https://github.com/hoisie/twitterstream.git
+5. git clone https://github.com/mihaip/twitterstream.git
 6. cd twitterstream
 7. gomake install
 8. cd birdpinger
