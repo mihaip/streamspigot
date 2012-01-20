@@ -73,7 +73,7 @@ class DisplayStatus(object):
 
             # Convert newlines to HTML (Twitter seems to normalize all line
             # endings to \n).
-            chunk = chunk.replace('\n', '<br>')
+            chunk = chunk.replace('\n', '<br/>')
 
             add_raw_chunk(chunk)
 
