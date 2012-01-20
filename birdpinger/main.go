@@ -63,6 +63,17 @@ func main() {
 			// Streaming API will also notify when tweets of theirs are retweeted or
 			// replied to).
 			if _, inMap := followingUserIdMap[tweet.User.Id]; inMap {
+				// Similarly, we ignore tweets that are in reply to users that aren't
+				// being followed. This will have false negatives: if user A follows X
+				// and user B follows X and Z, a reply by X to Z will cause both A and
+				// B's streams to get pinged, even though A won't actually see that
+				// status. However, that should be rare.
+				if in_reply_to_user_id := tweet.In_reply_to_user_id; in_reply_to_user_id != 0 {
+					if _, inMap := followingUserIdMap[in_reply_to_user_id]; !inMap {
+						continue
+					}
+				}
+
 				go pingUser(tweet.User.Id, tweet.Id, pingUrl)
 			}
 		}

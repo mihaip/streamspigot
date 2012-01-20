@@ -64,3 +64,4 @@ done:
 - convert newlines to html
 - encoding bug in https://twitter.com/#!/smcbride/status/158634839388590080 - hub dropped the < when giving it to schedule_crawler?
 - drop status ID/timestamps older than 24 hours from StreamData
+- in birdpinger, filter out tweets that are in_reply_to_user_id for users that we don't care about (e.g. https://api.twitter.com/1/statuses/show.json?id=160246443020517376&include_entities=true)
