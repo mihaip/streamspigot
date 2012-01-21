@@ -5,12 +5,13 @@ import urllib
 import urllib2
 
 from google.appengine.api import taskqueue
+from google.appengine.api import urlfetch
 from google.appengine.ext import db
 
 from base.constants import CONSTANTS
 import base.handlers
+from datasources import twitter
 from birdfeeder import data
-import birdfeeder.handlers.feed
 
 RECENT_STATUS_INTERVAL_SEC = 10 * 60
 
@@ -42,7 +43,20 @@ class UpdateCronHandler(base.handlers.BaseHandler):
 class UpdateTaskHandler(base.handlers.BaseHandler):
     def post(self):
         session = data.Session.from_request(self.request)
-        had_updates, status_ids = update_timeline(session)
+        try:
+            had_updates, status_ids = update_timeline(session)
+        except twitter.TwitterError, err:
+            logging.exception('Twitter error')
+            self._write_error(500)
+            return
+        except urlfetch.DownloadError, err:
+            logging.exception('HTTP fetch error')
+            self._write_error(500)
+            return
+        except ValueError, err:
+            logging.exception('JSON error')
+            self._write_error(500)
+            return
 
         if had_updates:
             # TODO(mihaip): share feed URL generation with main.py
