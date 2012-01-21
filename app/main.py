@@ -32,7 +32,8 @@ class MainHandler(base.handlers.BaseHandler):
         self._write_template('index.html')
 
 def main():
-    ereporter.register_logger()
+    if not os.environ['SERVER_SOFTWARE'].startswith('Development'):
+        ereporter.register_logger()
     application = webapp.WSGIApplication([
             ('/tweet-digest/?', tweetdigest.handlers.MainHandler),
             ('/tweet-digest/lists', tweetdigest.handlers.ListsHandler),

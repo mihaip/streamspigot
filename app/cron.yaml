@@ -1,6 +1,6 @@
 cron:
 - description: Daily exception report
-  url: /_ereporter?sender=mihai.parparita@gmail.com&delete=false
+  url: /_ereporter?sender=mihai.parparita@gmail.com&delete=true
   schedule: every day 00:00
 
 - description: 1d/0
