@@ -7,6 +7,7 @@ import urllib2
 from google.appengine.api import taskqueue
 from google.appengine.api import urlfetch
 from google.appengine.ext import db
+from google.appengine.runtime import DeadlineExceededError
 
 from base.constants import CONSTANTS
 import base.handlers
@@ -55,6 +56,10 @@ class UpdateTaskHandler(base.handlers.BaseHandler):
             return
         except ValueError, err:
             logging.exception('JSON error')
+            self._write_error(500)
+            return
+        except DeadlineExceededError, err:
+            logging.exception('Deadline exceeded')
             self._write_error(500)
             return
 
