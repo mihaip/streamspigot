@@ -5,7 +5,6 @@ import os
 import time
 import wsgiref.handlers
 
-from django.conf import settings
 from django.utils import simplejson
 from django.template.loader import get_template
 from django.template import Context
@@ -23,11 +22,13 @@ class BaseHandler(webapp.RequestHandler):
         # entrypoints that cause it to get started without the environment
         # variable set. Since rendering templates is the only Django
         # functionality we actually need, as a workaround we set the environment
-        # variable here.
+        # variable here, and then import the settings module.
         # TODO(mihaip): figure out why this is happening
         if 'DJANGO_SETTINGS_MODULE' not in os.environ:
             logging.warning('DJANGO_SETTINGS_MODULE was not in the environment')
             os.environ['DJANGO_SETTINGS_MODULE'] = 'django_settings'
+
+        from django.conf import settings
 
         # Temporarily insert the template's directory into the template path,
         # so that templates in the same directory may be included without
