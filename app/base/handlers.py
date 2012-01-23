@@ -34,9 +34,11 @@ class BaseHandler(webapp.RequestHandler):
         # so that templates in the same directory may be included without
         # needing their full path
         previous_template_paths = list(settings.TEMPLATE_DIRS)
+        base_template_dir = os.path.join(
+            os.path.dirname(__file__), '..', 'templates')
         template_directory = os.path.join(
-            settings.TEMPLATE_DIRS[0], os.path.dirname(template_file_name))
-        settings.TEMPLATE_DIRS += (template_directory,)
+            base_template_dir, os.path.dirname(template_file_name))
+        settings.TEMPLATE_DIRS = (base_template_dir, template_directory)
 
         template = get_template(template_file_name)
         template_values.update(base.constants.CONSTANTS)
