@@ -12,11 +12,12 @@ todo:
 - prune null values and useless keys (e.g. profile_background_image_url_https) from persisted statuses
 
 thumbnail URLs to support:
-- vimeo.com
+- vimeo.com (from http://twitter.com/mishmosh/status/162659176324136960)
 - 4sq.com
 - ow.ly/i (from https://twitter.com/doriegreenspan/status/153033123968466944)
-- img.ly (from http://twitter.com/mrgan/status/157981871307886592)
 - pic.twitter.com (when manually inserted into tweets, it doesn't show up as a media entity - http://twitter.com/redrockcoffee/status/157687607613071360)
+- mlkshk.com (from http://twitter.com/chockenberry/status/165479284985696256)
+- picplz.com (from http://twitter.com/whizziwig/status/164044099777863681)
 
 done:
 - update oauth_template
@@ -66,3 +67,4 @@ done:
 - in birdpinger, filter out tweets that are in_reply_to_user_id for users that we don't care about (e.g. https://api.twitter.com/1/statuses/show.json?id=160246443020517376&include_entities=true)
 - catch exceptions when fetching timeline tweets
 - don't enable ereporter in dev mode
+- img.ly (from http://twitter.com/mrgan/status/157981871307886592)
