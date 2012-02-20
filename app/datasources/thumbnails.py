@@ -25,6 +25,7 @@ _IMGUR_GALLERY_PATH_RE = re.compile('/(gallery/)(\\w+).*')
 _TWITPIC_PATH_RE = re.compile('/(\\w+).*')
 _LOCKERZ_PATH_RE = re.compile('/s/\\w+.*')
 _IMGLY_PATH_RE = re.compile('/(\\w+).*')
+_OWLY_PATH_RE = re.compile('/i/(\\w+).*')
 
 def _get_short_flickr_photo_id(photo_id):
     result = ''
@@ -165,6 +166,17 @@ def get_thumbnail_info(url, size):
             if need_small:
                 thumb_width = 150
                 thumb_height = 150
+    elif hostname == 'ow.ly':
+        # No online docs, but these paths are shown in the embed codes that
+        # appear in the sidebar of any image (e.g. see http://ow.ly/i/oKuW).
+        match = _OWLY_PATH_RE.match(path)
+        if match:
+            thumb_url = 'http://static.ow.ly/photos/%s/%s.jpg' % (
+                need_small and 'thumb' or 'normal',
+                match.group(1))
+            if need_small:
+                thumb_width = 100
+                thumb_height = 100
 
     return thumb_url, thumb_width, thumb_height
 
