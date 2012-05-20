@@ -2078,6 +2078,8 @@ class Media(object):
   SMALL_SIZE = 'small'
   THUMB_SIZE = 'thumb'
 
+  KNOWN_SIZE_NAMES = set([LARGE_SIZE, MEDIUM_SIZE, SMALL_SIZE, THUMB_SIZE])
+
   def __init__(self,
                url=None,
                media_url=None,
@@ -2112,6 +2114,7 @@ class Media(object):
     '''
     sizes = {}
     for size_name, size_dict in data.get('sizes', {}).items():
+      if not size_name in Media.KNOWN_SIZE_NAMES: continue
       sizes[size_name] = (
           size_dict.get('w', None),
           size_dict.get('h', None),
