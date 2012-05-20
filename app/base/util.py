@@ -5,11 +5,13 @@ import uuid
 import zlib
 
 from django.utils import simplejson
-from django.utils.html import strip_spaces_between_tags
 from google.appengine.ext import db
 
 _CONSECUTIVE_WHITESPACE_RE = re.compile('[\\s]+')
+# Remove all whitespace between non-anchor tags.
 _TAG_WHITESPACE_RE1 = re.compile('>[\\s]+<([^a])')
+# Keep one space between anchor tags, so that consecutive links don't run
+# into eachother.
 _TAG_WHITESPACE_RE2 = re.compile('>[\\s]+<a')
 
 # Per http://www.w3.org/TR/REC-xml/#charsets XML disallows all control
@@ -21,7 +23,6 @@ del _CONTROL_CHARACTER_MAP[0xA] # line feed,
 del _CONTROL_CHARACTER_MAP[0xD] # and newline.
 
 def strip_html_whitespace(html):
-    html = strip_spaces_between_tags(html)
     html = _CONSECUTIVE_WHITESPACE_RE.sub(' ', html)
     html = _TAG_WHITESPACE_RE1.sub('><\\1', html)
     html = _TAG_WHITESPACE_RE2.sub('> <a', html)
