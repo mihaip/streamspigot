@@ -17,6 +17,7 @@ thumbnail URLs to support:
 - pic.twitter.com (when manually inserted into tweets, it doesn't show up as a media entity - http://twitter.com/redrockcoffee/status/157687607613071360)
 - mlkshk.com (from http://twitter.com/chockenberry/status/165479284985696256)
 - picplz.com (from http://twitter.com/whizziwig/status/164044099777863681)
+- picasaweb (from http://twitter.com/ohunt/status/164507898037284864)
 
 done:
 - update oauth_template
