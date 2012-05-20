@@ -2,6 +2,7 @@ import logging
 import urllib
 
 from django.utils import simplejson
+from google.appengine.api import memcache
 from google.appengine.api import urlfetch
 
 from oauth_keys import SERVICE_PROVIDERS
@@ -9,6 +10,7 @@ from oauth_keys import SERVICE_PROVIDERS
 READER_OAUTH_CLIENT = \
     SERVICE_PROVIDERS['feedplayback:googlereader'].get_oauth_client()
 FEED_PLAYBACK_USER_ID = '07254461334580145372'
+MEMCACHE_NAMESPACE = 'googlereader'
 
 class ItemRef(object):
     def __init__(self, id, timestamp_usec):
@@ -126,9 +128,16 @@ def edit_item_tags(item_id, origin_stream_id, add_tags=[], remove_tags=[]):
     _post_to_api('edit-tag', params)
 
 def _get_post_token():
-    resp, content = READER_OAUTH_CLIENT.request(
-        'http://www.google.com/reader/api/0/token', 'GET')
-    return content.strip()
+    URL = 'http://www.google.com/reader/api/0/token'
+    cached_token = memcache.get(key=URL, namespace=MEMCACHE_NAMESPACE)
+    if cached_token:
+      return cached_token
+
+    resp, content = READER_OAUTH_CLIENT.request(URL, 'GET')
+    token = content.strip()
+    memcache.set(
+        key=URL, value=token, time=20 * 60, namespace=MEMCACHE_NAMESPACE)
+    return token
 
 def _encode_params(params):
   def encode(s):
