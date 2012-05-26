@@ -206,5 +206,9 @@ def get_iframe_info(url):
         iframe_url = 'http://www.youtube.com/embed/%s' % path[1:]
         iframe_width = 560
         iframe_height = 315
+    elif hostname == 'vimeo.com':
+        iframe_url = 'http://player.vimeo.com/video/%s' % path[1:]
+        iframe_width = 500
+        iframe_height = 281
 
     return iframe_url, iframe_width, iframe_height
