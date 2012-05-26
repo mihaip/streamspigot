@@ -190,16 +190,10 @@ class UserTwitterFetcher(TwitterFetcher):
           user = self._api.GetUser(self._username)
           for status in timeline:
               status.user = user
-              # https://dev.twitter.com/docs/api/1/get/statuses/user_timeline
-              # claims that "If you're using the trim_user parameter in
-              # conjunction with include_rts, the retweets will still contain a
-              # full user object." However, that doesn't seem to be the case,
-              # and retweeted statuses don't have fully-populated user (reported
-              # as https://dev.twitter.com/issues/178).
-              # If we don't appear to have a fully-populated user, we do the
-              # look up ourselves (lookups are one at a time instead of batched
-              # for all the retweeted users so that there's a higher likelihood
-              # of getting a cache hit).
+              # If we don't appear to have a fully-populated retweetuser, we do
+              # the look up ourselves (lookups are one at a time instead of
+              # batched for all the retweeted users so that there's a higher
+              # likelihood of getting a cache hit).
               retweeted_status = status.retweeted_status
               if retweeted_status and not retweeted_status.user.screen_name:
                   retweeted_status.user = \
