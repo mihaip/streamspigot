@@ -43,10 +43,11 @@ class DigestHandler(base.handlers.BaseHandler):
         usernames = []
         list_owner = None
         list_id = None
+        dev_mode = self.request.get('dev') == 'true'
 
         start_date, end_date = data.get_digest_dates()
 
-        if self._handle_not_modified(last_modified_date=end_date):
+        if not dev_mode and self._handle_not_modified(last_modified_date=end_date):
             return
 
         if self.request.get('usernames'):
@@ -78,11 +79,11 @@ class DigestHandler(base.handlers.BaseHandler):
 
         # Generate digest
         if usernames:
-            grouped_statuses, error_usernames = \
-                data.get_digest_for_usernames(usernames)
+            grouped_statuses, error_usernames = data.get_digest_for_usernames(
+                    usernames, dev_mode)
         else:
-            grouped_statuses, had_error = \
-                data.get_digest_for_list(list_owner, list_id)
+            grouped_statuses, had_error = data.get_digest_for_list(
+                list_owner, list_id, dev_mode)
 
         # Template parameters
         digest_errors = None
@@ -111,9 +112,10 @@ class DigestHandler(base.handlers.BaseHandler):
 
         digest_entry_id = digest_id + '-' + start_date.date().isoformat()
 
-        self._add_caching_headers(
-            last_modified_date=end_date,
-            max_age_sec=data.DIGEST_LENGTH_SEC)
+        if not dev_mode:
+            self._add_caching_headers(
+                last_modified_date=end_date,
+                max_age_sec=data.DIGEST_LENGTH_SEC)
 
         self._write_template(output_template.template_file, {
             'digest_source': digest_source,

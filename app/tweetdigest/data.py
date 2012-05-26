@@ -77,17 +77,26 @@ def get_digest_dates():
         datetime.datetime.fromtimestamp(digest_end_time))
 
 def _process_digest_statuses(
-    statuses, digest_start_time, digest_end_time, error_info):
-    # Filter them for the ones that fall in the window
-    digest_statuses = [
-        s for s in statuses
-        if s.created_at_in_seconds <= digest_end_time and
-            s.created_at_in_seconds > digest_start_time
-    ]
+        statuses,
+        digest_start_time,
+        digest_end_time,
+        error_info,
+        dev_mode):
+    if not dev_mode:
+      # Filter them for the ones that fall in the window
+      digest_statuses = [
+          s for s in statuses
+          if s.created_at_in_seconds <= digest_end_time and
+              s.created_at_in_seconds > digest_start_time
+      ]
+    else:
+      digest_statuses = statuses
 
     # Order them in chronological order
     digest_statuses.sort(
         lambda x, y: int(x.created_at_in_seconds - y.created_at_in_seconds))
+    if dev_mode:
+        digest_statuses.reverse()
 
     # Group them by username
     status_groups = []
@@ -142,11 +151,18 @@ class ListTwitterFetcher(TwitterFetcher):
         return 'list "%s/%s"' % (self._list_owner, self._list_id)
 
 class UserTwitterFetcher(TwitterFetcher):
-    def __init__(self, api, username, digest_start_time, digest_end_time):
+    def __init__(
+            self,
+            api,
+            username,
+            digest_start_time,
+            digest_end_time,
+            dev_mode):
         self._api = api
         self._username = username
         self._digest_start_time = digest_start_time
         self._digest_end_time = digest_end_time
+        self._dev_mode = dev_mode
 
     def _fetch(self):
         # We pass in trim_user=True since all of the returned statuses will have
@@ -159,13 +175,14 @@ class UserTwitterFetcher(TwitterFetcher):
             include_entities=True,
             trim_user=True)
 
-        # We do the filtering now, so that we don't look up user objects that
-        # we don't need.
-        timeline = [
-            s for s in timeline
-            if s.created_at_in_seconds <= self._digest_end_time and
-                s.created_at_in_seconds > self._digest_start_time
-        ]
+        if not self._dev_mode:
+          # We do the filtering now, so that we don't look up user objects that
+          # we don't need.
+          timeline = [
+              s for s in timeline
+              if s.created_at_in_seconds <= self._digest_end_time and
+                  s.created_at_in_seconds > self._digest_start_time
+          ]
 
         if timeline:
           # Look up the requesting user and attach the fully-populated User
@@ -192,7 +209,7 @@ class UserTwitterFetcher(TwitterFetcher):
     def _id(self):
         return 'user "%s"' % self._username
 
-def get_digest_for_list(list_owner, list_id):
+def get_digest_for_list(list_owner, list_id, dev_mode):
     digest_start_time, digest_end_time, max_cache_age = _get_digest_timestamps()
 
     api = _get_digest_twitter_api(
@@ -202,9 +219,13 @@ def get_digest_for_list(list_owner, list_id):
     statuses, had_error = fetcher.fetch()
 
     return _process_digest_statuses(
-        statuses, digest_start_time, digest_end_time, had_error)
+        statuses,
+        digest_start_time,
+        digest_end_time,
+        had_error,
+        dev_mode)
 
-def get_digest_for_usernames(usernames):
+def get_digest_for_usernames(usernames, dev_mode):
     digest_start_time, digest_end_time, max_cache_age = _get_digest_timestamps()
 
     statuses = []
@@ -212,7 +233,12 @@ def get_digest_for_usernames(usernames):
 
     for username in usernames:
         api = _get_digest_twitter_api(max_cache_age, key=username)
-        fetcher = UserTwitterFetcher(api, username, digest_start_time, digest_end_time)
+        fetcher = UserTwitterFetcher(
+            api,
+            username,
+            digest_start_time,
+            digest_end_time,
+            dev_mode)
         user_statuses, had_error = fetcher.fetch()
         if had_error:
             error_usernames.append(username)
@@ -220,7 +246,11 @@ def get_digest_for_usernames(usernames):
             statuses.extend(user_statuses)
 
     return _process_digest_statuses(
-        statuses, digest_start_time, digest_end_time, error_usernames)
+        statuses,
+        digest_start_time,
+        digest_end_time,
+        error_usernames,
+        dev_mode)
 
 class UserListsTwitterFetcher(TwitterFetcher):
     def __init__(self, api, username):
