@@ -13,7 +13,9 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'django_settings'
 # directory.
 APP_DIR = os.path.abspath(os.path.dirname(__file__))
 DATASOURCES_DIR = os.path.join(APP_DIR, 'datasources')
+THIRD_PARTY_DIR = os.path.join(APP_DIR, 'third_party')
 sys.path.insert(0, DATASOURCES_DIR)
+sys.path.insert(0, THIRD_PARTY_DIR)
 
 from google.appengine.ext import ereporter
 from google.appengine.ext import webapp
