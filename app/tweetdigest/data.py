@@ -81,7 +81,8 @@ def _process_digest_statuses(
         digest_start_time,
         digest_end_time,
         error_info,
-        dev_mode):
+        dev_mode,
+        timezone=None):
     if not dev_mode:
       # Filter them for the ones that fall in the window
       digest_statuses = [
@@ -106,7 +107,8 @@ def _process_digest_statuses(
         status_groups.append(twitterdisplay.DisplayStatusGroup(
             user=statuses[0].user,
             statuses=statuses,
-            thumbnail_size=thumbnails.SMALL_THUMBNAIL))
+            thumbnail_size=thumbnails.SMALL_THUMBNAIL,
+            timezone=timezone))
 
     return status_groups, error_info
 
@@ -209,6 +211,9 @@ def get_digest_for_list(list_owner, list_id, dev_mode):
     api = _get_digest_twitter_api(
         max_cache_age, key='%s/%s' % (list_owner, list_id))
 
+    user = api.GetUser(list_owner)
+    timezone = twitterdisplay.get_timezone_for_user(user)
+
     fetcher = ListTwitterFetcher(api, list_owner, list_id, digest_start_time)
     statuses, had_error = fetcher.fetch()
 
@@ -217,7 +222,8 @@ def get_digest_for_list(list_owner, list_id, dev_mode):
         digest_start_time,
         digest_end_time,
         had_error,
-        dev_mode)
+        dev_mode,
+        timezone=timezone)
 
 def get_digest_for_usernames(usernames, dev_mode):
     digest_start_time, digest_end_time, max_cache_age = _get_digest_timestamps()
@@ -244,7 +250,8 @@ def get_digest_for_usernames(usernames, dev_mode):
         digest_start_time,
         digest_end_time,
         error_usernames,
-        dev_mode)
+        dev_mode,
+        timezone=None)
 
 class UserListsTwitterFetcher(TwitterFetcher):
     def __init__(self, api, username):
