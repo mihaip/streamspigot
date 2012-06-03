@@ -102,8 +102,11 @@ class DisplayStatus(object):
             add_footer_raw_chunk(
                 '<a href="%s" border="0">'
                   '<img src="%s" alt="" style="padding:2px"%s/>'
-                '</a>' %
-                (link_url , thumb_url, img_attributes))
+                '</a>' % (
+                    xml.sax.saxutils.escape(link_url),
+                    xml.sax.saxutils.escape(thumb_url),
+                    img_attributes
+                ))
 
         def add_footer_iframe_chunk(iframe_url, iframe_width, iframe_height):
             iframe_attributes = ''
