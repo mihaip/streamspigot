@@ -4,7 +4,9 @@ import logging
 import os
 
 from google.appengine.api import taskqueue
+from google.appengine.api import urlfetch
 from google.appengine.ext import db
+from google.appengine.runtime import DeadlineExceededError
 
 from base.constants import CONSTANTS
 import base.util
@@ -248,7 +250,21 @@ class FollowingData(db.Model):
         following_map = {}
         for session in Session.all():
             twitter_id = int(session.twitter_id)
-            following_twitter_ids = session.create_api().GetFriendIDs()['ids']
+            try:
+                following_twitter_ids = session.create_api().GetFriendIDs()['ids']
+            except twitter.TwitterError, err:
+                logging.warning('Twitter error "%s" when getting friend IDs, using stale data', err, session.twitter_id)
+                return
+            except urlfetch.DownloadError, err:
+                logging.warning('HTTP fetch error "%s" when getting friend IDs, using stale data', err, session.twitter_id)
+                return
+            except ValueError, err:
+                logging.warning('JSON error when "%s" getting friend IDs, using stale data', err, session.twitter_id)
+                return
+            except DeadlineExceededError, err:
+                logging.warning('Deadline exceeded "%s" when getting friend IDs, using stale data', err, session.twitter_id)
+                return
+
             for following_twitter_id in following_twitter_ids:
                 following_map.setdefault(following_twitter_id, []).append(twitter_id)
             # Users are also considered to be following themselves (since their

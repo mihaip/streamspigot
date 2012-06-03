@@ -47,19 +47,19 @@ class UpdateTaskHandler(base.handlers.BaseHandler):
         try:
             had_updates, status_ids = update_timeline(session)
         except twitter.TwitterError, err:
-            logging.exception('Twitter error')
+            logging.warning('Twitter error "%s" when updating timeline for %s', err, session.twitter_id)
             self._write_error(500)
             return
         except urlfetch.DownloadError, err:
-            logging.exception('HTTP fetch error')
+            logging.warning('HTTP fetch error "%s" when updating timeline for %s', err, session.twitter_id)
             self._write_error(500)
             return
         except ValueError, err:
-            logging.exception('JSON error')
+            logging.warning('JSON error "%s" when updating timeline for %s', err, session.twitter_id)
             self._write_error(500)
             return
         except DeadlineExceededError, err:
-            logging.exception('Deadline exceeded')
+            logging.warning('Deadline exceeded error "%s" when updating timeline for %s', err, session.twitter_id)
             self._write_error(500)
             return
 
