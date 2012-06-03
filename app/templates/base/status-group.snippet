@@ -24,7 +24,7 @@
                     title="{{ status.created_at }}"
                 {% endif %}
                  style="color:{{ ANCHOR_COLOR }}">
-                {% if use_relative_dates %}{{ status.relative_created_at }}{% else %}at {{ display_status.created_at_formatted_gmt }} GMT{% endif %}</a>
+                {% if use_relative_dates %}{{ status.relative_created_at }}{% else %}at {{ display_status.created_at_formatted }}{% endif %}</a>
               from {{ status.source|striptags }}
               {%if status.in_reply_to_status_id %}
                 <a href="{{ status.in_reply_to_screen_name }}/status/{{ status.in_reply_to_status_id }}" style="color:{{ ANCHOR_COLOR }}">in reply to {{ status.in_reply_to_screen_name }}</a>

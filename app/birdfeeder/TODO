@@ -5,7 +5,6 @@ todo:
 - cache user data so that feed fetches involve no twitter RPCs
 - reduce update cron job frequency
 - reply and retweet links
-- use user timezone to format timestamps (instead of GMT)
 - "scavenger" to delete old tweets from StatusData?
 - remove URLs (especially if at end?) from title snippet
 - @mentions feed
@@ -69,3 +68,4 @@ done:
 - img.ly (from http://twitter.com/mrgan/status/157981871307886592)
 - ow.ly/i (from https://twitter.com/doriegreenspan/status/153033123968466944)
 - vimeo.com (from http://twitter.com/mishmosh/status/162659176324136960)
+- use user timezone to format timestamps (instead of GMT)

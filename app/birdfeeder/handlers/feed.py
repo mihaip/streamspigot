@@ -68,13 +68,16 @@ class TimelineFeedHandler(FeedHandler):
         status_data = data.StatusData.get_by_status_ids(feed_status_ids)
         statuses = [s.to_status() for s in status_data]
 
+        timezone = twitterdisplay.get_timezone_for_user(user)
+
         # We don't actually want statuses grouped, instead we want one status
         # per item.
         status_groups = [
             twitterdisplay.DisplayStatusGroup(
                 user=status.user,
                 statuses=[status],
-                thumbnail_size=thumbnails.LARGE_THUMBNAIL)
+                thumbnail_size=thumbnails.LARGE_THUMBNAIL,
+                timezone=timezone)
             for status in statuses
         ]
 
