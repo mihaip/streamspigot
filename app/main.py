@@ -33,6 +33,10 @@ class MainHandler(base.handlers.BaseHandler):
     def get(self):
         self._write_template('index.html')
 
+class NotFoundHandler(base.handlers.BaseHandler):
+    def get(self):
+        self._write_not_found()
+
 def main():
     if not os.environ['SERVER_SOFTWARE'].startswith('Development'):
         ereporter.register_logger()
@@ -58,6 +62,7 @@ def main():
             ('/bird-feeder/pinger/ping', birdfeeder.handlers.pinger.PingHandler),
 
             ('/', MainHandler),
+            ('/.*', NotFoundHandler),
         ],
         debug=True)
     util.run_wsgi_app(application)

@@ -8,7 +8,6 @@ todo:
 - @mentions feed
 - prune null values and useless keys (e.g. profile_background_image_url_https) from persisted statuses
 - generalize twitter exception wrapping
-- better 404 handler
 - record screencast showing realtime flow
 
 thumbnail URLs to support:
@@ -71,3 +70,4 @@ done:
 - vimeo.com (from http://twitter.com/mishmosh/status/162659176324136960)
 - use user timezone to format timestamps (instead of GMT)
 - trigger a Reader crawlondemand when first generating a feed (or resetting the ID)
+- better 404 handler

@@ -68,7 +68,8 @@ class BaseHandler(webapp.RequestHandler):
         self.response.set_status(error_code)
 
     def _write_not_found(self):
-        self._write_error(404)
+        self._write_template('not-found.html')
+        self.response.set_status(404)
 
     def _write_input_error(self, error_message):
         self._write_error(400)
