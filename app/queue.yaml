@@ -6,3 +6,7 @@ queue:
 - name: birdfeeder-update
   rate: 5/s
   bucket_size: 5
+
+- name: birdfeeder-crawl-on-demand
+  rate: 5/s
+  bucket_size: 5

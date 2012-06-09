@@ -11,7 +11,7 @@ from google.appengine.runtime import DeadlineExceededError
 
 from base.constants import CONSTANTS
 import base.handlers
-from datasources import twitter
+from datasources import twitter, googlereader
 from birdfeeder import data
 
 RECENT_STATUS_INTERVAL_SEC = 10 * 60
@@ -64,10 +64,9 @@ class UpdateTaskHandler(base.handlers.BaseHandler):
             return
 
         if had_updates:
-            # TODO(mihaip): share feed URL generation with main.py
-            feed_url = '%s/bird-feeder/feed/timeline/%s' % (
-                CONSTANTS.APP_URL, session.feed_id)
-            ping_hub([feed_url])
+            ping_hub([session.get_timeline_feed_url()])
+            if not session.crawled_on_demand:
+                session.enqueue_crawl_on_demand_task()
         self.response.out.write(
             'Updated %s, %s updates' %
                 (session.twitter_id, had_updates and 'had' or 'didn\'t have'))
@@ -207,3 +206,11 @@ def ping_hub(urls):
           logging.warning('Error from hub: %s, Response: "%s"' % (e, error))
       logging.info('No 204 response')
 
+class CrawlOnDemandTaskHandler(base.handlers.BaseHandler):
+    def post(self):
+        session = data.Session.from_request(self.request)
+        if not googlereader.crawl_on_demand(session.get_timeline_feed_url()):
+            logging.warning('Crawl on demand failed')
+            return
+        session.crawled_on_demand = True
+        session.put()

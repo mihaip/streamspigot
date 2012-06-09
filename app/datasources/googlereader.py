@@ -127,6 +127,12 @@ def edit_item_tags(item_id, origin_stream_id, add_tags=[], remove_tags=[]):
 
     _post_to_api('edit-tag', params)
 
+def crawl_on_demand(feed_url):
+  return _fetch_api_json(
+      path='stream/contents/feed/%s' % urllib.quote(feed_url),
+      extra_params={'refresh': 'true'},
+      signed_in=True)
+
 def _get_post_token():
     URL = 'http://www.google.com/reader/api/0/token'
     cached_token = memcache.get(key=URL, namespace=MEMCACHE_NAMESPACE)
@@ -172,20 +178,31 @@ def _post_to_api(path, params):
         logging.warning('Could not parse response as JSON: %s' % content)
         return None
 
-def _fetch_api_json(path, extra_params={}):
+def _fetch_api_json(path, extra_params={}, signed_in=False):
     url = 'http://www.google.com/reader/api/0/' \
         '%s?output=json&client=streamspigot&%s' % (
             path, _encode_params(extra_params))
     logging.info('Google Reader API request: %s' % url)
-    response = urlfetch.fetch(
-        url=url,
-        method=urlfetch.GET,
-        deadline=10)
-    if response.content:
+    if signed_in:
+      response, content = READER_OAUTH_CLIENT.request(url, 'GET')
+      status = response.status
+    else:
+        response = urlfetch.fetch(
+            url=url,
+            method=urlfetch.GET,
+            deadline=10)
+        content = response.content
+        status = response.status_code
+
+    if status >= 400:
+        logging.warning('Got error status code %d' % status)
+        return None
+
+    if content:
         try:
-            return simplejson.loads(response.content)
+            return simplejson.loads(content)
         except ValueError, err:
-            logging.warning('Could not parse response as JSON: %s' % response.content)
+            logging.warning('Could not parse response as JSON: %s' % content)
 
     return None
 

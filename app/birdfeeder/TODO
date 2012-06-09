@@ -1,7 +1,5 @@
 todo:
-- trigger a Reader crawlondemand when first generating a feed (or resetting the ID)
 - add timestamps to birdpinger
-- see why Ann's feed doesn't use PSHB in Reader
 - cache user data so that feed fetches involve no twitter RPCs
 - reduce update cron job frequency
 - reply and retweet links
@@ -9,6 +7,9 @@ todo:
 - remove URLs (especially if at end?) from title snippet
 - @mentions feed
 - prune null values and useless keys (e.g. profile_background_image_url_https) from persisted statuses
+- generalize twitter exception wrapping
+- better 404 handler
+- record screencast showing realtime flow
 
 thumbnail URLs to support:
 - 4sq.com
@@ -69,3 +70,4 @@ done:
 - ow.ly/i (from https://twitter.com/doriegreenspan/status/153033123968466944)
 - vimeo.com (from http://twitter.com/mishmosh/status/162659176324136960)
 - use user timezone to format timestamps (instead of GMT)
+- trigger a Reader crawlondemand when first generating a feed (or resetting the ID)

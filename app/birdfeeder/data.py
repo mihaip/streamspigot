@@ -43,6 +43,7 @@ class Session(db.Model):
     feed_id = db.StringProperty(required=True)
     oauth_token = db.TextProperty(indexed=False)
     oauth_token_secret = db.TextProperty(indexed=False)
+    crawled_on_demand = db.BooleanProperty(indexed=False)
 
     def update(self, oauth_token, oauth_token_secret):
         self.session_id = _generate_session_id()
@@ -51,6 +52,7 @@ class Session(db.Model):
 
     def reset_feed_id(self):
         self.feed_id = _generate_feed_id()
+        self.crawled_on_demand = False
 
     def as_dict(self):
         return {
@@ -74,6 +76,17 @@ class Session(db.Model):
             CONSTANTS.APP_URL,
         ))
         return api
+
+    def enqueue_crawl_on_demand_task(self):
+        taskqueue.add(
+            queue_name='birdfeeder-crawl-on-demand',
+            url='/tasks/bird-feeder/crawl-on-demand',
+            params=self.as_dict())
+
+    def get_timeline_feed_url(self):
+        # TODO(mihaip): There's probably a better place for this.
+        return '%s/bird-feeder/feed/timeline/%s' % (
+            CONSTANTS.APP_URL, self.feed_id)
 
     def enqueue_update_task(
             self,
