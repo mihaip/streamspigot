@@ -4,7 +4,7 @@ import logging
 import time
 
 from birdfeeder import data
-from datasources import thumbnails, twitterdisplay
+from datasources import thumbnails, twitterappengine, twitterdisplay
 import session
 
 FEED_STATUS_INTERVAL_SEC = 24 * 60 * 60 # One day
@@ -31,7 +31,14 @@ class TimelineFeedHandler(FeedHandler):
     def _get_signed_in(self):
         twitter_id = self._session.twitter_id
         logging.info('Serving feed for %s' % twitter_id)
-        user = self._api.GetUser(twitter_id)
+
+        user, had_error = twitterappengine.exec_twitter_api(
+            lambda: self._api.GetUser(twitter_id),
+            error_detail='user %s' % twitter_id)
+
+        if had_error:
+            self._write_error(500)
+            return
 
         stream = data.StreamData.get_timeline_for_user(twitter_id)
 

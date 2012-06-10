@@ -3126,7 +3126,7 @@ class Api(object):
       parameters['cursor'] = cursor
       json = self._FetchUrl(url, parameters=parameters)
       data = self._ParseAndCheckTwitter(json)
-      return data
+      return data['ids']
 
   def GetFollowerIDs(self, userid=None, cursor=-1):
     '''Fetch the sequence of twitter.User instances, one for each follower

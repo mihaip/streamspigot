@@ -1,13 +1,10 @@
 import calendar
 import datetime
 import itertools
-import logging
 import os
 import re
 import time
 import zlib
-
-from google.appengine.api import urlfetch
 
 from base.constants import CONSTANTS
 from datasources import thumbnails, twitter, twitterappengine, twitterdisplay
@@ -114,16 +111,9 @@ def _process_digest_statuses(
 
 class TwitterFetcher(object):
     def fetch(self):
-        try:
-            return self._fetch(), False
-        except twitter.TwitterError, err:
-            logging.warning('Twitter error "%s" for %s"', err, self._id())
-        except urlfetch.DownloadError, err:
-            logging.warning('HTTP fetch error "%s" for %s', err, self._id())
-        except ValueError, err:
-            logging.warning('JSON error "%s" for %s', err, self._id())
-
-        return [], True
+        data, had_error = twitterappengine.exec_twitter_api(
+            self._fetch, error_detail=self._id())
+        return data or [], had_error
 
 class ListTwitterFetcher(TwitterFetcher):
     def __init__(self, api, list_owner, list_id, digest_start_time):
@@ -211,8 +201,13 @@ def get_digest_for_list(list_owner, list_id, dev_mode):
     api = _get_digest_twitter_api(
         max_cache_age, key='%s/%s' % (list_owner, list_id))
 
-    user = api.GetUser(list_owner)
-    timezone = twitterdisplay.get_timezone_for_user(user)
+    user, had_error = twitterappengine.exec_twitter_api(
+        lambda: api.GetUser(list_owner),
+        error_detail='user %s' % list_owner)
+    if not had_error:
+        timezone = twitterdisplay.get_timezone_for_user(user)
+    else:
+        timezone = None
 
     fetcher = ListTwitterFetcher(api, list_owner, list_id, digest_start_time)
     statuses, had_error = fetcher.fetch()

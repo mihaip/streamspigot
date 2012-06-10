@@ -1,10 +1,15 @@
 '''Helper code for running python-twitter on top of Google App Engine'''
 
+import logging
 import time
 
 from django.utils import simplejson
 from google.appengine.api import memcache
+from google.appengine.api import urlfetch
 from google.appengine.ext import db
+from google.appengine.runtime import DeadlineExceededError
+
+from datasources import twitter
 
 class _DbCacheEntry(db.Model):
     value = db.BlobProperty(required=True, indexed=False)
@@ -86,3 +91,22 @@ class MemcacheCache(object):
         self._last_request_key = None
         self._last_request_value = None
         return None
+
+def exec_twitter_api(func, error_detail=''):
+    if error_detail:
+        error_detail = ' (for %s)' % error_detail
+    try:
+        return func(), False
+    except twitter.TwitterError, err:
+        logging.warning('Twitter error "%s"%s', err, error_detail)
+    except urlfetch.DownloadError, err:
+        logging.warning('HTTP fetch error "%s"%s', err, error_detail)
+    except urlfetch.DeadlineExceededError, err:
+        logging.warning('HTTP deadline exceeded error "%s"%s', err, error_detail)
+    except ValueError, err:
+        logging.warning('JSON error "%s"%s', err, error_detail)
+    except DeadlineExceededError, err:
+        logging.warning('Deadline exceeded "%s"%s', err, error_detail)
+        return
+
+    return None, True

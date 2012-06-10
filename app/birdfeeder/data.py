@@ -4,9 +4,7 @@ import logging
 import os
 
 from google.appengine.api import taskqueue
-from google.appengine.api import urlfetch
 from google.appengine.ext import db
-from google.appengine.runtime import DeadlineExceededError
 
 from base.constants import CONSTANTS
 import base.util
@@ -263,20 +261,12 @@ class FollowingData(db.Model):
         following_map = {}
         for session in Session.all():
             twitter_id = int(session.twitter_id)
-            try:
-                following_twitter_ids = session.create_api().GetFriendIDs()['ids']
-            except twitter.TwitterError, err:
-                logging.warning('Twitter error "%s" when getting friend IDs, using stale data', err, session.twitter_id)
-                return
-            except urlfetch.DownloadError, err:
-                logging.warning('HTTP fetch error "%s" when getting friend IDs, using stale data', err, session.twitter_id)
-                return
-            except ValueError, err:
-                logging.warning('JSON error when "%s" getting friend IDs, using stale data', err, session.twitter_id)
-                return
-            except DeadlineExceededError, err:
-                logging.warning('Deadline exceeded "%s" when getting friend IDs, using stale data', err, session.twitter_id)
-                return
+            following_twitter_ids, had_error = twitterappengine.exec_twitter_api(
+                session.create_api().GetFriendIDs,
+                error_detail='can\'t get friend IDs for %s, using stale data' %
+                                session.twitter_id)
+
+            if had_error: return
 
             for following_twitter_id in following_twitter_ids:
                 following_map.setdefault(following_twitter_id, []).append(twitter_id)

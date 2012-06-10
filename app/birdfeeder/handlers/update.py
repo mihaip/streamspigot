@@ -5,13 +5,11 @@ import urllib
 import urllib2
 
 from google.appengine.api import taskqueue
-from google.appengine.api import urlfetch
 from google.appengine.ext import db
-from google.appengine.runtime import DeadlineExceededError
 
 from base.constants import CONSTANTS
 import base.handlers
-from datasources import twitter, googlereader
+from datasources import twitter, twitterappengine, googlereader
 from birdfeeder import data
 
 RECENT_STATUS_INTERVAL_SEC = 10 * 60
@@ -44,24 +42,15 @@ class UpdateCronHandler(base.handlers.BaseHandler):
 class UpdateTaskHandler(base.handlers.BaseHandler):
     def post(self):
         session = data.Session.from_request(self.request)
-        try:
-            had_updates, status_ids = update_timeline(session)
-        except twitter.TwitterError, err:
-            logging.warning('Twitter error "%s" when updating timeline for %s', err, session.twitter_id)
+        result, had_error = twitterappengine.exec_twitter_api(
+            lambda: update_timeline(session),
+            error_detail='updating timeline for %s' % session.twitter_id)
+
+        if had_error:
             self._write_error(500)
             return
-        except urlfetch.DownloadError, err:
-            logging.warning('HTTP fetch error "%s" when updating timeline for %s', err, session.twitter_id)
-            self._write_error(500)
-            return
-        except ValueError, err:
-            logging.warning('JSON error "%s" when updating timeline for %s', err, session.twitter_id)
-            self._write_error(500)
-            return
-        except DeadlineExceededError, err:
-            logging.warning('Deadline exceeded error "%s" when updating timeline for %s', err, session.twitter_id)
-            self._write_error(500)
-            return
+
+        had_updates, status_ids = result
 
         if had_updates:
             ping_hub([session.get_timeline_feed_url()])
