@@ -25,7 +25,7 @@ class BaseHandler(webapp.RequestHandler):
         # variable here, and then import the settings module.
         # TODO(mihaip): figure out why this is happening
         if 'DJANGO_SETTINGS_MODULE' not in os.environ:
-            logging.warning('DJANGO_SETTINGS_MODULE was not in the environment')
+            logging.debug('DJANGO_SETTINGS_MODULE was not in the environment')
             os.environ['DJANGO_SETTINGS_MODULE'] = 'django_settings'
 
         from django.conf import settings
