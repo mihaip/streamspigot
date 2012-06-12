@@ -197,7 +197,7 @@ def ping_hub(urls):
 
 class CrawlOnDemandTaskHandler(base.handlers.BaseHandler):
     def post(self):
-        session = data.Session.from_request(self.request)
+        session = data.Session.get_by_session_id(self.request.get('session_id'))
         if not googlereader.crawl_on_demand(session.get_timeline_feed_url()):
             logging.warning('Crawl on demand failed')
             return

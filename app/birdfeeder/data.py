@@ -79,7 +79,7 @@ class Session(db.Model):
         taskqueue.add(
             queue_name='birdfeeder-crawl-on-demand',
             url='/tasks/bird-feeder/crawl-on-demand',
-            params=self.as_dict())
+            params={'session_id': self.session_id})
 
     def get_timeline_feed_url(self):
         # TODO(mihaip): There's probably a better place for this.
