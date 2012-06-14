@@ -59,6 +59,7 @@ class Session(db.Model):
           'feed_id': self.feed_id,
           'oauth_token': self.oauth_token,
           'oauth_token_secret': self.oauth_token_secret,
+          'crawled_on_demand': self.crawled_on_demand and 'True' or 'False'
         }
 
     def create_api(self):
@@ -132,7 +133,8 @@ class Session(db.Model):
             twitter_id=request.get('twitter_id'),
             feed_id=request.get('feed_id'),
             oauth_token=request.get('oauth_token'),
-            oauth_token_secret=request.get('oauth_token_secret'))
+            oauth_token_secret=request.get('oauth_token_secret'),
+            crawled_on_demand=request.get('crawled_on_demand') == 'True')
 
     @classmethod
     def kind(cls):
