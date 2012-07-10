@@ -115,6 +115,7 @@ def update_timeline(session):
         retweets=True,
         include_entities=True,
         since_id=since_id)
+    logging.info('Got back %d statuses' % len(timeline))
 
     known_status_ids = set(stream.status_ids)
     new_status_ids = []
