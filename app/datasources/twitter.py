@@ -2099,7 +2099,14 @@ class Media(object):
     self.end_index = end_index
 
   def GetUrlForSize(self, size):
-    return self.media_url + ':' + size, self.sizes[size][0], self.sizes[size][1]
+    if size in self.sizes:
+      width, height = self.sizes[size][0], self.sizes[size][1]
+    else:
+      logging.warning(
+          'Cannot look up dimensions for size %s for media URL %s' %
+          size, self.media_url)
+      width, height = None, None
+    return self.media_url + ':' + size, width, height
 
   @staticmethod
   def NewFromJsonDict(data):
