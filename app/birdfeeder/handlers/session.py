@@ -20,6 +20,14 @@ TWITTER_OAUTH_CLIENT = TWITTER_SERVICE_PROVIDER.get_oauth_client()
 
 BASE_PATH = '/bird-feeder'
 
+WHITELISTED_TWITTER_IDS = [
+  '28203', # mihai
+  '17116881', # annparparita
+  '5634412', # robot_friend
+  '233087105', # streamspigot
+  '19002481' # googlereader
+]
+
 class BaseHandler(base.handlers.BaseHandler):
     def _get_path(self, path=''):
         return '%s/%s' % (BASE_PATH, path)
@@ -67,7 +75,7 @@ class SessionApiHandler(SessionHandler):
         if self._has_request_session():
             session = self._get_session_from_request()
 
-            if session:
+            if session and session.twitter_id in WHITELISTED_TWITTER_IDS:
                 self._session = session
                 self._api = session.create_api()
                 signed_in()
@@ -156,6 +164,10 @@ class CallbackHandler(SessionHandler):
         twitter_id = access_token_response['user_id']
         access_token = access_token_response['oauth_token']
         access_token_secret = access_token_response['oauth_token_secret']
+
+        if not twitter_id in WHITELISTED_TWITTER_IDS:
+          self.redirect(self._get_path())
+          return
 
         session = data.Session.get_by_twitter_id(twitter_id)
         if session:
