@@ -28,14 +28,18 @@ class PingHandler(base.handlers.BaseHandler):
 
         following_twitter_ids = data.FollowingData.get_following_twitter_ids(
             update_twitter_id)
+        task_count = 0
         for following_twitter_id in following_twitter_ids:
             logging.info('Queueing update for %d' % following_twitter_id)
             session = data.Session.get_by_twitter_id(str(following_twitter_id))
 
-            session.enqueue_update_task(
-                countdown=birdfeeder.handlers.update.PING_UPDATE_DELAY_SEC,
-                expected_status_id=update_status_id,
-                update_retry_count=0)
+            if session:
+                session.enqueue_update_task(
+                    countdown=birdfeeder.handlers.update.PING_UPDATE_DELAY_SEC,
+                    expected_status_id=update_status_id,
+                    update_retry_count=0)
+                task_count += 1
+            else:
+                logging.info('Ignored ping due to missing session');
 
-        self.response.out.write(
-            'Queued %d updates' % len(following_twitter_ids))
+        self.response.out.write('Queued %d updates' % task_count)
