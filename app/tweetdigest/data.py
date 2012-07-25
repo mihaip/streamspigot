@@ -157,15 +157,11 @@ class UserTwitterFetcher(TwitterFetcher):
         self._dev_mode = dev_mode
 
     def _fetch(self):
-        # We pass in trim_user=True since all of the returned statuses will have
-        # the same user object in the response. This makes parsing of the
-        # response JSON quite a bit slower (and also eats up space in the cache).
         timeline = self._api.GetUserTimeline(
             self._username,
             count=40,
             include_rts=True,
-            include_entities=True,
-            trim_user=True)
+            include_entities=True)
 
         if not self._dev_mode:
           # We do the filtering now, so that we don't look up user objects that
@@ -176,20 +172,6 @@ class UserTwitterFetcher(TwitterFetcher):
                   s.created_at_in_seconds > self._digest_start_time
           ]
 
-        if timeline:
-          # Look up the requesting user and attach the fully-populated User
-          # instance to the returned statuses.
-          user = self._api.GetUser(self._username)
-          for status in timeline:
-              status.user = user
-              # If we don't appear to have a fully-populated retweetuser, we do
-              # the look up ourselves (lookups are one at a time instead of
-              # batched for all the retweeted users so that there's a higher
-              # likelihood of getting a cache hit).
-              retweeted_status = status.retweeted_status
-              if retweeted_status and not retweeted_status.user.screen_name:
-                  retweeted_status.user = \
-                      self._api.GetUser(retweeted_status.user.id)
         return timeline
 
     def _id(self):
