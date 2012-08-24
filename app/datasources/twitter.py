@@ -4049,9 +4049,10 @@ class Api(object):
 
     # Open and return the URL immediately if we're not going to cache
     if encoded_post_data or no_cache or not self._cache or not self._cache_timeout:
+      logging.info('Requesting Twitter URL: %s' % url)
       response = opener.open(url, encoded_post_data)
       url_data = self._DecompressGzippedResponse(response)
-      self._LogRateLimitDetails(url, response)
+      self._LogRateLimitDetails(response)
       opener.close()
     else:
       # See if it has been cached before
@@ -4060,9 +4061,10 @@ class Api(object):
       # If the cached version is outdated then fetch another and store it
       if not last_cached or time.time() >= last_cached + self._cache_timeout:
         try:
+          logging.info('Requesting Twitter URL: %s' % url)
           response = opener.open(url, encoded_post_data)
           url_data = self._DecompressGzippedResponse(response)
-          self._LogRateLimitDetails(url, response)
+          self._LogRateLimitDetails(response)
           self._cache.Set(cache_key, url_data)
         except urllib2.HTTPError, e:
           print e
@@ -4073,7 +4075,7 @@ class Api(object):
     # Always return the latest version
     return url_data
 
-  def _LogRateLimitDetails(self, url, response):
+  def _LogRateLimitDetails(self, response):
     rate_limit_details = []
 
     for header, description in RATE_LIMIT_HEADERS:
@@ -4081,9 +4083,7 @@ class Api(object):
       if value:
         rate_limit_details.append('    %s: %s' % (description, value))
 
-    logging.info(
-        'Requested Twitter URL: %s, rate limit details:\n%s' %
-            (url, '\n'.join(rate_limit_details)))
+    logging.info('Rate limit details:\n%s' % '\n'.join(rate_limit_details))
 
 class _FileCacheError(Exception):
   '''Base exception class for FileCache related errors'''
