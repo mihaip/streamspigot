@@ -1,4 +1,5 @@
 todo:
+- sort statuses in feed so that catchup requests end up in the right order in reader
 - add timestamps to birdpinger
 - cache user data so that feed fetches involve no twitter RPCs
 - reduce update cron job frequency
