@@ -8,6 +8,7 @@ from google.appengine.api import memcache
 from google.appengine.api import urlfetch
 from google.appengine.ext import db
 from google.appengine.runtime import DeadlineExceededError
+from google.appengine.runtime import apiproxy_errors
 
 from datasources import twitter
 
@@ -107,5 +108,7 @@ def exec_twitter_api(func, error_detail=''):
         logging.warning('JSON error "%s"%s', err, error_detail)
     except DeadlineExceededError, err:
         logging.warning('Deadline exceeded "%s"%s', err, error_detail)
+    except apiproxy_errors.DeadlineExceededError, err:
+        logging.warning('API proxy deadline exceeded "%s"%s', err, error_detail)
 
     return None, True
