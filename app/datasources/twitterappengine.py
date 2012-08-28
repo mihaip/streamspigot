@@ -107,6 +107,5 @@ def exec_twitter_api(func, error_detail=''):
         logging.warning('JSON error "%s"%s', err, error_detail)
     except DeadlineExceededError, err:
         logging.warning('Deadline exceeded "%s"%s', err, error_detail)
-        return
 
     return None, True
