@@ -2106,7 +2106,13 @@ class Media(object):
           'Cannot look up dimensions for size %s for media URL %s' %
           size, self.media_url)
       width, height = None, None
-    return self.media_url + ':' + size, width, height
+    # Per https://dev.twitter.com/docs/tweet-entities, medium is the default,
+    # and so can be omitted. It shouldn't pose any harm to specify it, but as
+    # of 09/06/2012, :medium URLs were giving a 404.
+    url_with_size = self.media_url
+    if size != Media.MEDIUM_SIZE:
+      url_with_size += ':' + size
+    return url_with_size, width, height
 
   @staticmethod
   def NewFromJsonDict(data):
