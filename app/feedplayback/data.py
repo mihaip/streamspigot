@@ -136,10 +136,22 @@ class Subscription(object):
 
         item_id = feed_info.item_ids[self.position]
 
-        googlereader.edit_item_tags(
-            item_id,
-            origin_stream_id='feed/%s' % self.feed_url,
-            add_tags=[self.reader_stream_id])
+        # This API seems to fail most often (about one occurrence a day), so
+        # it's worth retrying inline.
+        retry_count = 0
+        while True:
+          try:
+            googlereader.edit_item_tags(
+                item_id,
+                origin_stream_id='feed/%s' % self.feed_url,
+                add_tags=[self.reader_stream_id])
+            break
+          except:
+            retry_count += 1
+            if retry_count == 5:
+              logging.error('Could not advance subscription ID %s, '
+                  'too many Google Reader API failures' % self.id)
+              return
 
         self.position += 1
         self.save()
