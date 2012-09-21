@@ -3,6 +3,7 @@ import logging
 import time
 import urllib
 import urllib2
+import sys
 
 from google.appengine.api import taskqueue
 from google.appengine.ext import db
@@ -194,6 +195,10 @@ def ping_hub(urls):
           if hasattr(e, 'read'):
               error = e.read()
           logging.warning('Error from hub: %s, Response: "%s"' % (e, error))
+      except:
+          logging.warning('Exception when pinging hub: %s' % str(sys.exc_info()[0]))
+          return
+
       logging.info('No 204 response')
 
 class CrawlOnDemandTaskHandler(base.handlers.BaseHandler):
