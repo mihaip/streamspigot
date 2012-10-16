@@ -5,6 +5,7 @@ from django.utils import simplejson
 from google.appengine.api import memcache
 from google.appengine.api import urlfetch
 
+import base.util
 from oauth_keys import SERVICE_PROVIDERS
 
 READER_OAUTH_CLIENT = \
@@ -38,7 +39,7 @@ def lookup_feed_url(html_or_feed_url):
 def lookup_feed_title(feed_url):
     json = _fetch_api_json('stream/contents/feed/%s' % urllib.quote(feed_url))
     if json and 'title' in json:
-        return json['title']
+        return base.util.unescape_html(json['title'])
     return None
 
 def get_item_contents(item_id):

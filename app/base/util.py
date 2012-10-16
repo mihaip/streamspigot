@@ -2,6 +2,7 @@ import base64
 import logging
 import re
 import uuid
+import xml.sax.saxutils
 import zlib
 
 from django.utils import simplejson
@@ -34,6 +35,14 @@ def generate_id(prefix):
 
 def strip_control_characters(s):
     return s.translate(_CONTROL_CHARACTER_MAP)
+
+def unescape_html(s):
+    # There are more HTML entities than this, but these are the ones that
+    # occur in Google Reader responses.
+    return xml.sax.saxutils.unescape(s, entities={
+      '&quot;': '"',
+      '&#39;': '\'',
+    })
 
 class JsonProperty(db.Property):
     data_type = db.Blob
