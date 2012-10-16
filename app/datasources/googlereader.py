@@ -37,7 +37,10 @@ def lookup_feed_url(html_or_feed_url):
     return None
 
 def lookup_feed_title(feed_url):
-    json = _fetch_api_json('stream/contents/feed/%s' % urllib.quote(feed_url))
+    # Don't actually need any items, but at least one is reqiured for FRFE to
+    # extract the stream title from.
+    json = _fetch_api_json(
+        'stream/contents/feed/%s' % urllib.quote(feed_url), {'n': '1'})
     if json and 'title' in json:
         return base.util.unescape_html(json['title'])
     return None
