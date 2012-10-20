@@ -216,10 +216,11 @@ def create_subscription(feed_url, start_date, frequency):
 
     start_position = _get_nearest_item_index(feed_info, start_date)
 
-    feed_title = feed_info.title
+    feed_title = feed_info.title[0:100]
     subscription_id = base.util.generate_id('s')
 
-    reader_tag_name = '%s (%s)' % (feed_title, subscription_id)
+    reader_tag_name = googlereader.sanitize_tag_name(
+        '%s (%s)' % (feed_title, subscription_id))
     reader_stream_id = 'user/%s/label/%s' % (
         googlereader.FEED_PLAYBACK_USER_ID, reader_tag_name)
 

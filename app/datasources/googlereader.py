@@ -1,4 +1,5 @@
 import logging
+import re
 import urllib
 
 from django.utils import simplejson
@@ -210,3 +211,7 @@ def _fetch_api_json(path, extra_params={}, signed_in=False):
 
     return None
 
+ILLEGAL_TAG_CHARACTERS = re.compile('["<>?&/\\^,]')
+
+def sanitize_tag_name(tag_name):
+    return ILLEGAL_TAG_CHARACTERS.sub('', tag_name)
