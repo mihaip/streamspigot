@@ -1,16 +1,17 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
-	"http"
 	"io/ioutil"
-	"json"
+	"net/http"
+	"net/url"
 	"os"
 	"time"
-	"url"
 
-	"twitterstream"
+	"github.com/araddon/httpstream"
 )
 
 const followingListUpdateIntervalNanosec = 1 * 60 * 60 * 1e9 // 1 hour
@@ -35,10 +36,13 @@ func main() {
 	var followingUserIds []int64
 	var followingUserIdMap map[int64]bool
 
-	stream := make(chan *twitterstream.Tweet)
+	stream := make(chan []byte)
+	done := make(chan bool)
 	updateFollowingListTick := time.Tick(followingListUpdateIntervalNanosec)
 
-	client := twitterstream.NewClient(*twitterUsername, *twitterPassword)
+	client := httpstream.NewBasicAuthClient(*twitterUsername, *twitterPassword, func(line []byte) {
+		stream <- line
+	})
 
 	updateFollowingList := func() {
 		followingUserIds, followingUserIdMap = getFollowingList(followingUrl)
@@ -46,9 +50,9 @@ func main() {
 		fmt.Printf("Tracking updates for %d users...\n", len(followingUserIds))
 
 		client.Close()
-		err := client.Follow(followingUserIds, stream)
+		err := client.Filter(followingUserIds, nil, false, done)
 		if err != nil {
-			fmt.Println(err.String())
+			fmt.Println(err)
 		}
 	}
 
@@ -58,23 +62,46 @@ func main() {
 		select {
 		case <-updateFollowingListTick:
 			updateFollowingList()
-		case tweet := <-stream:
-			// We ignore tweets that come from users that we're not following (the
-			// Streaming API will also notify when tweets of theirs are retweeted or
-			// replied to).
-			if _, inMap := followingUserIdMap[tweet.User.Id]; inMap {
-				// Similarly, we ignore tweets that are in reply to users that aren't
-				// being followed. This will have false negatives: if user A follows X
-				// and user B follows X and Z, a reply by X to Z will cause both A and
-				// B's streams to get pinged, even though A won't actually see that
-				// status. However, that should be rare.
-				if in_reply_to_user_id := tweet.In_reply_to_user_id; in_reply_to_user_id != 0 {
-					if _, inMap := followingUserIdMap[in_reply_to_user_id]; !inMap {
-						continue
-					}
-				}
+		case <-done:
+			fmt.Printf("Client says it's done")
+		case line := <-stream:
+			switch {
+			case bytes.HasPrefix(line, []byte(`{"event":`)):
+				var event httpstream.Event
+				json.Unmarshal(line, &event)
+			case bytes.HasPrefix(line, []byte(`{"friends":`)):
+				var friends httpstream.FriendList
+				json.Unmarshal(line, &friends)
+			default:
+				tweet := httpstream.Tweet{}
+				json.Unmarshal(line, &tweet)
+				if tweet.User != nil && tweet.User.Id != nil {
+					fmt.Printf("%s: %s\n", tweet.User.ScreenName, tweet.Text)
 
-				go pingUser(tweet.User.Id, tweet.Id, pingUrl)
+					userId := int64(*tweet.User.Id)
+
+					// We ignore tweets that come from users that we're not following (the
+					// Streaming API will also notify when tweets of theirs are retweeted or
+					// replied to).
+					if _, inMap := followingUserIdMap[userId]; inMap {
+						// Similarly, we ignore tweets that are in reply to users that aren't
+						// being followed. This will have false negatives: if user A follows X
+						// and user B follows X and Z, a reply by X to Z will cause both A and
+						// B's streams to get pinged, even though A won't actually see that
+						// status. However, that should be rare.
+						if (tweet.In_reply_to_user_id != nil) {
+							if in_reply_to_user_id := int64(*tweet.In_reply_to_user_id); in_reply_to_user_id != 0 {
+								if _, inMap := followingUserIdMap[in_reply_to_user_id]; !inMap {
+									continue
+								}
+							}
+						}
+
+						go pingUser(userId, int64(*tweet.Id), pingUrl)
+					}
+				} else {
+					fmt.Printf("No tweet?")
+				}
 			}
 		}
 	}
