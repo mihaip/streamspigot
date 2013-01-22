@@ -1,0 +1,3 @@
+blacklist:
+- subnet: 80.37.163.114
+  description: High traffic claiming to be from Lynx
