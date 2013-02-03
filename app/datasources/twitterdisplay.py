@@ -115,9 +115,19 @@ class DisplayStatus(object):
                     iframe_width, iframe_height)
             add_footer_raw_chunk(
                 '<iframe src="%s" frameborder="0"%s allowfullscreen="true"></iframe>'
-                % (iframe_url, iframe_attributes))
+                % (xml.sax.saxutils.escape(iframe_url), iframe_attributes))
+
+        def add_footer_video_chunk(video_url, video_attributes):
+            add_footer_raw_chunk(
+                '<video src="%s" %s></video>' % (
+                  xml.sax.saxutils.escape(video_url), video_attributes))
 
         def maybe_add_thumbnail_chunk(url):
+            video_url, video_attributes = thumbnails.get_video_info(url)
+            if video_url:
+                add_footer_video_chunk(video_url, video_attributes)
+                return
+
             # If the caller is OK with large thumbnails, chances are they're
             # OK with actual embedded content too.
             if self._thumbnail_size == thumbnails.LARGE_THUMBNAIL:

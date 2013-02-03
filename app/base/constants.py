@@ -17,7 +17,8 @@ CONSTANTS = _ConstantsDict(
     HEADER_COLOR='#666',
 
     APP_NAME='Stream Spigot',
-    APP_URL='http://www.streamspigot.com',
+    APP_URL='HTTP_HOST' in os.environ and \
+        ('http://' + os.environ['HTTP_HOST']) or 'http://www.streamspigot.com',
     IS_DEV_SERVER=os.environ.get('HTTP_HOST', '').startswith('localhost'),
 
     HUB_URL = 'http://pubsubhubbub.appspot.com/'

@@ -1,14 +1,20 @@
+import formatter
+import htmllib
 import logging
 import re
 import sys
 import urllib
 import urlparse
+import xml.sax.saxutils
 # parse_qsl moved to urlparse module in v2.6
 try:
   from urlparse import parse_qsl
 except:
   from cgi import parse_qsl
 
+from google.appengine.api import urlfetch
+
+import base.constants
 
 LARGE_THUMBNAIL = 'large'
 SMALL_THUMBNAIL = 'small'
@@ -27,6 +33,7 @@ _LOCKERZ_PATH_RE = re.compile('/s/\\w+.*')
 _IMGLY_FULL_PATH_RE = re.compile('/images/(\\d+)/full.*')
 _IMGLY_SHORT_PATH_RE = re.compile('/(\\w+).*')
 _OWLY_PATH_RE = re.compile('/i/(\\w+).*')
+_VINE_PATH_RE = re.compile('/v/(\\w+).*')
 
 def _get_short_flickr_photo_id(photo_id):
     result = ''
@@ -212,3 +219,110 @@ def get_iframe_info(url):
         iframe_height = 281
 
     return iframe_url, iframe_width, iframe_height
+
+def get_video_info(url):
+    video_url = None
+    video_attributes = None
+
+    parsed_url = urlparse.urlparse(url)
+    hostname = parsed_url.netloc
+    path = parsed_url.path
+    query = dict(parse_qsl(parsed_url.query))
+
+    if hostname == 'vine.co':
+        match = _VINE_PATH_RE.match(path)
+        if match:
+          video_url = '%s/thumbnails/embed?service=vine&id=%s' % (
+              base.constants.CONSTANTS.APP_URL, match.group(1))
+          video_attributes = 'loop muted controls'
+
+    return video_url, video_attributes
+
+class TestHandler(base.handlers.BaseHandler):
+    def get(self):
+        url = self.request.get('url')
+
+        self.response.headers['Content-Type'] = 'text/html; charset=UTF-8'
+        def add_field(label, value):
+            self.response.out.write('<p><b>%s</b>: %s</p>' % (label, value))
+
+        video_url, video_attributes = get_video_info(url)
+        if video_url:
+            add_field('video_url', video_url)
+            add_field('video_attributes', video_attributes)
+            add_field('HTML', '<video src="%s" %s></video>' % (
+                xml.sax.saxutils.escape(video_url), video_attributes))
+
+        iframe_url, iframe_width, iframe_height = get_iframe_info(url)
+        if iframe_url:
+            add_field('iframe_url', iframe_url)
+            add_field('iframe_width', iframe_width)
+            add_field('iframe_height', iframe_height)
+            iframe_attributes = ''
+            if iframe_width and iframe_height:
+                iframe_attributes = ' width="%d" height="%d"' % (
+                    iframe_width, iframe_height)
+            add_field('HTML',
+                '<iframe src="%s" frameborder="0"%s></iframe>'
+                % (xml.sax.saxutils.escape(iframe_url), iframe_attributes))
+
+        def add_thumbnail(size):
+          thumb_url, thumb_width, thumb_height = get_thumbnail_info(url, size)
+          if thumb_url:
+              add_field('thumb_url (%s)' % size, thumb_url)
+              add_field('thumb_width (%s)' % size, thumb_width)
+              add_field('thumb_height (%s)' % size, thumb_height)
+              img_attributes = ''
+              if thumb_width and thumb_height:
+                  img_attributes = ' width="%d" height="%d"' % (
+                      thumb_width, thumb_height)
+              add_field('HTML (%s)',
+                  '<img src="%s" alt="" style="padding:2px"%s/>'
+                  % (xml.sax.saxutils.escape(thumb_url), img_attributes))
+
+        add_thumbnail(LARGE_THUMBNAIL)
+        add_thumbnail(SMALL_THUMBNAIL)
+
+
+class EmbedHandler(base.handlers.BaseHandler):
+    def get(self):
+        service = self.request.get('service')
+        id = self.request.get('id')
+
+        if service == 'vine':
+            redirect_url = get_vine_video_url(id)
+
+        if redirect_url:
+            self.redirect(redirect_url)
+        else:
+            self._write_error(500)
+
+def get_vine_video_url(vine_id):
+    vine_page_url = 'http://vine.co/v/%s' % vine_id
+    vine_response = urlfetch.fetch(
+        url=vine_page_url,
+        method=urlfetch.GET,
+        deadline=10)
+    vine_content = vine_response.content
+    if vine_response.status_code >= 400:
+        logging.warning(
+            'Got HTTP status code %d when fetching %s (response: %s)' % (
+                vine_response.status_code,
+                vine_page_url,
+                vine_content))
+        return None
+
+    class MetaTagParser(htmllib.HTMLParser):
+        def __init__(self):
+            htmllib.HTMLParser.__init__(self, formatter.NullFormatter())
+            self.video_url = None
+
+        def do_meta(self, attrs):
+          if ('property', 'twitter:player:stream') in attrs:
+            self.video_url = dict(attrs).get('content', None)
+
+    parser = MetaTagParser()
+    parser.feed(vine_content)
+    parser.close()
+
+    return parser.video_url

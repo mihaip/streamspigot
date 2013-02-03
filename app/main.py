@@ -26,8 +26,9 @@ import birdfeeder.handlers.main
 import birdfeeder.handlers.feed
 import birdfeeder.handlers.pinger
 import birdfeeder.handlers.session
-import tweetdigest.handlers
+import datasources.thumbnails
 import feedplayback.handlers
+import tweetdigest.handlers
 
 class MainHandler(base.handlers.BaseHandler):
     def get(self):
@@ -60,6 +61,9 @@ def main():
             ('/bird-feeder/feed/timeline/(.*)', birdfeeder.handlers.feed.TimelineFeedHandler),
             ('/bird-feeder/pinger/following', birdfeeder.handlers.pinger.FollowingHandler),
             ('/bird-feeder/pinger/ping', birdfeeder.handlers.pinger.PingHandler),
+
+            ('/thumbnails/embed', datasources.thumbnails.EmbedHandler),
+            ('/thumbnails/test', datasources.thumbnails.TestHandler),
 
             ('/', MainHandler),
             ('/.*', NotFoundHandler),
