@@ -234,7 +234,7 @@ def get_video_info(url):
         if match:
           video_url = '%s/thumbnails/embed?service=vine&id=%s' % (
               base.constants.CONSTANTS.APP_URL, match.group(1))
-          video_attributes = 'loop muted controls'
+          video_attributes = 'loop="loop" muted="muted" controls="controls"'
 
     return video_url, video_attributes
 
