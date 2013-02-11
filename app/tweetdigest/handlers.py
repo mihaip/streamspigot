@@ -55,8 +55,14 @@ class DigestHandler(base.handlers.BaseHandler):
             usernames = [u.strip().lower() for u in usernames if u.strip()]
             for username in usernames:
                 if not data.is_valid_twitter_username(username):
-                    self._write_input_error('%s is an invalid Twitter username' % username)
+                    self._write_input_error(
+                        '%s is an invalid Twitter username' % username)
                     return
+            if len(usernames) > 10:
+                self._write_input_error(
+                    'At most 10 usernames can be requested (got %d)' %
+                        len(usernames))
+                return
         if self.request.get('list'):
             list = self.request.get('list').strip().lower()
             if '/' not in list:

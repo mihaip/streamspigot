@@ -126,6 +126,12 @@ streamspigot.tweetdigest.removeUsernameRow = function(currentRow) {
 };
 
 streamspigot.tweetdigest.addUsernameRow = function(currentRow) {
+  var currentRowCount =
+      currentRow.parentNode.getElementsByTagName("input").length;
+  if (currentRowCount == 10) {
+      alert('At most 10 usernames can be added to a digest.');
+      return;
+  }
   var newRow = currentRow.cloneNode(true);
   streamspigot.tweetdigest.initUsernameRow(newRow);
 
