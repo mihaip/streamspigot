@@ -66,7 +66,11 @@ class PreviewHandler(base.handlers.BaseHandler):
 
 class CreateHandler(base.handlers.BaseHandler):
     def post(self):
-        url = self.request.get('url')
+        url = self.request.get('url').strip()
+        if not url:
+            self._write_input_error('Missing "url" parameter')
+            return
+
         try:
             start_date = datetime.datetime.strptime(
                 self.request.get('start-date'), '%Y-%m-%d')
