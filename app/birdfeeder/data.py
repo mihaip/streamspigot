@@ -254,7 +254,7 @@ class FollowingData(db.Model):
             # strings; convert them to numbers when deserializing.
             FollowingData._following_map = {}
             for twitter_id, following_twitter_ids in stored_data.following_map.items():
-                twitter_id = int(twitter_id)
+                twitter_id = long(twitter_id)
                 FollowingData._following_map[twitter_id] = following_twitter_ids
             FollowingData._last_update_time = stored_data.last_update_time
             if not FollowingData._is_stale():

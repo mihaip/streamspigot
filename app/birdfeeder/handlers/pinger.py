@@ -20,8 +20,8 @@ class PingHandler(base.handlers.BaseHandler):
             self._write_input_error('Setec Astronomy')
             return
 
-        update_twitter_id = int(self.request.get('update_twitter_id'))
-        update_status_id = int(self.request.get('update_status_id'))
+        update_twitter_id = long(self.request.get('update_twitter_id'))
+        update_status_id = long(self.request.get('update_status_id'))
 
         logging.info('Got ping for status %d by %d' % (
             update_status_id, update_twitter_id))

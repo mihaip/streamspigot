@@ -65,7 +65,7 @@ class UpdateTaskHandler(base.handlers.BaseHandler):
         # got the status that we were looking for, otherwise we have to try
         # again.
         try:
-            expected_status_id = int(self.request.get('expected_status_id'))
+            expected_status_id = long(self.request.get('expected_status_id'))
             update_retry_count = int(self.request.get('update_retry_count'))
 
             logging.info('Looking for expected status %d...' % expected_status_id)
