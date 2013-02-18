@@ -127,10 +127,10 @@ class ListTwitterFetcher(TwitterFetcher):
         while True:
             max_id = len(statuses) and statuses[-1].id - 1 or None
             chunk = self._api.GetListTimeline(
-                self._list_owner,
-                self._list_id,
+                slug=self._list_id,
+                owner_screen_name=self._list_owner,
                 max_id=max_id,
-                per_page=40,
+                count=40,
                 include_rts=True,
                 include_entities=True)
             statuses.extend(chunk)
@@ -158,10 +158,8 @@ class UserTwitterFetcher(TwitterFetcher):
 
     def _fetch(self):
         timeline = self._api.GetUserTimeline(
-            self._username,
-            count=40,
-            include_rts=True,
-            include_entities=True)
+            screen_name=self._username,
+            count=40)
 
         if not self._dev_mode:
           # We do the filtering now, so that we don't look up user objects that
@@ -184,7 +182,7 @@ def get_digest_for_list(list_owner, list_id, dev_mode):
         max_cache_age, key='%s/%s' % (list_owner, list_id))
 
     user, had_error = twitterappengine.exec_twitter_api(
-        lambda: api.GetUser(list_owner),
+        lambda: api.GetUser(screen_name=list_owner, include_entities=False),
         error_detail='user %s' % list_owner)
     if not had_error:
         timezone = twitterdisplay.get_timezone_for_user(user)
@@ -236,7 +234,7 @@ class UserListsTwitterFetcher(TwitterFetcher):
         self._username = username
 
     def _fetch(self):
-        return self._api.GetLists(self._username)
+        return self._api.GetLists(screen_name=self._username)
 
     def _id(self):
         return 'lists "%s"' % self._username

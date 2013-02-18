@@ -81,10 +81,9 @@ AUTHORIZATION_URL = 'https://api.twitter.com/oauth/authorize'
 SIGNIN_URL        = 'https://api.twitter.com/oauth/authenticate'
 
 RATE_LIMIT_HEADERS = (
-  ('x-ratelimit-class', 'Class'),
-  ('x-ratelimit-remaining', 'Remaining'),
-  ('x-ratelimit-limit', 'Limit'),
-  ('x-ratelimit-reset', 'Reset'),
+  ('x-rate-limit-remaining', 'Remaining'),
+  ('x-rate-limit-limit', 'Limit'),
+  ('x-rate-limit-reset', 'Reset'),
 )
 
 class TwitterError(Exception):
@@ -2265,7 +2264,7 @@ class Api(object):
       >>> api.GetUserTimeline(user)
       >>> api.GetStatus(id)
       >>> api.DestroyStatus(id)
-      >>> api.GetFriendsTimeline(user)
+      >>> api.GetHomeTimeline(user)
       >>> api.GetFriends(user)
       >>> api.GetFollowers()
       >>> api.GetFeatured()
@@ -2340,7 +2339,7 @@ class Api(object):
     self._InitializeDefaultParameters()
 
     if base_url is None:
-      self.base_url = 'https://api.twitter.com/1'
+      self.base_url = 'https://api.twitter.com/1.1'
     else:
       self.base_url = base_url
 
@@ -2674,52 +2673,55 @@ class Api(object):
       cnt +=1
     return trends
 
-  def GetFriendsTimeline(self,
-                         user=None,
-                         count=None,
-                         page=None,
-                         since_id=None,
-                         retweets=None,
-                         include_entities=None):
-    '''Fetch the sequence of twitter.Status messages for a user's friends
+  def GetHomeTimeline(self,
+                      count=None,
+                      since_id=None,
+                      max_id=None,
+                      trim_user=None,
+                      exclude_replies=None,
+                      contributor_details=None,
+                      include_entities=True):
+    '''Fetch the sequence of twitter.Status messages posted by the
+    authenticating and the users they follow.
 
-    The twitter.Api instance must be authenticated if the user is private.
+    The twitter.Api instance must be authenticated.
 
     Args:
-      user:
-        Specifies the ID or screen name of the user for whom to return
-        the friends_timeline.  If not specified then the authenticated
-        user set in the twitter.Api instance will be used.  [Optional]
       count:
-        Specifies the number of statuses to retrieve. May not be
-        greater than 100. [Optional]
-      page:
-         Specifies the page of results to retrieve.
-         Note: there are pagination limits. [Optional]
+        Specifies the number of records to retrieve. Must be less than or equal
+        to 200. Defaults to 20. [Optional]
       since_id:
-        Returns results with an ID greater than (that is, more recent
-        than) the specified ID. There are limits to the number of
-        Tweets which can be accessed through the API. If the limit of
-        Tweets has occured since the since_id, the since_id will be
-        forced to the oldest ID available. [Optional]
-      retweets:
-        If True, the timeline will contain native retweets. [Optional]
+        Returns results with an ID greater than (that is, more recent than) the
+        specified ID. There are limits to the number of Tweets which can be
+        accessed through the API. If the limit of Tweets has occured since the
+        since_id, the since_id will be forced to the oldest ID available.
+        [Optional]
+      max_id:
+        Returns results with an ID less than (that is, older than) or equal to
+        the specified ID. [Optional]
+      trim_user:
+        When set to either true, t or 1, each tweet returned in a timeline will
+        include a user object including only the status authors numerical ID.
+        Omit this parameter to receive the complete user object. [Optional]
+      exclude_replies:
+        This parameter will prevent replies from appearing in the returned
+        timeline. Using exclude_replies with the count parameter will mean you
+        will receive up-to count tweets - this is because the count parameter
+        retrieves that many tweets before filtering out retweets and replies.
+        [Optional]
+      contributor_details:
+        This parameter enhances the contributors element of the status response
+        to include the screen_name of the contributor. By default only the
+        user_id of the contributor is included. [Optional]
       include_entities:
-        If True, each tweet will include a node called "entities,".
-        This node offers a variety of metadata about the tweet in a
-        discreet structure, including: user_mentions, urls, and
-        hashtags. [Optional]
+        The entities node will be disincluded when set to false. [Optional]
 
     Returns:
       A sequence of twitter.Status instances, one for each message
     '''
-    if not user and not self._oauth_consumer:
-      raise TwitterError("User must be specified if API is not authenticated.")
-    url = '%s/statuses/friends_timeline' % self.base_url
-    if user:
-      url = '%s/%s.json' % (url, user)
-    else:
-      url = '%s.json' % url
+    if not self._oauth_consumer:
+      raise TwitterError("API must be authenticated.")
+    url = '%s/statuses/home_timeline.json' % self.base_url
     parameters = {}
     if count is not None:
       try:
@@ -2728,124 +2730,101 @@ class Api(object):
       except ValueError:
         raise TwitterError("'count' must be an integer")
       parameters['count'] = count
-    if page is not None:
-      try:
-        parameters['page'] = int(page)
-      except ValueError:
-        raise TwitterError("'page' must be an integer")
     if since_id:
-      parameters['since_id'] = since_id
-    if retweets:
-      parameters['include_rts'] = True
-    if include_entities:
-      parameters['include_entities'] = True
+      parameters['since_id'] = long(since_id)
+    if max_id:
+      parameters['since_id'] = long(max_id)
+    if trim_user:
+      parameters['trim_user'] = 'true'
+    if exclude_replies:
+      parameters['exclude_replies'] = 'true'
+    if contributor_details:
+      parameters['contributor_details'] = 'true'
+    if not include_entities:
+      parameters['include_entities'] = 'false'
     json = self._FetchUrl(url, parameters=parameters)
     data = self._ParseAndCheckTwitter(json)
     return [Status.NewFromJsonDict(x) for x in data]
 
   def GetUserTimeline(self,
-                      id=None,
                       user_id=None,
                       screen_name=None,
                       since_id=None,
-                      max_id=None,
                       count=None,
-                      page=None,
-                      include_rts=None,
-                      include_entities=None,
-                      trim_user=None):
+                      max_id=None,
+                      trim_user=None,
+                      exclude_replies=None,
+                      contributor_details=None,
+                      include_rts=True):
     '''Fetch the sequence of public Status messages for a single user.
 
-    The twitter.Api instance must be authenticated if the user is private.
+    The twitter.Api instance must be authenticated.
 
     Args:
-      id:
-        Specifies the ID or screen name of the user for whom to return
-        the user_timeline. [Optional]
       user_id:
-        Specfies the ID of the user for whom to return the
-        user_timeline. Helpful for disambiguating when a valid user ID
-        is also a valid screen name. [Optional]
+        The ID of the user for whom to return results for. [Optional]
       screen_name:
-        Specfies the screen name of the user for whom to return the
-        user_timeline. Helpful for disambiguating when a valid screen
-        name is also a user ID. [Optional]
+       The screen name of the user for whom to return results for. [Optional]
       since_id:
         Returns results with an ID greater than (that is, more recent
         than) the specified ID. There are limits to the number of
         Tweets which can be accessed through the API. If the limit of
         Tweets has occured since the since_id, the since_id will be
         forced to the oldest ID available. [Optional]
-      max_id:
-        Returns only statuses with an ID less than (that is, older
-        than) or equal to the specified ID. [Optional]
       count:
-        Specifies the number of statuses to retrieve. May not be
-        greater than 200.  [Optional]
-      page:
-        Specifies the page of results to retrieve.
-        Note: there are pagination limits. [Optional]
-      include_rts:
-        If True, the timeline will contain native retweets (if they
-        exist) in addition to the standard stream of tweets. [Optional]
-      include_entities:
-        If True, each tweet will include a node called "entities,".
-        This node offers a variety of metadata about the tweet in a
-        discreet structure, including: user_mentions, urls, and
-        hashtags. [Optional]
+        Specifies the number of tweets to try and retrieve, up to a maximum of
+        200 per distinct request. The value of count is best thought of as a
+        limit to the number of tweets to return because suspended or deleted
+        content is removed after the count has been applied. We include retweets
+        in the count, even if include_rts is not supplied. It is recommended you
+        always send include_rts=1 when using this API method. [Optional]
+      max_id:
+        Returns results with an ID less than (that is, older than) or equal to
+        the specified ID. [Optional]
       trim_user:
         If True, full user data will not be present per Status (the User object
         will have an ID only). [Optional]
-
+      exclude_replies:
+        This parameter will prevent replies from appearing in the returned
+        timeline. Using exclude_replies with the count parameter will mean you
+        will receive up-to count tweets - this is because the count parameter
+        retrieves that many tweets before filtering out retweets and replies.
+      contributor_details:
+        This parameter enhances the contributors element of the status response
+        to include the screen_name of the contributor. By default only the
+        user_id of the contributor is included.
+      include_rts:
+        When set to false, the timeline will strip any native retweets (though
+        they will still count toward both the maximal length of the timeline and
+        the slice selected by the count parameter). Note: If you're using the
+        trim_user parameter in conjunction with include_rts, the retweets will
+        still contain a full user object. [Optional]
     Returns:
       A sequence of Status instances, one for each message up to count
     '''
-    parameters = {}
-
-    if id:
-      url = '%s/statuses/user_timeline/%s.json' % (self.base_url, id)
-    elif user_id:
-      url = '%s/statuses/user_timeline.json?user_id=%d' % (self.base_url, user_id)
-    elif screen_name:
-      url = ('%s/statuses/user_timeline.json?screen_name=%s' % (self.base_url,
-             screen_name))
-    elif not self._oauth_consumer:
+    if not self._oauth_consumer:
       raise TwitterError("User must be specified if API is not authenticated.")
-    else:
-      url = '%s/statuses/user_timeline.json' % self.base_url
 
+    parameters = {}
+    url = '%s/statuses/user_timeline.json' % (self.base_url)
+    if user_id:
+      parameters['user_id'] = long(user_id)
+    if screen_name:
+      parameters['screen_name'] = screen_name
     if since_id:
-      try:
-        parameters['since_id'] = long(since_id)
-      except:
-        raise TwitterError("since_id must be an integer")
-
-    if max_id:
-      try:
-        parameters['max_id'] = long(max_id)
-      except:
-        raise TwitterError("max_id must be an integer")
-
+      parameters['since_id'] = long(since_id)
     if count:
-      try:
-        parameters['count'] = int(count)
-      except:
-        raise TwitterError("count must be an integer")
-
-    if page:
-      try:
-        parameters['page'] = int(page)
-      except:
-        raise TwitterError("page must be an integer")
-
-    if include_rts:
-      parameters['include_rts'] = 1
-
-    if include_entities:
-      parameters['include_entities'] = 1
-
+      parameters['count'] = int(count)
+    if max_id:
+      parameters['max_id'] = long(max_id)
     if trim_user:
-      parameters['trim_user'] = 1
+      parameters['trim_user'] = 'true'
+    if exclude_replies:
+      parameters['exclude_replies'] = 'true'
+    if contributor_details:
+      parameters['contributor_details'] = 'true'
+    if not include_rts:
+      parameters['include_rts'] = 'false'
 
     json = self._FetchUrl(url, parameters=parameters)
     data = self._ParseAndCheckTwitter(json)
@@ -3117,26 +3096,53 @@ class Api(object):
     data = self._ParseAndCheckTwitter(json)
     return [User.NewFromJsonDict(x) for x in data['users']]
 
-  def GetFriendIDs(self, user=None, cursor=-1):
+  def GetFriendIDs(self,
+                   user_id=None,
+                   screen_name=None,
+                   cursor=None,
+                   count=None):
       '''Returns a list of twitter user id's for every person
       the specified user is following.
 
       Args:
-        user:
-          The id or screen_name of the user to retrieve the id list for
+        user_id:
+          The ID of the user for whom to return results for. Either a
+          screen_name or a user_id must be provided. [Optional]
+        screen_name:
+          The screen name of the user for whom to return results for. Either a
+          screen_name or a user_id must be provided. [Optional]
+        cursor:
+          Causes the list of connections to be broken into pages of no more than
+          5000 IDs at a time. The number of IDs returned is not guaranteed to be
+          5000 as suspended users are filtered out after connections are
+          queried. If no cursor is provided, a value of -1 will be assumed,
+          which is the first "page." The response from the API will include a
+          previous_cursor and next_cursor to allow paging back and forth.
           [Optional]
+        count:
+          Specifies the number of IDs attempt retrieval of, up to a maximum of
+          5,000 per distinct request. The value of count is best thought of as
+          a limit to the number of results to return. When using the count
+          parameter with this method, it is wise to use a consistent count
+          value across all requests to the same user's collection. Usage of
+          this parameter is encouraged in environments where all 5,000 IDs
+          constitutes too large of a response.  [Optional]
 
       Returns:
         A list of integers, one for each user id.
       '''
-      if not user and not self._oauth_consumer:
+      if not self._oauth_consumer:
           raise TwitterError("twitter.Api instance must be authenticated")
-      if user:
-          url = '%s/friends/ids/%s.json' % (self.base_url, user)
-      else:
-          url = '%s/friends/ids.json' % self.base_url
+      url = '%s/friends/ids.json' % self.base_url
       parameters = {}
-      parameters['cursor'] = cursor
+      if user_id:
+        parameters['user_id'] = long(user_id)
+      if screen_name:
+        parameters['screen_name'] = screen_name
+      if cursor:
+        parameters['cursor'] = cursor
+      if count:
+        parameters['count'] = int(count)
       json = self._FetchUrl(url, parameters=parameters)
       data = self._ParseAndCheckTwitter(json)
       return data['ids']
@@ -3243,19 +3249,35 @@ class Api(object):
     data = self._ParseAndCheckTwitter(json)
     return [User.NewFromJsonDict(u) for u in data]
 
-  def GetUser(self, user):
+  def GetUser(self, user_id=None, screen_name=None, include_entities=True):
     '''Returns a single user.
 
     The twitter.Api instance must be authenticated.
 
     Args:
-      user: The twitter name or id of the user to retrieve.
+      user_id:
+        The ID of the user for whom to return results for. Either an id or
+        screen_name is required for this method.
+      screen_name:
+        The screen name of the user for whom to return results for. Either a id
+        or screen_name is required for this method.
+      include_entities:
+        The entities node will be disincluded when set to false.
 
     Returns:
       A twitter.User instance representing that user
     '''
-    url  = '%s/users/show/%s.json' % (self.base_url, user)
-    json = self._FetchUrl(url)
+    url  = '%s/users/show.json' % (self.base_url)
+    if not self._oauth_consumer:
+      raise TwitterError("The twitter.Api instance must be authenticated.")
+    parameters = {}
+    if user_id:
+      parameters['user_id'] = long(user_id)
+    if screen_name:
+      parameters['screen_name'] = screen_name
+    if not include_entities:
+      parameters['include_entities'] = 'false'
+    json = self._FetchUrl(url, parameters=parameters)
     data = self._ParseAndCheckTwitter(json)
     return User.NewFromJsonDict(data)
 
@@ -3586,49 +3608,57 @@ class Api(object):
     data = self._ParseAndCheckTwitter(json)
     return [List.NewFromJsonDict(x) for x in data['lists']]
 
-  def GetLists(self, user, cursor=-1):
+  def GetLists(self, user_id=None, screen_name=None):
     '''Fetch the sequence of lists for a user.
 
     Args:
-      user:
-        The twitter name or id of the user whose lists you are fetching.
-        If the passed in user is the same as the authenticated user
-        then you will also receive private list data.
-      cursor:
-        "page" value that Twitter will use to start building the
-        list sequence from.  -1 to start at the beginning.
-        Twitter will return in the result the values for next_cursor
-        and previous_cursor. [Optional]
+      user_id:
+        The ID of the user for whom to return results for. Helpful for
+        disambiguating when a valid user ID is also a valid screen name.
+      screen_name:
+        The screen name of the user for whom to return results for. Helpful for
+        disambiguating when a valid screen name is also a user ID.
 
     Returns:
       A sequence of twitter.List instances, one for each list
     '''
-    url = '%s/%s/lists.json' % (self.base_url, user)
+    if not self._oauth_consumer:
+      raise TwitterError("twitter.Api instance must be authenticated")
+
+    url = '%s/lists/list.json' % (self.base_url)
     parameters = {}
-    parameters['cursor'] = cursor
+    if user_id:
+      parameters['user_id'] = long(user_id)
+    if screen_name:
+      parameters['screen_name'] = screen_name
 
     json = self._FetchUrl(url, parameters=parameters)
     data = self._ParseAndCheckTwitter(json)
-    return [List.NewFromJsonDict(x) for x in data['lists']]
+    return [List.NewFromJsonDict(x) for x in data]
 
   def GetListTimeline(self,
-                      owner,
-                      id,
+                      list_id=None,
+                      slug=None,
+                      owner_screen_name=None,
+                      owner_id=None,
                       since_id=None,
                       max_id=None,
-                      per_page=None,
-                      page=None,
+                      count=None,
                       include_rts=None,
                       include_entities=None):
     '''Fetch the sequence of public Status messages for members of a list.
 
-    The twitter.Api instance must be authenticated if the user is private.
-
     Args:
-      owner:
-        The user that owns the list.
-      id:
-        The slug or id of the list to fetch.
+      list_id:
+        The numerical id of the list.
+      slug:
+        You can identify a list by its slug instead of its numerical id. If you
+        decide to do so, note that you'll also have to specify the list owner
+        using the owner_id or owner_screen_name parameters.
+      owner_screen_name:
+        The screen name of the user who owns the list being requested by a slug.
+      owner_id:
+        The user ID of the user who owns the list being requested by a slug.
       since_id:
         Returns results with an ID greater than (that is, more recent
         than) the specified ID. There are limits to the number of
@@ -3638,12 +3668,8 @@ class Api(object):
       max_id:
         Returns only statuses with an ID less than (that is, older
         than) or equal to the specified ID. [Optional]
-      per_page:
-        Specifies the number of statuses to retrieve. May not be
-        greater than 200.  [Optional]
-      page:
-        Specifies the page of results to retrieve.
-        Note: there are pagination limits. [Optional]
+      count:
+        Specifies the number of results to retrieve per "page."
       include_rts:
         If True, the timeline will contain native retweets (if they
         exist) in addition to the standard stream of tweets. [Optional]
@@ -3656,9 +3682,19 @@ class Api(object):
     Returns:
       A sequence of Status instances, one for each message up to count
     '''
-    parameters = {}
+    if not self._oauth_consumer:
+      raise TwitterError("Api instance must first be given user credentials.")
 
-    url = '%s/%s/lists/%s/statuses.json' % (self.base_url, owner, id)
+    parameters = {}
+    url = '%s/lists/statuses.json' % (self.base_url)
+    if list_id:
+      parameters['list_id'] = long(list_id)
+    if slug:
+      parameters['slug'] = slug
+    if owner_screen_name:
+      parameters['owner_screen_name'] = owner_screen_name
+    if owner_id:
+      parameters['owner_id'] = long(owner_id)
 
     if since_id:
       try:
@@ -3672,17 +3708,11 @@ class Api(object):
       except:
         raise TwitterError("max_id must be an integer")
 
-    if per_page:
+    if count:
       try:
-        parameters['per_page'] = int(per_page)
+        parameters['count'] = int(count)
       except:
-        raise TwitterError("per_page must be an integer")
-
-    if page:
-      try:
-        parameters['page'] = int(page)
-      except:
-        raise TwitterError("page must be an integer")
+        raise TwitterError("count must be an integer")
 
     if include_rts:
       parameters['include_rts'] = 1

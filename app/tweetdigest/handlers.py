@@ -22,7 +22,13 @@ class ListsHandler(base.handlers.BaseHandler):
 
         lists = data.get_lists(username)
         if lists:
-            self._write_json([l.slug for l in lists])
+            list_names = []
+            for list in lists:
+                list_user = list.user
+                if list_user and list_user.screen_name != username:
+                    continue
+                list_names.append(list.slug)
+            self._write_json(list_names)
         else:
             self._write_error(502)
 

@@ -33,7 +33,8 @@ class TimelineFeedHandler(FeedHandler):
         logging.info('Serving feed for %s' % twitter_id)
 
         user, had_error = twitterappengine.exec_twitter_api(
-            lambda: self._api.GetUser(twitter_id),
+            lambda: self._api.GetUser(user_id=twitter_id,
+                                      include_entities=False),
             error_detail='user %s' % twitter_id)
 
         if had_error:

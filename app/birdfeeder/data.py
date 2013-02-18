@@ -262,9 +262,9 @@ class FollowingData(db.Model):
 
         following_map = {}
         for session in Session.all():
-            twitter_id = int(session.twitter_id)
+            twitter_id = long(session.twitter_id)
             following_twitter_ids, had_error = twitterappengine.exec_twitter_api(
-                session.create_api().GetFriendIDs,
+                lambda: session.create_api().GetFriendIDs(user_id=twitter_id),
                 error_detail='can\'t get friend IDs for %s, using stale data' %
                                 session.twitter_id)
 

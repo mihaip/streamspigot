@@ -111,11 +111,7 @@ def update_timeline(session):
     api = session.create_api()
     # TODO(mihaip): Support paging back if more than 200 statuses were received
     # since the last update.
-    timeline = api.GetFriendsTimeline(
-        count=200,
-        retweets=True,
-        include_entities=True,
-        since_id=since_id)
+    timeline = api.GetHomeTimeline(count=200, since_id=since_id)
     logging.info('Got back %d statuses' % len(timeline))
 
     known_status_ids = set(stream.status_ids)
