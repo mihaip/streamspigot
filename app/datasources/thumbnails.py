@@ -303,13 +303,13 @@ def get_vine_video_url(vine_id):
         url=vine_page_url,
         method=urlfetch.GET,
         deadline=10)
-    vine_content = vine_response.content
+    vine_content = vine_response.content.decode('utf-8')
     if vine_response.status_code >= 400:
         logging.warning(
-            'Got HTTP status code %d when fetching %s (response: %s)' % (
+            'Got HTTP status code %d when fetching %s (response: %s)',
                 vine_response.status_code,
                 vine_page_url,
-                vine_content))
+                vine_content)
         return None
 
     class MetaTagParser(htmllib.HTMLParser):
