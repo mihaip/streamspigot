@@ -299,10 +299,15 @@ class EmbedHandler(base.handlers.BaseHandler):
 
 def get_vine_video_url(vine_id):
     vine_page_url = 'http://vine.co/v/%s' % vine_id
-    vine_response = urlfetch.fetch(
-        url=vine_page_url,
-        method=urlfetch.GET,
-        deadline=10)
+    try:
+        vine_response = urlfetch.fetch(
+            url=vine_page_url,
+            method=urlfetch.GET,
+            deadline=1)
+    except:
+        logging.warning(
+            "Could not fetch Vine URL: %s", vine_page_url, exc_info=True)
+        return None
     vine_content = vine_response.content.decode('utf-8')
     if vine_response.status_code >= 400:
         logging.warning(
