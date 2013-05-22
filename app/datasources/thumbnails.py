@@ -303,7 +303,7 @@ def get_vine_video_url(vine_id):
         vine_response = urlfetch.fetch(
             url=vine_page_url,
             method=urlfetch.GET,
-            deadline=1)
+            deadline=10)
     except:
         logging.warning(
             "Could not fetch Vine URL: %s", vine_page_url, exc_info=True)
