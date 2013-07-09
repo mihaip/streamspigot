@@ -41,7 +41,6 @@ class Session(db.Model):
     feed_id = db.StringProperty(required=True)
     oauth_token = db.TextProperty(indexed=False)
     oauth_token_secret = db.TextProperty(indexed=False)
-    crawled_on_demand = db.BooleanProperty(indexed=False)
 
     def update(self, oauth_token, oauth_token_secret):
         self.session_id = _generate_session_id()
@@ -50,7 +49,6 @@ class Session(db.Model):
 
     def reset_feed_id(self):
         self.feed_id = _generate_feed_id()
-        self.crawled_on_demand = False
 
     def as_dict(self):
         return {
@@ -59,7 +57,6 @@ class Session(db.Model):
           'feed_id': self.feed_id,
           'oauth_token': self.oauth_token,
           'oauth_token_secret': self.oauth_token_secret,
-          'crawled_on_demand': self.crawled_on_demand and 'True' or 'False'
         }
 
     def create_api(self):
@@ -75,12 +72,6 @@ class Session(db.Model):
             CONSTANTS.APP_URL,
         ))
         return api
-
-    def enqueue_crawl_on_demand_task(self):
-        taskqueue.add(
-            queue_name='birdfeeder-crawl-on-demand',
-            url='/tasks/bird-feeder/crawl-on-demand',
-            params={'session_id': self.session_id})
 
     def get_timeline_feed_url(self):
         # TODO(mihaip): There's probably a better place for this.
@@ -133,8 +124,7 @@ class Session(db.Model):
             twitter_id=request.get('twitter_id'),
             feed_id=request.get('feed_id'),
             oauth_token=request.get('oauth_token'),
-            oauth_token_secret=request.get('oauth_token_secret'),
-            crawled_on_demand=request.get('crawled_on_demand') == 'True')
+            oauth_token_secret=request.get('oauth_token_secret'))
 
     @classmethod
     def kind(cls):

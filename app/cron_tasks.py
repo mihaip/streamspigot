@@ -31,7 +31,6 @@ def main():
 
             ('/cron/bird-feeder/update', birdfeeder.handlers.update.UpdateCronHandler),
             ('/tasks/bird-feeder/update', birdfeeder.handlers.update.UpdateTaskHandler),
-            ('/tasks/bird-feeder/crawl-on-demand', birdfeeder.handlers.update.CrawlOnDemandTaskHandler),
             ('/tools/bird-feeder/update-feed', birdfeeder.handlers.tools.UpdateFeedHandler),
             ('/tools/bird-feeder/status/(\d+)', birdfeeder.handlers.tools.StatusHandler),
         ],

@@ -93,6 +93,27 @@ a, .link {
   background: #dde8ff;
 }
 
+#retired-tool-cover {
+    position: fixed;
+    z-index: 100;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.85);
+}
+
+#retired-tool-cover:after {
+    content: "This tool has been retired.";
+    position: absolute;
+    top: 33%;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 38px;
+    font-weight: bold;
+}
+
 #tweetdigest-setup-table {
   margin: 0 auto;
 }

@@ -8,15 +8,11 @@ class IndexHandler(session.SessionApiHandler):
         twitter_user = self._api.GetUser(self._session.twitter_id)
 
         timeline_feed_url = self._session.get_timeline_feed_url()
-        timeline_reader_url = \
-            'http://www.google.com/reader/view/feed/%s' % urllib.quote(
-                timeline_feed_url)
 
         self._write_template('birdfeeder/index-signed-in.html', {
           'twitter_user': twitter_user,
           'sign_out_path': self._get_path('sign-out'),
           'timeline_feed_url': timeline_feed_url,
-          'timeline_reader_url': timeline_reader_url,
         })
 
     def _get_signed_out(self):

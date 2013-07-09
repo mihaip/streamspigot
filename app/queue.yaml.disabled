@@ -1,0 +1,9 @@
+queue:
+- name: feedplayback-advance
+  rate: 1/s
+  bucket_size: 1
+
+- name: birdfeeder-crawl-on-demand
+  rate: 5/s
+  bucket_size: 5
+

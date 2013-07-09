@@ -10,7 +10,7 @@ from google.appengine.ext import db
 
 from base.constants import CONSTANTS
 import base.handlers
-from datasources import twitter, twitterappengine, googlereader
+from datasources import twitter, twitterappengine
 from birdfeeder import data
 
 RECENT_STATUS_INTERVAL_SEC = 10 * 60
@@ -55,8 +55,6 @@ class UpdateTaskHandler(base.handlers.BaseHandler):
 
         if had_updates:
             ping_hub([session.get_timeline_feed_url()])
-            if not session.crawled_on_demand:
-                session.enqueue_crawl_on_demand_task()
         self.response.out.write(
             'Updated %s, %s updates' %
                 (session.twitter_id, had_updates and 'had' or 'didn\'t have'))
@@ -196,12 +194,3 @@ def ping_hub(urls):
           return
 
       logging.info('No 204 response')
-
-class CrawlOnDemandTaskHandler(base.handlers.BaseHandler):
-    def post(self):
-        session = data.Session.get_by_session_id(self.request.get('session_id'))
-        if not googlereader.crawl_on_demand(session.get_timeline_feed_url()):
-            logging.warning('Crawl on demand failed')
-            return
-        session.crawled_on_demand = True
-        session.put()

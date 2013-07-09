@@ -17,19 +17,27 @@
     <p>Read tweets in daily batches</p>
   </a>
 
-  <a href="/feed-playback/" class="tool odd">
-    <h2>Feed Playback</h2>
-    <p>Start reading a blog from the very beginning</p>
-  </a>
-
-  <a href="/bird-feeder/" class="tool even">
+  <a href="/bird-feeder/" class="tool odd">
     <h2>Bird Feeder</h2>
     <p>Keep up with tweets in your favorite feed reader</p>
   </a>
 </div>
+
 {% endblock %}
 
 {% block footer %}
+<p>
+  Retired tools:
+</p>
+
+<ul>
+  <li><a href="/feed-playback/">Feed Playback</a>: Allowed you to start reading
+  a blog (or any other feed) from the very beginning. Used the Google Reader
+  feed cache to provide archived feed data, and thus stopped working when
+  <a href="http://googlereader.blogspot.com/2013/07/a-final-farewell.html">Google
+  Reader was shut down</a>.</li>
+</ul>
+
 <p>
   {{ APP_NAME }} was created by <a href="http://persistent.info">Mihai
   Parparita</a>, who can be reached at <script>streamspigot.util.printEmail();</script>. To keep

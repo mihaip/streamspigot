@@ -1,0 +1,40 @@
+cron:
+- description: 1d/0
+  url: /cron/feed-playback/advance?frequency=1d&frequency_modulo=0
+  schedule: every day 00:00
+
+- description: 2d/0
+  url: /cron/feed-playback/advance?frequency=2d&frequency_modulo=0
+  schedule: every day 01:00
+
+- description: 2d/1
+  url: /cron/feed-playback/advance?frequency=2d&frequency_modulo=1
+  schedule: every day 02:00
+
+- description: 7d/0
+  url: /cron/feed-playback/advance?frequency=7d&frequency_modulo=0
+  schedule: every day 03:00
+
+- description: 7d/1
+  url: /cron/feed-playback/advance?frequency=7d&frequency_modulo=1
+  schedule: every day 04:00
+
+- description: 7d/2
+  url: /cron/feed-playback/advance?frequency=7d&frequency_modulo=2
+  schedule: every day 05:00
+
+- description: 7d/3
+  url: /cron/feed-playback/advance?frequency=7d&frequency_modulo=3
+  schedule: every day 06:00
+
+- description: 7d/4
+  url: /cron/feed-playback/advance?frequency=7d&frequency_modulo=4
+  schedule: every day 07:00
+
+- description: 7d/5
+  url: /cron/feed-playback/advance?frequency=7d&frequency_modulo=5
+  schedule: every day 08:00
+
+- description: 7d/6
+  url: /cron/feed-playback/advance?frequency=7d&frequency_modulo=6
+  schedule: every day 09:00
