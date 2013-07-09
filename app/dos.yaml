@@ -1,3 +1,7 @@
 blacklist:
 - subnet: 80.37.163.114
   description: High traffic claiming to be from Lynx
+- subnet: 137.254.4.13
+  description: Overly aggressive tweet digest fetcher (claims to be IE)
+- subnet: 144.76.37.210
+  description: Overly aggressive tweet digest fetcher (claims to be SilverReader)
