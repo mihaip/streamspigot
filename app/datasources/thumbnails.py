@@ -77,7 +77,7 @@ def get_thumbnail_info(url, size):
         # See http://instagram.com/developer/embedding/#media
         match = _INSTAGRAM_PATH_RE.match(path)
         if match:
-            thumb_url = 'http://instagr.am/p/%s/media' % match.group(1)
+            thumb_url = 'http://instagr.am/p/%s/media/' % match.group(1)
             if need_small:
                 thumb_url += '?size=t'
                 thumb_width = 150
