@@ -1,7 +1,7 @@
 To build and run
 
 1. Install Go per http://golang.org/doc/install.html
-2. sudo go get github.com/araddon/httpstream
+2. go get github.com/araddon/httpstream
 3. cd birdpinger
 4. go build
 5. ./birdpinger \

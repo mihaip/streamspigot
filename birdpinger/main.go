@@ -50,7 +50,13 @@ func main() {
 		fmt.Printf("Tracking updates for %d users...\n", len(followingUserIds))
 
 		client.Close()
-		err := client.Filter(followingUserIds, nil, false, done)
+		err := client.Filter(
+			followingUserIds,
+			nil,   // no topic filter
+			nil,   // no language filter
+			nil,   // no location filter
+			false, // don't watch for stalls
+			done)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -89,7 +95,7 @@ func main() {
 						// and user B follows X and Z, a reply by X to Z will cause both A and
 						// B's streams to get pinged, even though A won't actually see that
 						// status. However, that should be rare.
-						if (tweet.In_reply_to_user_id != nil) {
+						if tweet.In_reply_to_user_id != nil {
 							if in_reply_to_user_id := int64(*tweet.In_reply_to_user_id); in_reply_to_user_id != 0 {
 								if _, inMap := followingUserIdMap[in_reply_to_user_id]; !inMap {
 									continue
