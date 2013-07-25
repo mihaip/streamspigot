@@ -19,6 +19,8 @@ class MainHandler(base.handlers.BaseHandler):
 
 class AdvanceCronHandler(base.handlers.BaseHandler):
     def get(self):
+        self._write_error(410)
+        return
         frequency = self.request.get('frequency')
         frequency_modulo = int(self.request.get('frequency_modulo'))
 
@@ -42,6 +44,8 @@ class AdvanceCronHandler(base.handlers.BaseHandler):
 
 class AdvanceTaskHandler(base.handlers.BaseHandler):
     def post(self):
+        self._write_error(410)
+        return
         subscription_id = self.request.get('subscription_id')
         subscription = data.get_subscription_by_id(subscription_id)
         subscription.advance()
@@ -49,6 +53,8 @@ class AdvanceTaskHandler(base.handlers.BaseHandler):
 
 class PreviewHandler(base.handlers.BaseHandler):
     def get(self):
+        self._write_error(410)
+        return
         url = self.request.get('url').strip()
         if not url:
             self._write_input_error('Missing "url" parameter')
@@ -66,6 +72,8 @@ class PreviewHandler(base.handlers.BaseHandler):
 
 class CreateHandler(base.handlers.BaseHandler):
     def post(self):
+        self._write_error(410)
+        return
         url = self.request.get('url').strip()
         if not url:
             self._write_input_error('Missing "url" parameter')
@@ -104,6 +112,8 @@ class CreateHandler(base.handlers.BaseHandler):
 
 class FeedInfoHandler(base.handlers.BaseHandler):
     def get(self):
+        self._write_error(410)
+        return
         url = self.request.get('url').strip()
         if not url:
             self._write_input_error('Missing "url" parameter')
@@ -117,6 +127,8 @@ class FeedInfoHandler(base.handlers.BaseHandler):
 
 class SubscriptionHandler(base.handlers.BaseHandler):
     def get(self, subscription_id):
+        self._write_error(410)
+        return
         subscription = data.get_subscription_by_id(subscription_id)
 
         if not subscription:
@@ -138,6 +150,8 @@ class SubscriptionHandler(base.handlers.BaseHandler):
 
 class SubscriptionAdvanceHandler(base.handlers.BaseHandler):
     def post(self):
+        self._write_error(410)
+        return
         subscription_id = self.request.get('subscription_id')
         subscription = data.get_subscription_by_id(subscription_id)
         subscription.advance()
