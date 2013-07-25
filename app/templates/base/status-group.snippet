@@ -1,10 +1,10 @@
 {% spaceless %}
   <tr>
-    <td style="text-align:right;padding:0 0.2em 0 0" valign="top">
+    <td style="text-align:right;padding:0 0.2em 0 0;min-width:60px" valign="top">
       <div style="margin:0 0 {{ bottom_margin }} 0">
           <a href="/{{ status_group.user.screen_name }}"
              title="{{ status_group.user.name }}"
-             style="color:{{ USER_LINK_COLOR }};text-decoration:none"><img src="{{ status_group.user.profile_image_url }}" width="48" height="48" style="border:solid 0.5em {{ BUBBLE_COLOR }};background:{{ BUBBLE_COLOR }};" /><br />{{ status_group.user.screen_name }}</a>
+             style="color:{{ USER_LINK_COLOR }};text-decoration:none"><img src="{{ status_group.user.profile_image_url }}" width="48" height="48" style="border:solid 6px {{ BUBBLE_COLOR }};background:{{ BUBBLE_COLOR }};" /><br />{{ status_group.user.screen_name }}</a>
        </div>
     </td>
     <td valign="top">
