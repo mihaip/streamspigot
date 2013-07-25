@@ -2,9 +2,10 @@ To build and run
 
 1. Install Go per http://golang.org/doc/install.html
 2. go get github.com/araddon/httpstream
-3. cd birdpinger
-4. go build
-5. ./birdpinger \
+3. go get github.com/araddon/goauth
+4. cd birdpinger
+5. go build
+6. ./birdpinger \
     --twitter_username=[username] \
     --twitter_password=[password] \
     --stream_spigot_hostname=<localhost:8081 or wherever streamspigot is running> \

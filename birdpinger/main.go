@@ -12,19 +12,22 @@ import (
 	"time"
 
 	"github.com/araddon/httpstream"
+	oauth "github.com/araddon/goauth"
 )
 
 const followingListUpdateIntervalNanosec = 1 * 60 * 60 * 1e9 // 1 hour
 
-var twitterUsername *string = flag.String("twitter_username", "", "Twitter account username to use to connect to the Streaming API")
-var twitterPassword *string = flag.String("twitter_password", "", "Password for the Twitter account")
+var oauthConsumerKey *string = flag.String("oauth_consumer_key", "", "")
+var oauthConsumerSecret *string = flag.String("oauth_consumer_secret", "", "")
+var oauthToken *string = flag.String("oauth_token", "", "")
+var oauthTokenSecret *string = flag.String("oauth_token_secret", "", "")
 var streamSpigotHostname *string = flag.String("stream_spigot_hostname", "", "Host where Stream Spigot is running")
 var streamSpigotSecret *string = flag.String("stream_spigot_secret", "", "Secret key that must be passed in all Stream Spigot HTTP requests")
 
 func main() {
 	flag.Parse()
 
-	if len(*twitterUsername) == 0 || len(*twitterPassword) == 0 || len(*streamSpigotHostname) == 0 || len(*streamSpigotSecret) == 0 {
+	if len(*oauthConsumerKey) == 0 || len(*oauthConsumerSecret) == 0 || len(*oauthToken) == 0 || len(*oauthTokenSecret) == 0|| len(*streamSpigotHostname) == 0 || len(*streamSpigotSecret) == 0 {
 		flag.Usage()
 		return
 	}
@@ -40,7 +43,26 @@ func main() {
 	done := make(chan bool)
 	updateFollowingListTick := time.Tick(followingListUpdateIntervalNanosec)
 
-	client := httpstream.NewBasicAuthClient(*twitterUsername, *twitterPassword, func(line []byte) {
+	httpstream.OauthCon = &oauth.OAuthConsumer{
+		Service:          "twitter",
+		RequestTokenURL:  "http://twitter.com/oauth/request_token",
+		AccessTokenURL:   "http://twitter.com/oauth/access_token",
+		AuthorizationURL: "http://twitter.com/oauth/authorize",
+		ConsumerKey:      *oauthConsumerKey,
+		ConsumerSecret:   *oauthConsumerSecret,
+		CallBackURL:      "oob",
+		UserAgent:        "go/httpstream",
+	}
+
+	accessToken := oauth.AccessToken{
+	    Id:       "",
+		Token:    *oauthToken,
+		Secret:   *oauthTokenSecret,
+		Verifier: "",
+		Service:  "twitter",
+	}
+
+	client := httpstream.NewOAuthClient(&accessToken, func(line []byte) {
 		stream <- line
 	})
 
