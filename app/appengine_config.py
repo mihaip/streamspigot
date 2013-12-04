@@ -20,32 +20,12 @@ class BlockingMiddleware(object):
 
         # Google Reader and iGoogle are dead, yet their crawler still lives on.
         # (and generates ~1,200 requests per day). Block it, since presumably no
-        # one is actually looking at the resuts. Make the block be a 200
-        # response, so that it gets cached by App Engine's edge cache (and
-        # hopefully Trawler too).
+        # one is actually looking at the resuts.
         if user_agent.startswith('Feedfetcher-Google;'):
             logging.info('Blocked Feedfetcher request')
-            start_response('200 OK', [
-                ('Content-type','text/xml; charset=UTF-8'),
-                ('Last-Modified', 'Tue, 2 Jul 2013 00:00:00 GMT'),
-                ('Expires', 'Sun, 2 Jul 2023 00:00:00 GMT'),
-                ('Cache-Control', 'public, max-age=315570000'),
-            ])
-            return ['''<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
-  <id>tag:streamspigot.com,2013:/feedfetcher-go-away</id>
-  <title>Stream Spigot</title>
-  <entry>
-    <id>tag:streamspigot.com,2013:/feedfetcher-go-away</id>
-    <title type="text">Feedfetcher, why are you still crawling?</title>
-    <content type="xhtml">
-      <div xmlns="http://www.w3.org/1999/xhtml">
-        Since <a href="http://googlereader.blogspot.com/2013/07/a-final-farewell.html">Reader</a> and <a href="https://support.google.com/websearch/answer/2664197?hl=en">iGoogle</a> are shut down, why is <a href="http://www.google.com/feedfetcher.html">Feedfetcher</a> still crawling?
-      </div>
-    </content>
-  </entry>
-</feed>
-''']
+            start_response('403 Forbidden', [('Content-type','text/plain')])
+            return ['']
+
         return self._wrapped_app(environ, start_response)
 
 def webapp_add_wsgi_middleware(app):
