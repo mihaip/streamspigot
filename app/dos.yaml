@@ -5,3 +5,7 @@ blacklist:
   description: Overly aggressive tweet digest fetcher (claims to be IE)
 - subnet: 144.76.37.210
   description: Overly aggressive tweet digest fetcher (claims to be SilverReader)
+- subnet: 72.14.199.0/24
+  description: Google's Feedfetcher
+- subnet: 209.85.238.0/24
+  description: Google's Feedfetcher
