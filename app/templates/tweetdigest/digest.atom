@@ -4,14 +4,14 @@
   <link rel="self" href="{{ feed_url }}"/>
   <link rel="alternate" type="text/html" href="{{ html_url }}"/>
   <title>Tweet Digest of {{ digest_source|striptags }} - {{ APP_NAME }}</title>
-  <updated>{{ start_date_iso }}Z</updated>
+  <updated>{{ end_date_iso }}Z</updated>
   <author>
     <name>{{ APP_NAME }}</name>
   </author>
   <entry>
     <id>tag:persistent.info,2007:/twitter-digest/{{ digest_entry_id }}</id>
     <title type="text">Tweet Digest for {{ title_date }}</title>
-    <updated>{{ start_date_iso }}Z</updated>
+    <updated>{{ end_date_iso }}Z</updated>
     <link rel="alternate" type="text/html" href="{{ html_url }}"/>
     <content type="xhtml" xml:base="http://twitter.com/">
       <div xmlns="http://www.w3.org/1999/xhtml">

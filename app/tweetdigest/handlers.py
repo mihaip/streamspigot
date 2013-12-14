@@ -139,7 +139,7 @@ class DigestHandler(base.handlers.BaseHandler):
             'html_url': base_digest_url + '&output=html',
             'digest_id': digest_id,
             'digest_entry_id': digest_entry_id,
-            'start_date_iso': start_date.isoformat(),
+            'end_date_iso': end_date.isoformat(),
 
             'digest_contents': base.util.strip_html_whitespace(
                 self._render_template(
