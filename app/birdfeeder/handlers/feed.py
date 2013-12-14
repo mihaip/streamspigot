@@ -28,6 +28,7 @@ class FeedHandler(session.SessionApiHandler):
         self._write_error(403)
 
 class TimelineFeedHandler(FeedHandler):
+
     def _get_signed_in(self):
         twitter_id = self._session.twitter_id
         logging.info('Serving feed for %s' % twitter_id)
@@ -45,14 +46,7 @@ class TimelineFeedHandler(FeedHandler):
 
         threshold_time = time.time() - FEED_STATUS_INTERVAL_SEC
 
-        # It's wasteful to serve the hub the full set of items in the feed, so
-        # we use a variant of the feed windowing technique described at
-        # http://code.google.com/p/pubsubhubbub/wiki/PublisherEfficiency#Feed_windowing
-        # to only give it new items. We treat the If-Modified-Since header as
-        # an indication of the items that the hub already has, but we allow one
-        # hour of overlap, in case of items getting dropped, replication delay,
-        # cosmic rays, etc.
-        if self._user_agent_contains('appid: pubsubhubbub'):
+        if self._should_use_feed_windowing():
             if_modified_since = self._get_if_modified_since()
             if if_modified_since:
                 logging.info('If-Modified-Since: %d' % if_modified_since)
@@ -100,3 +94,26 @@ class TimelineFeedHandler(FeedHandler):
             content_type='application/atom+xml')
 
         self._add_last_modified_header(updated_date)
+
+    # It's wasteful to serve the hub and other frequent crawlers the full set
+    # of items in the feed, so we use a variant of the feed windowing technique
+    # described at http://code.google.com/p/pubsubhubbub/wiki/
+    # PublisherEfficiency#Feed_windowing to only give them new items. We treat
+    # the If-Modified-Since header as an indication of the items that the hub
+    # already has, but we allow one hour of overlap, in case of items getting
+    # dropped, replication delay, cosmic rays, etc.
+    def _should_use_feed_windowing(self):
+        if 'User-Agent' not in self.request.headers:
+            return False
+
+        ua = self.request.headers['User-Agent']
+
+        return (
+            # Google's PubSubHubbub hub
+            'appid: pubsubhubbub' in ua or
+            'appid: s~pubsubhubbub-hrd' in ua or
+            # Other feed readers that crawl pretty often
+            'NewsBlur Feed Fetcher' in ua or
+            'Digg Feed Fetcher' in ua or
+            'Feedspot' in ua)
+

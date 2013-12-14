@@ -112,9 +112,3 @@ class BaseHandler(webapp.RequestHandler):
             last_modified_date + datetime.timedelta(seconds=max_age_sec))
         self.response.headers['Cache-Control'] = \
             'public, max-age=%d' % max_age_sec
-
-    def _user_agent_contains(self, s):
-        if 'User-Agent' not in self.request.headers:
-            return False
-
-        return self.request.headers['User-Agent'].find(s) != -1
