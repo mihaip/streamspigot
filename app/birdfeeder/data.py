@@ -66,7 +66,20 @@ class Session(db.Model):
             access_token_key=self.oauth_token,
             access_token_secret=self.oauth_token_secret,
             cache=None)
-        api.SetCacheTimeout(60) # In seconds. TODO(mihaip): configure?
+        api.SetUserAgent('StreamSpigot/%s (+%s)' % (
+            os.environ.get('CURRENT_VERSION_ID', '1'),
+            CONSTANTS.APP_URL,
+        ))
+        return api
+
+    def create_caching_api(self):
+        api = twitter.Api(
+            consumer_key=TWITTER_SERVICE_PROVIDER.consumer.key,
+            consumer_secret=TWITTER_SERVICE_PROVIDER.consumer.secret,
+            access_token_key=self.oauth_token,
+            access_token_secret=self.oauth_token_secret,
+            cache=twitterappengine.MemcacheCache())
+        api.SetCacheTimeout(24 * 60 * 60) # In seconds. TODO(mihaip): configure?
         api.SetUserAgent('StreamSpigot/%s (+%s)' % (
             os.environ.get('CURRENT_VERSION_ID', '1'),
             CONSTANTS.APP_URL,

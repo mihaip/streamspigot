@@ -77,6 +77,7 @@ class SessionApiHandler(SessionHandler):
             if session and session.twitter_id in WHITELISTED_TWITTER_IDS:
                 self._session = session
                 self._api = session.create_api()
+                self._caching_api = session.create_caching_api()
                 signed_in()
                 return
             else:
