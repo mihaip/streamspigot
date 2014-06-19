@@ -9,6 +9,7 @@ import session
 
 FEED_STATUS_INTERVAL_SEC = 24 * 60 * 60 # One day
 IF_MODIFIED_SINCE_INTERVAL_SEC = 60 * 60 # One hour
+PUBSUBHUBBUB_HUB_INTERVAL_SEC = 4 * 60 * 60 # Four hours
 MIN_FEED_ITEMS = 10
 
 # Overrides the session accessors from SessionHandler to key the session
@@ -53,6 +54,12 @@ class TimelineFeedHandler(FeedHandler):
                 threshold_time = if_modified_since - IF_MODIFIED_SINCE_INTERVAL_SEC
                 # Since we're serving a partial response, we don't want proxies
                 # caching it.
+                self.response.headers['Cache-Control'] = 'private'
+            elif 'pubsubhubbub' in self.request.headers['User-Agent']:
+                # Google's PubSubHubbub hub no longer seems to send an
+                # If-Modified-Since header, but it crawls often enough that we
+                # can use a shorter interval for it.
+                threshold_time = time.time() - PUBSUBHUBBUB_HUB_INTERVAL_SEC
                 self.response.headers['Cache-Control'] = 'private'
 
         # We want the feed to have all tweets from the past day, but also at
