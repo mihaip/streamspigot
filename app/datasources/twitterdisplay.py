@@ -194,6 +194,8 @@ class DisplayStatus(object):
                         twitter.Media.THUMB_SIZE or twitter.Media.MEDIUM_SIZE)
                 add_footer_thumbnail_chunk(
                     link_url , thumb_url, thumb_width, thumb_height)
+              else:
+                logging.info("Unknown media type: %s", e.type)
 
           if entity_url:
               add_raw_chunk('<a href="')
