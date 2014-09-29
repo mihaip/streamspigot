@@ -174,7 +174,7 @@ class DisplayStatus(object):
           if isinstance(e, twitter.Hashtag):
               entity_url = 'search?q=%23' + e.text
           elif isinstance(e, twitter.Url):
-              entity_url = e.url
+              entity_url = e.expanded_url or e.url
               entity_url_anchor_text = e.display_url or e.expanded_url or e.url
               if entity_url_anchor_text:
                   entity_anchor_text = xml.sax.saxutils.escape(entity_url_anchor_text)
