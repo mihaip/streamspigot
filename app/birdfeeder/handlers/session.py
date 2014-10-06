@@ -192,3 +192,6 @@ class ResetFeedIdHandler(SessionApiHandler):
         self._session.reset_feed_id()
         self._session.put()
         self.response.out.write('OK')
+
+    def _get_signed_out(self):
+        self._write_error(403)
