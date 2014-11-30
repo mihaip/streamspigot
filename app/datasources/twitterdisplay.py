@@ -197,6 +197,7 @@ class DisplayStatus(object):
               else:
                 logging.info("Unknown media type: %s", e.type)
 
+          entity_anchor_text = entity_anchor_text.replace("/", u"/\u200B")
           if entity_url:
               add_raw_chunk('<a href="')
               add_escaped_chunk(entity_url)
