@@ -102,10 +102,18 @@ class DisplayStatus(object):
             add_footer_raw_chunk(
                 '<a href="%s" border="0">'
                   '<img src="%s" alt="" '
-                    # Force the width to be "auto" to override the "full bleed"
-                    # style set by NewsBlur (see https://github.com/samuelclay/
-                    # NewsBlur/commit/93c4ddfc30e6b126118e07e76bdf367ff84b34e1)
-                    'style="padding:2px;width:auto!important"%s/>'
+                    'style="padding:2px;'
+                      # Force the width to be "100%" and reset the margins to
+                      # override the "full bleed" style set by NewsBlur (see
+                      # https://github.com/samuelclay/NewsBlur/commit/
+                      # 93c4ddfc30e6b126118e07e76bdf367ff84b34e1). There needs
+                      # to be a space between the value and !important since its
+                      # CSS sanitizer breaks up tokens via whitespace only
+                      # (https://github.com/samuelclay/NewsBlur/blob/
+                      # 4aead01e3442eadfcbb7e5cf451e55184386a03f/utils/
+                      # feedparser.py#L2539)
+                      'width:100%% !important;margin:0 !important"'
+                    '%s/>'
                 '</a>' % (
                     xml.sax.saxutils.escape(link_url),
                     xml.sax.saxutils.escape(thumb_url),
