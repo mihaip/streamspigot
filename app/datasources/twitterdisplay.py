@@ -101,7 +101,11 @@ class DisplayStatus(object):
                     thumb_width, thumb_height)
             add_footer_raw_chunk(
                 '<a href="%s" border="0">'
-                  '<img src="%s" alt="" style="padding:2px"%s/>'
+                  '<img src="%s" alt="" '
+                    # Force the width to be "auto" to override the "full bleed"
+                    # style set by NewsBlur (see https://github.com/samuelclay/
+                    # NewsBlur/commit/93c4ddfc30e6b126118e07e76bdf367ff84b34e1)
+                    'style="padding:2px;width:auto!important"%s/>'
                 '</a>' % (
                     xml.sax.saxutils.escape(link_url),
                     xml.sax.saxutils.escape(thumb_url),
@@ -197,6 +201,7 @@ class DisplayStatus(object):
               else:
                 logging.info("Unknown media type: %s", e.type)
 
+          # Make it more likely that anchor text will wrap.
           entity_anchor_text = entity_anchor_text.replace("/", u"/\u200B")
           if entity_url:
               add_raw_chunk('<a href="')
