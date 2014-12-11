@@ -95,28 +95,35 @@ class DisplayStatus(object):
 
         def add_footer_thumbnail_chunk(
                 link_url, thumb_url, thumb_width, thumb_height):
+            img_styles = ['padding:2px']
             img_attributes = ''
+            # Force the width to be "100%" and reset the margins to override the
+            # "full bleed" style set by NewsBlur (see https://github.com/
+            # samuelclay/NewsBlur/commit/93c4ddfc30e6b126118e07e76bdf367ff84b).
+            # There needs to be a space between the value and !important since
+            # its CSS sanitizer breaks up tokens via whitespace only (
+            # https://github.com/samuelclay/NewsBlur/blob/
+            # 4aead01e3442eadfcbb7e5cf451e55184386a/utils/feedparser.py#L2539)
+            # The triggering conditions match the NB-large-image class being
+            # added in https://github.com/samuelclay/NewsBlur/blob/
+            # fb3b37a46028a1222be2f1f5f6f0cea63e895666/clients/ios/static/
+            # storyDetailView.js#L63
+            if thumb_width >= 320-24 and thumb_height >= 50 or \
+                (not thumb_width and not thumb_height and
+                    self._thumbnail_size == thumbnails.LARGE_THUMBNAIL):
+                img_styles.append('width:100% !important')
+                img_styles.append('margin: 0 !important')
             if thumb_width and thumb_height:
                 img_attributes = ' width="%d" height="%d"' % (
                     thumb_width, thumb_height)
+
             add_footer_raw_chunk(
                 '<a href="%s" border="0">'
-                  '<img src="%s" alt="" '
-                    'style="padding:2px;'
-                      # Force the width to be "100%" and reset the margins to
-                      # override the "full bleed" style set by NewsBlur (see
-                      # https://github.com/samuelclay/NewsBlur/commit/
-                      # 93c4ddfc30e6b126118e07e76bdf367ff84b34e1). There needs
-                      # to be a space between the value and !important since its
-                      # CSS sanitizer breaks up tokens via whitespace only
-                      # (https://github.com/samuelclay/NewsBlur/blob/
-                      # 4aead01e3442eadfcbb7e5cf451e55184386a03f/utils/
-                      # feedparser.py#L2539)
-                      'width:100%% !important;margin:0 !important"'
-                    '%s/>'
+                  '<img src="%s" alt="" style="%s"%s/>'
                 '</a>' % (
                     xml.sax.saxutils.escape(link_url),
                     xml.sax.saxutils.escape(thumb_url),
+                    ";".join(img_styles),
                     img_attributes
                 ))
 
