@@ -42,9 +42,28 @@ class DisplayStatus(object):
         return self.url(base_url='')
 
     def title_as_text(self):
-        title_text = _unescape_tweet_chunk(self._status.text)
-        title_text = _WHITESPACE_RE.sub(' ', title_text)
+        title_text = ""
+        status = self._status
+        if status.retweeted_status:
+            status = status.retweeted_status
+            title_text += 'RT @%s: ' % status.user.screen_name
+
+        # Simplified variant of the entity procesing done by body_as_html that
+        # skips over all URLs.
+        urls = list((status.urls or []) + (status.medias or []))
+        urls = [u for u in urls if u.start_index != -1 and u.end_index != -1]
+        urls.sort(cmp=lambda u1,u2: u1.start_index - u2.start_index)
+        last_url_end = 0
+        for url in urls:
+            title_text += _unescape_tweet_chunk(
+                status.text[last_url_end:url.start_index])
+            last_url_end = url.end_index
+        title_text += _unescape_tweet_chunk(
+            status.text[last_url_end:])
+
         title_text = base.util.strip_control_characters(title_text)
+        title_text = _WHITESPACE_RE.sub(' ', title_text).strip()
+
         return '%s: %s' % (self._status.user.screen_name, title_text)
 
     def created_at_formatted(self):
