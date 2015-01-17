@@ -84,6 +84,8 @@ class DisplayStatus(object):
         text_as_html = []
         footer_as_html = []
 
+        escape = xml.sax.saxutils.escape
+
         def add_raw_chunk(chunk):
             text_as_html.append(chunk)
 
@@ -98,7 +100,7 @@ class DisplayStatus(object):
             chunk = base.util.strip_control_characters(chunk)
 
             # HTML-escape
-            chunk = xml.sax.saxutils.escape(chunk)
+            chunk = escape(chunk)
 
             # Convert newlines to HTML (Twitter seems to normalize all line
             # endings to \n).
@@ -107,7 +109,7 @@ class DisplayStatus(object):
             add_raw_chunk(chunk)
 
         def add_escaped_chunk(chunk):
-            add_raw_chunk(xml.sax.saxutils.escape(chunk))
+            add_raw_chunk(escape(chunk))
 
         def add_footer_raw_chunk(chunk):
             footer_as_html.append(chunk)
@@ -140,8 +142,8 @@ class DisplayStatus(object):
                 '<a href="%s" border="0">'
                   '<img src="%s" alt="" style="%s"%s/>'
                 '</a>' % (
-                    xml.sax.saxutils.escape(link_url),
-                    xml.sax.saxutils.escape(thumb_url),
+                    escape(link_url),
+                    escape(thumb_url),
                     ";".join(img_styles),
                     img_attributes
                 ))
@@ -153,12 +155,12 @@ class DisplayStatus(object):
                     iframe_width, iframe_height)
             add_footer_raw_chunk(
                 '<iframe src="%s" frameborder="0"%s allowfullscreen="true"></iframe>'
-                % (xml.sax.saxutils.escape(iframe_url), iframe_attributes))
+                % (escape(iframe_url), iframe_attributes))
 
         def add_footer_video_chunk(video_url, video_attributes):
             add_footer_raw_chunk(
                 '<video src="%s" %s></video>' % (
-                  xml.sax.saxutils.escape(video_url), video_attributes))
+                  escape(video_url), video_attributes))
 
         def maybe_add_thumbnail_chunk(url):
             video_url, video_attributes = thumbnails.get_video_info(url)
@@ -204,55 +206,59 @@ class DisplayStatus(object):
         last_entity_end = 0
 
         for e in entities:
-          add_tweet_chunk(status.text[last_entity_end:e.start_index])
+            add_tweet_chunk(status.text[last_entity_end:e.start_index])
 
-          entity_anchor_text = status.text[e.start_index:e.end_index]
-          entity_url = None
+            entity_anchor_text = status.text[e.start_index:e.end_index]
+            entity_url = None
 
-          if isinstance(e, twitter.Hashtag):
-              entity_url = 'search?q=%23' + e.text
-          elif isinstance(e, twitter.Url):
-              entity_url = e.expanded_url or e.url
-              entity_url_anchor_text = e.display_url or e.expanded_url or e.url
-              if entity_url_anchor_text:
-                  entity_anchor_text = xml.sax.saxutils.escape(entity_url_anchor_text)
-              maybe_add_thumbnail_chunk(e.expanded_url or e.url)
-          elif isinstance(e, twitter.User):
-              entity_url = e.screen_name
-          elif isinstance(e, twitter.Media):
-              entity_url = e.url
-              entity_url_anchor_text = e.display_url or e.expanded_url or e.url
-              if entity_url_anchor_text:
-                  entity_anchor_text = xml.sax.saxutils.escape(entity_url_anchor_text)
-              if e.type == 'photo':
-                # Appending /large seems to generate a lightbox view of that image
-                link_url = e.expanded_url + '/large'
-                thumb_url, thumb_width, thumb_height = e.GetUrlForSize(
-                    self._thumbnail_size == thumbnails.SMALL_THUMBNAIL and
-                        twitter.Media.THUMB_SIZE or twitter.Media.MEDIUM_SIZE)
-                add_footer_thumbnail_chunk(
-                    link_url , thumb_url, thumb_width, thumb_height)
-              else:
-                logging.info("Unknown media type: %s", e.type)
+            if isinstance(e, twitter.Hashtag):
+                entity_url = 'search?q=%23' + e.text
+            elif isinstance(e, twitter.Url):
+                entity_url = e.expanded_url or e.url
+                entity_url_anchor_text = \
+                    e.display_url or e.expanded_url or e.url
+                if entity_url_anchor_text:
+                    entity_anchor_text = escape(entity_url_anchor_text)
+                maybe_add_thumbnail_chunk(e.expanded_url or e.url)
+            elif isinstance(e, twitter.User):
+                entity_url = e.screen_name
+            elif isinstance(e, twitter.Media):
+                entity_url = e.url
+                entity_url_anchor_text = \
+                    e.display_url or e.expanded_url or e.url
+                if entity_url_anchor_text:
+                    entity_anchor_text = escape(entity_url_anchor_text)
+                if e.type == 'photo':
+                    # Appending /large seems to generate a lightbox view of that
+                    # image
+                    link_url = e.expanded_url + '/large'
+                    thumb_url, thumb_width, thumb_height = e.GetUrlForSize(
+                        twitter.Media.THUMB_SIZE
+                            if self._thumbnail_size == thumbnails.SMALL_THUMBNAIL
+                            else twitter.Media.MEDIUM_SIZE)
+                    add_footer_thumbnail_chunk(
+                        link_url , thumb_url, thumb_width, thumb_height)
+                else:
+                  logging.info("Unknown media type: %s", e.type)
 
-          # Make it more likely that anchor text will wrap.
-          entity_anchor_text = entity_anchor_text.replace("/", u"/\u200B")
-          if entity_url:
-              add_raw_chunk('<a href="')
-              add_escaped_chunk(entity_url)
-              add_raw_chunk('" %s>' % _LINK_ATTRIBUTES)
-              add_tweet_chunk(entity_anchor_text)
-              add_raw_chunk('</a>')
-          else:
-              add_tweet_chunk(entity_anchor_text)
+            # Make it more likely that anchor text will wrap.
+            entity_anchor_text = entity_anchor_text.replace("/", u"/\u200B")
+            if entity_url:
+                add_raw_chunk('<a href="')
+                add_escaped_chunk(entity_url)
+                add_raw_chunk('" %s>' % _LINK_ATTRIBUTES)
+                add_tweet_chunk(entity_anchor_text)
+                add_raw_chunk('</a>')
+            else:
+                add_tweet_chunk(entity_anchor_text)
 
-          last_entity_end = e.end_index
+            last_entity_end = e.end_index
 
         add_tweet_chunk(status.text[last_entity_end:])
 
         result = ''.join(text_as_html)
         if footer_as_html:
-          result += '<p>' + ''.join(footer_as_html) + '</p>'
+            result += '<p>' + ''.join(footer_as_html) + '</p>'
         return result
 
     @staticmethod
