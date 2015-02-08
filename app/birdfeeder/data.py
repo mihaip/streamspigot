@@ -273,14 +273,6 @@ class FollowingData(db.Model):
 
             if had_error: return
 
-            # TODO(mihaip): remove this and replace with rate-limitting, the
-            # real problem is not how many people are followed, but how often
-            # they tweet.
-            if len(following_twitter_ids) > 200:
-                logging.warning('Not including followers for %d, following too '
-                    'many people (%d)' % (twitter_id, len(following_twitter_ids)))
-                continue
-
             for following_twitter_id in following_twitter_ids:
                 following_map.setdefault(following_twitter_id, []).append(twitter_id)
             # Users are also considered to be following themselves (since their
