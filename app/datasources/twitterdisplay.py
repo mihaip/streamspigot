@@ -223,12 +223,7 @@ class DisplayStatus(object):
             elif isinstance(e, twitter.User):
                 entity_url = e.screen_name
             elif isinstance(e, twitter.Media):
-                entity_url = e.url
-                entity_url_anchor_text = \
-                    e.display_url or e.expanded_url or e.url
-                if entity_url_anchor_text:
-                    entity_anchor_text = escape(entity_url_anchor_text)
-                if e.type == 'photo':
+                def add_media_thumbnail():
                     # Appending /large seems to generate a lightbox view of that
                     # image
                     link_url = e.expanded_url + '/large'
@@ -238,6 +233,32 @@ class DisplayStatus(object):
                             else twitter.Media.MEDIUM_SIZE)
                     add_footer_thumbnail_chunk(
                         link_url , thumb_url, thumb_width, thumb_height)
+
+                entity_url = e.url
+                entity_url_anchor_text = \
+                    e.display_url or e.expanded_url or e.url
+                if entity_url_anchor_text:
+                    entity_anchor_text = escape(entity_url_anchor_text)
+                if e.type == 'photo':
+                    add_media_thumbnail()
+                elif e.type == 'animated_gif':
+                    video_url = e.video_url
+                    if video_url is not None:
+                        video_attributes = [
+                            'loop="loop"',
+                            'muted="muted"',
+                            'autoplay="autoplay"',
+                        ]
+                        size = e.sizes.get(twitter.Media.MEDIUM_SIZE)
+                        if size:
+                            video_attributes.extend([
+                                'width="%d"' % size[0],
+                                'height="%d"' % size[1],
+                            ])
+                        add_footer_video_chunk(
+                            video_url, " ".join(video_attributes))
+                    else:
+                        add_media_thumbnail()
                 else:
                   logging.info("Unknown media type: %s", e.type)
 

@@ -642,6 +642,10 @@ class Status(object):
         hashtags = [Hashtag.NewFromJsonDict(h) for h in data['entities']['hashtags']]
       if 'media' in data['entities']:
         medias = [Media.NewFromJsonDict(m) for m in data['entities']['media']]
+    # Allow "extended_entities" to override "entities"
+    if 'extended_entities' in data:
+      if 'media' in data['extended_entities']:
+        medias = [Media.NewFromJsonDict(m) for m in data['extended_entities']['media']]
     return Status(created_at=data.get('created_at', None),
                   favorited=data.get('favorited', None),
                   id=data.get('id', None),
@@ -2087,7 +2091,8 @@ class Media(object):
                type=None,
                sizes={},
                start_index=-1,
-               end_index=-1):
+               end_index=-1,
+               video_url=None):
     self.url = url
     self.media_url = media_url
     self.display_url = display_url
@@ -2096,6 +2101,7 @@ class Media(object):
     self.sizes = sizes
     self.start_index = start_index
     self.end_index = end_index
+    self.video_url = video_url
 
   def GetUrlForSize(self, size):
     if size in self.sizes:
@@ -2132,6 +2138,12 @@ class Media(object):
           size_dict.get('h', None),
           size_dict.get('resize', None)
       )
+    video_url = None
+    if 'video_info' in data:
+        for variant_data in data['video_info'].get('variants', []):
+          if 'url' in variant_data:
+            video_url = variant_data['url']
+            break
     return Media(url=data.get('url', None),
                  media_url=data.get('media_url', None),
                  display_url=data.get('display_url', None),
@@ -2139,7 +2151,8 @@ class Media(object):
                  type=data.get('type', None),
                  sizes=sizes,
                  start_index=data.get('indices', [-1, -1])[0],
-                 end_index=data.get('indices', [-1, -1])[1])
+                 end_index=data.get('indices', [-1, -1])[1],
+                 video_url=video_url)
 
 class Trend(object):
   ''' A class representing a trending topic
