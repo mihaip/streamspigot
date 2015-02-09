@@ -244,6 +244,11 @@ class DisplayStatus(object):
                             'loop="loop"',
                             'muted="muted"',
                             'autoplay="autoplay"',
+                            # Even though we don't normally want controls,
+                            # NewsBlur strips out the autoplay attribtue, so
+                            # they're needed to initiate playback on the
+                            # desktop.
+                            'controls="controls"',
                             'poster="%s"' % e.media_url,
                         ]
                         width = None
