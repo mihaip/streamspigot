@@ -157,7 +157,11 @@ class DisplayStatus(object):
                 '<iframe src="%s" frameborder="0"%s allowfullscreen="true"></iframe>'
                 % (escape(iframe_url), iframe_attributes))
 
-        def add_footer_video_chunk(video_url, video_attributes):
+        def add_footer_video_chunk(
+                video_url, video_attributes, width=None, height=None):
+            if width:
+                video_attributes += (' width="%d" '
+                    'style="width:100%%;max-width:%dpx"') % (width, width)
             add_footer_raw_chunk(
                 '<video src="%s" %s></video>' % (
                   escape(video_url), video_attributes))
@@ -248,15 +252,19 @@ class DisplayStatus(object):
                             'loop="loop"',
                             'muted="muted"',
                             'autoplay="autoplay"',
+                            'poster="%s"' % e.media_url,
                         ]
+                        width = None
+                        height = None
                         size = e.sizes.get(twitter.Media.MEDIUM_SIZE)
                         if size:
-                            video_attributes.extend([
-                                'width="%d"' % size[0],
-                                'height="%d"' % size[1],
-                            ])
+                            width = size[0]
+                            height = size[1]
                         add_footer_video_chunk(
-                            video_url, " ".join(video_attributes))
+                            video_url,
+                            " ".join(video_attributes),
+                            width,
+                            height)
                     else:
                         add_media_thumbnail()
                 else:
