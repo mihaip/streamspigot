@@ -167,20 +167,12 @@ class DisplayStatus(object):
                   escape(video_url), video_attributes))
 
         def maybe_add_thumbnail_chunk(url):
-            video_url, video_attributes = thumbnails.get_video_info(url)
-            if video_url:
-                add_footer_video_chunk(video_url, video_attributes)
+            iframe_url, iframe_width, iframe_height = \
+                thumbnails.get_iframe_info(url)
+            if iframe_url:
+                add_footer_iframe_chunk(
+                    iframe_url, iframe_width, iframe_height)
                 return
-
-            # If the caller is OK with large thumbnails, chances are they're
-            # OK with actual embedded content too.
-            if self._thumbnail_size == thumbnails.LARGE_THUMBNAIL:
-                iframe_url, iframe_width, iframe_height = \
-                    thumbnails.get_iframe_info(url)
-                if iframe_url:
-                    add_footer_iframe_chunk(
-                        iframe_url, iframe_width, iframe_height)
-                    return
 
             thumb_url, thumb_width, thumb_height = \
                 thumbnails.get_thumbnail_info(url, self._thumbnail_size)

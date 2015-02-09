@@ -62,7 +62,6 @@ def main():
             ('/bird-feeder/pinger/following', birdfeeder.handlers.pinger.FollowingHandler),
             ('/bird-feeder/pinger/ping', birdfeeder.handlers.pinger.PingHandler),
 
-            ('/thumbnails/embed', datasources.thumbnails.EmbedHandler),
             ('/thumbnails/test', datasources.thumbnails.TestHandler),
 
             ('/', MainHandler),
