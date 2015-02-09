@@ -149,9 +149,12 @@ class DisplayStatus(object):
                 ))
 
         def add_footer_iframe_chunk(iframe_url, iframe_width, iframe_height):
-            iframe_attributes = ''
+            # "frameborder" is not a whitelisted HTML attribute in NewsBlur.
+            # "border" is not on its CSS whitelist either, but "border-color"
+            # is.
+            iframe_attributes = ' style="border-color: transparent"'
             if iframe_width and iframe_height:
-                iframe_attributes = ' width="%d" height="%d"' % (
+                iframe_attributes += ' width="%d" height="%d"' % (
                     iframe_width, iframe_height)
             add_footer_raw_chunk(
                 '<iframe src="%s" frameborder="0"%s allowfullscreen="true"></iframe>'
