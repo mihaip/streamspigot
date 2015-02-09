@@ -217,8 +217,8 @@ def get_iframe_info(url):
         match = _VINE_PATH_RE.match(path)
         if match:
             iframe_url = 'https://vine.co/v/%s/embed/simple' % match.group(1)
-            iframe_width = 320
-            iframe_height = 320
+            iframe_width = 480
+            iframe_height = 480
 
     return iframe_url, iframe_width, iframe_height
 
