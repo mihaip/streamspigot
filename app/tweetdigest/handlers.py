@@ -1,3 +1,4 @@
+import datetime
 import os
 import re
 
@@ -149,3 +150,27 @@ class DigestHandler(base.handlers.BaseHandler):
                     })),
         },
         content_type=output_template.content_type)
+
+class LegacyDigestHandler(base.handlers.BaseHandler):
+    def get(self):
+        output = self.request.get('output')
+
+        self._add_caching_headers(
+            last_modified_date=datetime.datetime(2015, 03, 11),
+            max_age_sec=7 * 24 * 60 * 60)
+
+        template_values = {
+            'digest_url': "%s/tweet-digest/digest?%s" %
+                    (CONSTANTS.APP_URL, self.request.query_string)
+        }
+
+        if output == 'html':
+            self._write_template(
+                'tweetdigest/legacy-digest.html',
+                template_values,
+                content_type='text/html')
+        else:
+            self._write_template(
+                'tweetdigest/legacy-digest.atom',
+                template_values,
+                content_type='text/html')

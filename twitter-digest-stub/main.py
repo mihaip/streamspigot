@@ -8,7 +8,7 @@ class MainPage(webapp.RequestHandler):
 
 class GenerateDigest(webapp.RequestHandler):
     def get(self):
-        self.redirect('http://www.streamspigot.com/tweet-digest/digest?' + self.request.query_string)
+        self.redirect('http://www.streamspigot.com/tweet-digest/legacy-digest?' + self.request.query_string)
 
 def main():
     application = webapp.WSGIApplication([

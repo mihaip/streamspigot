@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <id>tag:persistent.info,2007:/twitter-digest/legacy</id>
+  <title>Legacy Tweet Digest</title>
+  <updated>2015-03-11T00:00:00Z</updated>
+  <author>
+    <name>{{ APP_NAME }}</name>
+  </author>
+  <entry>
+    <id>tag:persistent.info,2007:/twitter-digest/legacy</id>
+    <title type="text">Legacy Tweet Digest, Action Required</title>
+    <updated>2015-03-11T00:00:00Z</updated>
+    <content type="xhtml" xml:base="http://twitter.com/">
+      <div xmlns="http://www.w3.org/1999/xhtml">
+        <p>You are subscribed to a <code>twitter-digest.appspot.com</code> feed
+        URL. That application is no longer running.</p>
+
+        <p>If you still wish to get a digest of tweets, you can instead
+        subscribe to this URL:<br/>
+        <a href="{{ digest_url }}">{{ digest_url }}</a></p>
+
+        <p>To create a new digest, see the
+        <a href="{{ APP_URL }}/tweet-digest">Tweet Digest tool</a> on
+        <a href="{{ APP_URL }}">{{ APP_NAME }}</a>.</p>
+      </div>
+    </content>
+  </entry>
+</feed>
