@@ -1,4 +1,4 @@
-application: twitter-digest
+application: twitter-digest-hrd
 version: 2
 runtime: python
 api_version: 1
@@ -6,5 +6,4 @@ api_version: 1
 handlers:
 - url: /.*
   script: main.py
-  
-  
+
