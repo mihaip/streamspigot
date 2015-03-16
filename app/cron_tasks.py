@@ -2,11 +2,6 @@ import logging
 import os
 import sys
 
-from google.appengine.dist import use_library
-use_library('django', '1.2')
-
-os.environ['DJANGO_SETTINGS_MODULE'] = 'django_settings'
-
 # Tweak import path so that httplib2 (which lives in datasources) can be
 # imported as httplib2 while the app is running.
 # TODO(mihaip): move httplib2 (and oauth2 and python-twitter) into a third_party

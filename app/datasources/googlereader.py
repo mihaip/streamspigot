@@ -1,8 +1,8 @@
+import json
 import logging
 import re
 import urllib
 
-from django.utils import simplejson
 from google.appengine.api import memcache
 from google.appengine.api import urlfetch
 
@@ -178,7 +178,7 @@ def _post_to_api(path, params):
       return None
 
     try:
-        return simplejson.loads(content)
+        return json.loads(content)
     except ValueError, err:
         logging.warning('Could not parse response as JSON: %s' % content)
         return None
@@ -205,7 +205,7 @@ def _fetch_api_json(path, extra_params={}, signed_in=False):
 
     if content:
         try:
-            return simplejson.loads(content)
+            return json.loads(content)
         except ValueError, err:
             logging.warning('Could not parse response as JSON: %s' % content)
 

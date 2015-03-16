@@ -1,5 +1,3 @@
-from django.utils import simplejson
-
 import base.handlers
 from birdfeeder import data
 import birdfeeder.handlers.feed

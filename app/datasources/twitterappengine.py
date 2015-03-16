@@ -1,9 +1,9 @@
 '''Helper code for running python-twitter on top of Google App Engine'''
 
+import json
 import logging
 import time
 
-from django.utils import simplejson
 from google.appengine.api import memcache
 from google.appengine.api import urlfetch
 from google.appengine.ext import db
@@ -41,7 +41,7 @@ class DbCache(object):
             try:
               # All cached data must be valid JSON, and if we mistakenly cache
               # error response, we should ignore them
-              data = simplejson.loads(entry.value)
+              data = json.loads(entry.value)
               if isinstance(data, dict) and data.has_key('error'):
                 return None
             except:

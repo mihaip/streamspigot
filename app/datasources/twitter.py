@@ -23,6 +23,7 @@ __version__ = '0.8.3'
 import base64
 import calendar
 import datetime
+import json
 import httplib
 import logging
 import os
@@ -37,20 +38,6 @@ import urllib2
 import urlparse
 import gzip
 import StringIO
-
-try:
-  # Python >= 2.6
-  import json as simplejson
-except ImportError:
-  try:
-    # Python < 2.6
-    import simplejson
-  except ImportError:
-    try:
-      # Google App Engine
-      from django.utils import simplejson
-    except ImportError:
-      raise ImportError, "Unable to load a json library"
 
 # parse_qsl moved to urlparse module in v2.6
 try:
@@ -553,7 +540,7 @@ class Status(object):
     Returns:
       A JSON string representation of this twitter.Status instance
    '''
-    return simplejson.dumps(self.AsDict(), sort_keys=True)
+    return json.dumps(self.AsDict(), sort_keys=True)
 
   def AsDict(self):
     '''A dict representation of this twitter.Status instance.
@@ -1289,7 +1276,7 @@ class User(object):
     Returns:
       A JSON string representation of this twitter.User instance
    '''
-    return simplejson.dumps(self.AsDict(), sort_keys=True)
+    return json.dumps(self.AsDict(), sort_keys=True)
 
   def AsDict(self):
     '''A dict representation of this twitter.User instance.
@@ -1700,7 +1687,7 @@ class List(object):
     Returns:
       A JSON string representation of this twitter.List instance
    '''
-    return simplejson.dumps(self.AsDict(), sort_keys=True)
+    return json.dumps(self.AsDict(), sort_keys=True)
 
   def AsDict(self):
     '''A dict representation of this twitter.List instance.
@@ -2000,7 +1987,7 @@ class DirectMessage(object):
     Returns:
       A JSON string representation of this twitter.DirectMessage instance
    '''
-    return simplejson.dumps(self.AsDict(), sort_keys=True)
+    return json.dumps(self.AsDict(), sort_keys=True)
 
   def AsDict(self):
     '''A dict representation of this twitter.DirectMessage instance.
@@ -3976,18 +3963,18 @@ class Api(object):
     else:
       return urllib.urlencode(dict([(k, self._Encode(v)) for k, v in post_data.items()]))
 
-  def _ParseAndCheckTwitter(self, json):
+  def _ParseAndCheckTwitter(self, json_str):
     """Try and parse the JSON returned from Twitter and return
     an empty dictionary if there is any error. This is a purely
     defensive check because during some Twitter network outages
     it will return an HTML failwhale page."""
     try:
-      data = simplejson.loads(json)
+      data = json.loads(json_str)
       self._CheckForTwitterError(data)
     except ValueError:
-      if "<title>Twitter / Over capacity</title>" in json:
+      if "<title>Twitter / Over capacity</title>" in json_str:
         raise TwitterError("Capacity Error")
-      if "<title>Twitter / Error</title>" in json:
+      if "<title>Twitter / Error</title>" in json_str:
         raise TwitterError("Technical Error")
       raise TwitterError("json decoding")
 

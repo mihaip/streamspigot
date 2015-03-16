@@ -1,7 +1,8 @@
 application: streamspigot-hrd
-version: 2
-runtime: python
+version: 3
+runtime: python27
 api_version: 1
+threadsafe: false
 
 builtins:
 - appstats: on
@@ -42,3 +43,9 @@ handlers:
 - url: .*
   script: main.py
 
+libraries:
+- name: django
+  version: "1.2"
+
+env_variables:
+  DJANGO_SETTINGS_MODULE: 'django_settings'

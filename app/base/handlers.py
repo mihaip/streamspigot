@@ -1,11 +1,11 @@
 import datetime
 import email
+import json
 import logging
 import os
 import time
 import wsgiref.handlers
 
-from django.utils import simplejson
 from django.template.loader import get_template
 from django.template import Context
 from google.appengine.ext import webapp
@@ -18,11 +18,11 @@ def _format_rfc_1123_date(date):
 class BaseHandler(webapp.RequestHandler):
     def _render_template(self, template_file_name, template_values={}):
         # Even though we set the DJANGO_SETTINGS_MODULE environment variable in
-        # both main.py and cron_tasks.py, there appear to be other app
-        # entrypoints that cause it to get started without the environment
-        # variable set. Since rendering templates is the only Django
-        # functionality we actually need, as a workaround we set the environment
-        # variable here, and then import the settings module.
+        # app.yaml, there appear to be other app entrypoints that cause it to
+        # get started without the environment variable set. Since rendering
+        # templates is the only Django functionality we actually need, as a
+        # workaround we set the environment variable here, and then import the
+        # settings module.
         # TODO(mihaip): figure out why this is happening
         if 'DJANGO_SETTINGS_MODULE' not in os.environ:
             logging.debug('DJANGO_SETTINGS_MODULE was not in the environment')
@@ -78,7 +78,7 @@ class BaseHandler(webapp.RequestHandler):
     def _write_json(self, obj, pretty_print=False):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(
-            simplejson.dumps(obj, indent=pretty_print and 2 or None))
+            json.dumps(obj, indent=pretty_print and 2 or None))
 
     def _get_if_modified_since(self):
         if 'If-Modified-Since' not in self.request.headers:

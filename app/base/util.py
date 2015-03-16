@@ -1,11 +1,11 @@
 import base64
+import json
 import logging
 import re
 import uuid
 import xml.sax.saxutils
 import zlib
 
-from django.utils import simplejson
 from google.appengine.ext import db
 
 _CONSECUTIVE_WHITESPACE_RE = re.compile('[\\s]+')
@@ -49,7 +49,7 @@ class JsonProperty(db.Property):
 
     def get_value_for_datastore(self, model_instance):
         value = self.__get__(model_instance, model_instance.__class__)
-        value = simplejson.dumps(value, separators=(',',':'))
+        value = json.dumps(value, separators=(',',':'))
         value = zlib.compress(value)
         return db.Blob(value)
 
@@ -58,4 +58,4 @@ class JsonProperty(db.Property):
         # a brace (the opening of the object literal).
         if value[0] != '{':
             value = zlib.decompress(value)
-        return simplejson.loads(str(value))
+        return json.loads(str(value))
