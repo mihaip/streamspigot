@@ -202,6 +202,7 @@ class DisplayStatus(object):
         entities = [
             e for e in entities if e.start_index != -1 and e.end_index != -1]
         entities.sort(cmp=lambda e1,e2: e1.start_index - e2.start_index)
+        last_entity_start = 0
         last_entity_end = 0
 
         for e in entities:
@@ -270,6 +271,14 @@ class DisplayStatus(object):
                 else:
                   logging.info("Unknown media type: %s", e.type)
 
+            if e.start_index == last_entity_start and \
+                  e.end_index == last_entity_end:
+                # For tweets with multiple pictures we will get multiple
+                # entities that point to the same span of text in the tweet.
+                # We want to insert thumbnails for each one, but only add one
+                # anchor.
+                continue
+
             # Make it more likely that anchor text will wrap.
             entity_anchor_text = entity_anchor_text.replace("/", u"/\u200B")
             if entity_url:
@@ -281,6 +290,7 @@ class DisplayStatus(object):
             else:
                 add_tweet_chunk(entity_anchor_text)
 
+            last_entity_start = e.start_index
             last_entity_end = e.end_index
 
         add_tweet_chunk(status.text[last_entity_end:])
