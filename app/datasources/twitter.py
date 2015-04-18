@@ -542,6 +542,15 @@ class Status(object):
    '''
     return json.dumps(self.AsDict(), sort_keys=True)
 
+  def AsOriginalJsonString(self):
+    '''A JSON string representation of the original JSON dictionary that was
+    used to create this object (may include more fields than AsJsonString).
+
+    Returns:
+      A JSON string representation of this twitter.Status instance
+   '''
+    return json.dumps(self.original_json_dict, indent=2, sort_keys=True)
+
   def AsDict(self):
     '''A dict representation of this twitter.Status instance.
 

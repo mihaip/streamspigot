@@ -51,6 +51,8 @@ class DigestHandler(base.handlers.BaseHandler):
         list_owner = None
         list_id = None
         dev_mode = self.request.get('dev') == 'true'
+        include_status_json = dev_mode and \
+            self.request.get('include_status_json') == 'true'
 
         start_date, end_date = data.get_digest_dates()
 
@@ -129,6 +131,14 @@ class DigestHandler(base.handlers.BaseHandler):
             self._add_caching_headers(
                 last_modified_date=end_date,
                 max_age_sec=data.DIGEST_LENGTH_SEC)
+        digest_contents = self._render_template(
+            'tweetdigest/digest-contents.snippet', {
+                'grouped_statuses': grouped_statuses,
+                'use_relative_dates': output_template.use_relative_dates,
+                'include_status_json': include_status_json,
+            })
+        if not include_status_json:
+            digest_contents = base.util.strip_html_whitespace(digest_contents)
 
         self._write_template(output_template.template_file, {
             'digest_source': digest_source,
@@ -142,12 +152,7 @@ class DigestHandler(base.handlers.BaseHandler):
             'digest_entry_id': digest_entry_id,
             'end_date_iso': end_date.isoformat(),
 
-            'digest_contents': base.util.strip_html_whitespace(
-                self._render_template(
-                    'tweetdigest/digest-contents.snippet', {
-                        'grouped_statuses': grouped_statuses,
-                        'use_relative_dates': output_template.use_relative_dates,
-                    })),
+            'digest_contents': digest_contents,
         },
         content_type=output_template.content_type)
 

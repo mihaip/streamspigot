@@ -324,3 +324,22 @@ a, .link {
 #birdfeeder-feed-container.disabled {
   opacity: .5;
 }
+
+.status-json.collapsed {
+  overflow: hidden;
+  width: 30px;
+  height: 12px;
+  background: #ccc;
+  color: #ccc;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.status-json.collapsed:before {
+  content: "…";
+  display: block;
+  text-align: center;
+  color: #fff;
+  line-height: 1px;
+  font-size: 24px;
+}

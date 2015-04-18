@@ -30,6 +30,9 @@
                 <a href="{{ status.in_reply_to_screen_name }}/status/{{ status.in_reply_to_status_id }}" style="color:{{ ANCHOR_COLOR }}">in reply to {{ status.in_reply_to_screen_name }}</a>
               {% endif %}
             </div>
+            {% if include_status_json %}
+              <pre class="status-json collapsed" onclick="this.classList.remove('collapsed')">{{ status.AsOriginalJsonString }}</pre>
+            {% endif %}
           {% endspaceless %}
         </div>
       {% endfor %}
