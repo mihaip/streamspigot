@@ -2,6 +2,7 @@ import datetime
 import itertools
 import logging
 import re
+import string
 import xml.sax.saxutils
 
 from pytz.gae import pytz
@@ -98,6 +99,23 @@ class DisplayStatus(object):
             # now, instead of earlier, since otherwise all of the entity offsets
             # would be wrong.
             chunk = base.util.strip_control_characters(chunk)
+
+            # Insert zero-width spaces after punctuation and every so often in
+            # longer tokens to make sure that the display wraps. Has to be done
+            # this way since NewsBlur's CSS whitelist does not allow
+            # "word-break: break-word" and its HTML whitelist does not allow
+            # <wbr> tags.
+            run_length = 0
+            chunk_with_breaks = u""
+            for c in chunk:
+              chunk_with_breaks += c
+              run_length += 1
+              if c in string.whitespace:
+                run_length = 0
+              elif c in string.punctuation or run_length > 24:
+                chunk_with_breaks += u"\u200B"
+                run_length = 0
+            chunk = chunk_with_breaks
 
             # HTML-escape
             chunk = escape(chunk)
@@ -279,8 +297,6 @@ class DisplayStatus(object):
                 # anchor.
                 continue
 
-            # Make it more likely that anchor text will wrap.
-            entity_anchor_text = entity_anchor_text.replace("/", u"/\u200B")
             if entity_url:
                 add_raw_chunk('<a href="')
                 add_escaped_chunk(entity_url)
