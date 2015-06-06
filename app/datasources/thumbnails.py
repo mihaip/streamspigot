@@ -203,22 +203,22 @@ def get_iframe_info(url):
     if hostname == 'youtube.com' or hostname == 'www.youtube.com':
         if path == '/watch' and 'v' in query:
             iframe_url = 'http://www.youtube.com/embed/%s' % query['v']
-            iframe_width = 560
-            iframe_height = 315
+            iframe_width = 350
+            iframe_height = 197
     elif hostname == 'youtu.be':
         iframe_url = 'http://www.youtube.com/embed/%s' % path[1:]
-        iframe_width = 560
-        iframe_height = 315
+        iframe_width = 350
+        iframe_height = 197
     elif hostname == 'vimeo.com':
         iframe_url = 'http://player.vimeo.com/video/%s' % path[1:]
-        iframe_width = 500
-        iframe_height = 281
+        iframe_width = 350
+        iframe_height = 197
     elif hostname == 'vine.co':
         match = _VINE_PATH_RE.match(path)
         if match:
             iframe_url = 'https://vine.co/v/%s/embed/simple' % match.group(1)
-            iframe_width = 480
-            iframe_height = 480
+            iframe_width = 350
+            iframe_height = 350
 
     return iframe_url, iframe_width, iframe_height
 
