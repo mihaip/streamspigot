@@ -43,27 +43,40 @@ class DisplayStatus(object):
         return self.url(base_url='')
 
     def title_as_text(self):
-        title_text = ""
-        status = self._status
-        if status.retweeted_status:
-            status = status.retweeted_status
-            title_text += 'RT @%s: ' % status.user.screen_name
-
         # Simplified variant of the entity procesing done by body_as_html that
         # skips over all URLs.
-        urls = list((status.urls or []) + (status.medias or []))
-        urls = [u for u in urls if u.start_index != -1 and u.end_index != -1]
-        urls.sort(cmp=lambda u1,u2: u1.start_index - u2.start_index)
-        last_url_end = 0
-        for url in urls:
+        def get_status_title_text(status):
+            title_text = ""
+            urls = list((status.urls or []) + (status.medias or []))
+            urls = \
+                [u for u in urls if u.start_index != -1 and u.end_index != -1]
+            urls.sort(cmp=lambda u1,u2: u1.start_index - u2.start_index)
+            last_url_end = 0
+            for url in urls:
+                title_text += _unescape_tweet_chunk(
+                    status.text[last_url_end:url.start_index])
+                last_url_end = url.end_index
             title_text += _unescape_tweet_chunk(
-                status.text[last_url_end:url.start_index])
-            last_url_end = url.end_index
-        title_text += _unescape_tweet_chunk(
-            status.text[last_url_end:])
+                status.text[last_url_end:])
 
-        title_text = base.util.strip_control_characters(title_text)
-        title_text = _WHITESPACE_RE.sub(' ', title_text).strip()
+            title_text = base.util.strip_control_characters(title_text)
+            title_text = _WHITESPACE_RE.sub(' ', title_text).strip()
+            return title_text
+
+        status = self._status
+        if status.retweeted_status:
+            title_text = 'RT @%s: %s' % (
+                status.retweeted_status.user.screen_name,
+                get_status_title_text(status.retweeted_status),
+            )
+        elif status.quoted_status:
+            title_text = '%s RT @%s: %s' % (
+                get_status_title_text(status),
+                status.quoted_status.user.screen_name,
+                get_status_title_text(status.quoted_status),
+            )
+        else:
+            title_text = get_status_title_text(status)
 
         return '%s: %s' % (self._status.user.screen_name, title_text)
 
@@ -84,6 +97,108 @@ class DisplayStatus(object):
         status = self._status
         text_as_html = []
         footer_as_html = []
+
+        def add_status_chunks(status, skip_entity_urls=[]):
+            entities = list(
+                (status.hashtags or []) +
+                (status.urls or []) +
+                (status.user_mentions or []) +
+                (status.medias or []))
+            entities = [e for e in entities
+                if e.start_index != -1 and e.end_index != -1]
+            entities.sort(cmp=lambda e1,e2: e1.start_index - e2.start_index)
+            last_entity_start = 0
+            last_entity_end = 0
+
+            for e in entities:
+                add_tweet_chunk(status.text[last_entity_end:e.start_index])
+
+                entity_anchor_text = status.text[e.start_index:e.end_index]
+                entity_url = None
+
+                if isinstance(e, twitter.Hashtag):
+                    entity_url = 'search?q=%23' + e.text
+                elif isinstance(e, twitter.Url):
+                    entity_url = e.expanded_url or e.url
+                    entity_url_anchor_text = \
+                        e.display_url or e.expanded_url or e.url
+                    if entity_url_anchor_text:
+                        entity_anchor_text = escape(entity_url_anchor_text)
+                    maybe_add_thumbnail_chunk(e.expanded_url or e.url)
+                elif isinstance(e, twitter.User):
+                    entity_url = e.screen_name
+                elif isinstance(e, twitter.Media):
+                    def add_media_thumbnail():
+                        # Appending /large seems to generate a lightbox view of
+                        # that image
+                        link_url = e.expanded_url + '/large'
+                        thumb_url, thumb_width, thumb_height = e.GetUrlForSize(
+                            twitter.Media.THUMB_SIZE
+                                if self._thumbnail_size ==
+                                    thumbnails.SMALL_THUMBNAIL
+                                else twitter.Media.MEDIUM_SIZE)
+                        add_footer_thumbnail_chunk(
+                            link_url , thumb_url, thumb_width, thumb_height)
+
+                    entity_url = e.url
+                    entity_url_anchor_text = \
+                        e.display_url or e.expanded_url or e.url
+                    if entity_url_anchor_text:
+                        entity_anchor_text = escape(entity_url_anchor_text)
+                    if e.type == 'photo':
+                        add_media_thumbnail()
+                    elif e.type == 'animated_gif':
+                        video_url = e.video_url
+                        if video_url is not None:
+                            video_attributes = [
+                                'loop="loop"',
+                                'muted="muted"',
+                                'autoplay="autoplay"',
+                                # Even though we don't normally want controls,
+                                # NewsBlur strips out the autoplay attribute,
+                                # so they're needed to initiate playback on the
+                                # desktop.
+                                'controls="controls"',
+                                'poster="%s"' % e.media_url,
+                            ]
+                            width = None
+                            height = None
+                            size = e.sizes.get(twitter.Media.MEDIUM_SIZE)
+                            if size:
+                                width = size[0]
+                                height = size[1]
+                            add_footer_video_chunk(
+                                video_url,
+                                " ".join(video_attributes),
+                                width,
+                                height)
+                        else:
+                            add_media_thumbnail()
+                    else:
+                      logging.info("Unknown media type: %s", e.type)
+
+                if e.start_index == last_entity_start and \
+                      e.end_index == last_entity_end:
+                    # For tweets with multiple pictures we will get multiple
+                    # entities that point to the same span of text in the
+                    # tweet. We want to insert thumbnails for each one, but only
+                    # add one anchor.
+                    continue
+
+                if entity_url:
+                    if entity_url not in skip_entity_urls:
+                        add_raw_chunk('<a href="')
+                        add_escaped_chunk(entity_url)
+                        add_raw_chunk('" %s>' % _LINK_ATTRIBUTES)
+                        add_tweet_chunk(entity_anchor_text)
+                        add_raw_chunk('</a>')
+                else:
+                    add_tweet_chunk(entity_anchor_text)
+
+                last_entity_start = e.start_index
+                last_entity_end = e.end_index
+
+            add_tweet_chunk(status.text[last_entity_end:])
 
         escape = xml.sax.saxutils.escape
 
@@ -205,111 +320,26 @@ class DisplayStatus(object):
         # not counted against the 140 character limit and so that we get media
         # entities.
         if status.retweeted_status:
-            status = status.retweeted_status
             add_raw_chunk('RT: <a href="')
-            add_escaped_chunk(status.user.screen_name)
+            add_escaped_chunk(status.retweeted_status.user.screen_name)
             add_raw_chunk('" %s>@' % _LINK_ATTRIBUTES)
-            add_escaped_chunk(status.user.screen_name)
+            add_escaped_chunk(status.retweeted_status.user.screen_name)
             add_raw_chunk('</a>: ')
-
-        entities = list(
-            (status.hashtags or []) +
-            (status.urls or []) +
-            (status.user_mentions or []) +
-            (status.medias or []))
-        entities = [
-            e for e in entities if e.start_index != -1 and e.end_index != -1]
-        entities.sort(cmp=lambda e1,e2: e1.start_index - e2.start_index)
-        last_entity_start = 0
-        last_entity_end = 0
-
-        for e in entities:
-            add_tweet_chunk(status.text[last_entity_end:e.start_index])
-
-            entity_anchor_text = status.text[e.start_index:e.end_index]
-            entity_url = None
-
-            if isinstance(e, twitter.Hashtag):
-                entity_url = 'search?q=%23' + e.text
-            elif isinstance(e, twitter.Url):
-                entity_url = e.expanded_url or e.url
-                entity_url_anchor_text = \
-                    e.display_url or e.expanded_url or e.url
-                if entity_url_anchor_text:
-                    entity_anchor_text = escape(entity_url_anchor_text)
-                maybe_add_thumbnail_chunk(e.expanded_url or e.url)
-            elif isinstance(e, twitter.User):
-                entity_url = e.screen_name
-            elif isinstance(e, twitter.Media):
-                def add_media_thumbnail():
-                    # Appending /large seems to generate a lightbox view of that
-                    # image
-                    link_url = e.expanded_url + '/large'
-                    thumb_url, thumb_width, thumb_height = e.GetUrlForSize(
-                        twitter.Media.THUMB_SIZE
-                            if self._thumbnail_size == thumbnails.SMALL_THUMBNAIL
-                            else twitter.Media.MEDIUM_SIZE)
-                    add_footer_thumbnail_chunk(
-                        link_url , thumb_url, thumb_width, thumb_height)
-
-                entity_url = e.url
-                entity_url_anchor_text = \
-                    e.display_url or e.expanded_url or e.url
-                if entity_url_anchor_text:
-                    entity_anchor_text = escape(entity_url_anchor_text)
-                if e.type == 'photo':
-                    add_media_thumbnail()
-                elif e.type == 'animated_gif':
-                    video_url = e.video_url
-                    if video_url is not None:
-                        video_attributes = [
-                            'loop="loop"',
-                            'muted="muted"',
-                            'autoplay="autoplay"',
-                            # Even though we don't normally want controls,
-                            # NewsBlur strips out the autoplay attribtue, so
-                            # they're needed to initiate playback on the
-                            # desktop.
-                            'controls="controls"',
-                            'poster="%s"' % e.media_url,
-                        ]
-                        width = None
-                        height = None
-                        size = e.sizes.get(twitter.Media.MEDIUM_SIZE)
-                        if size:
-                            width = size[0]
-                            height = size[1]
-                        add_footer_video_chunk(
-                            video_url,
-                            " ".join(video_attributes),
-                            width,
-                            height)
-                    else:
-                        add_media_thumbnail()
-                else:
-                  logging.info("Unknown media type: %s", e.type)
-
-            if e.start_index == last_entity_start and \
-                  e.end_index == last_entity_end:
-                # For tweets with multiple pictures we will get multiple
-                # entities that point to the same span of text in the tweet.
-                # We want to insert thumbnails for each one, but only add one
-                # anchor.
-                continue
-
-            if entity_url:
-                add_raw_chunk('<a href="')
-                add_escaped_chunk(entity_url)
-                add_raw_chunk('" %s>' % _LINK_ATTRIBUTES)
-                add_tweet_chunk(entity_anchor_text)
-                add_raw_chunk('</a>')
-            else:
-                add_tweet_chunk(entity_anchor_text)
-
-            last_entity_start = e.start_index
-            last_entity_end = e.end_index
-
-        add_tweet_chunk(status.text[last_entity_end:])
+            add_status_chunks(status.retweeted_status)
+        elif status.quoted_status:
+            quoted_screen_name = status.quoted_status.user.screen_name
+            add_status_chunks(status, skip_entity_urls=[
+                "https://twitter.com/%s/status/%s" %
+                    (quoted_screen_name, status.quoted_status.id)
+            ])
+            add_raw_chunk(' RT: <a href="')
+            add_escaped_chunk(quoted_screen_name)
+            add_raw_chunk('" %s>@' % _LINK_ATTRIBUTES)
+            add_escaped_chunk(quoted_screen_name)
+            add_raw_chunk('</a>: ')
+            add_status_chunks(status.quoted_status)
+        else:
+            add_status_chunks(status)
 
         result = ''.join(text_as_html)
         if footer_as_html:

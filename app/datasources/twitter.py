@@ -133,6 +133,7 @@ class Status(object):
                retweeted=None,
                retweeted_status=None,
                retweet_count=None,
+               quoted_status=None,
                original_json_dict=None):
     '''An object to hold a Twitter status message.
 
@@ -171,6 +172,7 @@ class Status(object):
       retweeted:
       retweeted_status:
       retweet_count:
+      quoted_status:
     '''
     self.created_at = created_at
     self.favorited = favorited
@@ -195,6 +197,7 @@ class Status(object):
     self.contributors = contributors
     self.retweeted_status = retweeted_status
     self.retweet_count = retweet_count
+    self.quoted_status = quoted_status
     self.original_json_dict = original_json_dict
 
   def GetCreatedAt(self):
@@ -479,13 +482,13 @@ class Status(object):
   contributors = property(GetContributors, SetContributors,
                           doc='')
 
-  def GetRetweeted_status(self):
+  def GetRetweetedStatus(self):
     return self._retweeted_status
 
-  def SetRetweeted_status(self, retweeted_status):
+  def SetRetweetedStatus(self, retweeted_status):
     self._retweeted_status = retweeted_status
 
-  retweeted_status = property(GetRetweeted_status, SetRetweeted_status,
+  retweeted_status = property(GetRetweetedStatus, SetRetweetedStatus,
                               doc='')
 
   def GetRetweetCount(self):
@@ -496,6 +499,14 @@ class Status(object):
 
   retweet_count = property(GetRetweetCount, SetRetweetCount,
                            doc='')
+  def GetQuotedStatus(self):
+    return self._quoted_status
+
+  def SetQuotedStatus(self, quoted_status):
+    self._quoted_status = quoted_status
+
+  quoted_status = property(GetQuotedStatus, SetQuotedStatus,
+                              doc='')
 
   def __ne__(self, other):
     return not self.__eq__(other)
@@ -520,7 +531,8 @@ class Status(object):
              self.coordinates == other.coordinates and \
              self.contributors == other.contributors and \
              self.retweeted_status == other.retweeted_status and \
-             self.retweet_count == other.retweet_count
+             self.retweet_count == other.retweet_count and \
+             self.quoted_status == other.quoted_status
     except AttributeError:
       return False
 
@@ -606,6 +618,8 @@ class Status(object):
       data['urls'] = dict([(url.url, url.expanded_url) for url in self.urls])
     if self.user_mentions:
       data['user_mentions'] = [um.AsDict() for um in self.user_mentions]
+    if self.quoted_status:
+      data['quoted_status'] = self.quoted_status.AsDict()
     return data
 
   @staticmethod
@@ -625,6 +639,10 @@ class Status(object):
       retweeted_status = Status.NewFromJsonDict(data['retweeted_status'])
     else:
       retweeted_status = None
+    if 'quoted_status' in data:
+      quoted_status = Status.NewFromJsonDict(data['quoted_status'])
+    else:
+      quoted_status = None
     urls = None
     user_mentions = None
     hashtags = None
@@ -664,6 +682,7 @@ class Status(object):
                   contributors=data.get('contributors', None),
                   retweeted_status=retweeted_status,
                   retweet_count=data.get('retweet_count', None),
+                  quoted_status=quoted_status,
                   original_json_dict=data)
 
 
