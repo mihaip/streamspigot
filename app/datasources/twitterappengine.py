@@ -1,5 +1,6 @@
 '''Helper code for running python-twitter on top of Google App Engine'''
 
+import httplib
 import json
 import logging
 import time
@@ -110,5 +111,7 @@ def exec_twitter_api(func, error_detail=''):
         logging.warning('Deadline exceeded "%s"%s', err, error_detail)
     except apiproxy_errors.DeadlineExceededError, err:
         logging.warning('API proxy deadline exceeded "%s"%s', err, error_detail)
+    except httplib.HTTPException, err:
+        logging.warning('HTTP error "%s"%s', err, error_detail)
 
     return None, True
