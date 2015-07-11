@@ -3,10 +3,12 @@
 import httplib
 import json
 import logging
+import socket
 import time
 
 from google.appengine.api import memcache
 from google.appengine.api import urlfetch
+from google.appengine.api import urlfetch_errors
 from google.appengine.ext import db
 from google.appengine.runtime import DeadlineExceededError
 from google.appengine.runtime import apiproxy_errors
@@ -104,7 +106,8 @@ def exec_twitter_api(func, error_detail=''):
     except urlfetch.DownloadError, err:
         logging.warning('HTTP fetch error "%s"%s', err, error_detail)
     except urlfetch.DeadlineExceededError, err:
-        logging.warning('HTTP deadline exceeded error "%s"%s', err, error_detail)
+        logging.warning('HTTP deadline exceeded error "%s"%s',
+                        err, error_detail)
     except ValueError, err:
         logging.warning('JSON error "%s"%s', err, error_detail)
     except DeadlineExceededError, err:
@@ -113,5 +116,11 @@ def exec_twitter_api(func, error_detail=''):
         logging.warning('API proxy deadline exceeded "%s"%s', err, error_detail)
     except httplib.HTTPException, err:
         logging.warning('HTTP error "%s"%s', err, error_detail)
+    except urlfetch_errors.InternalTransientError, err:
+        logging.warning('App Engine internal transient error "%s"%s',
+                        err, error_detail)
+    except socket.error, err:
+        logging.warning('Socket error "%s"%s', err, error_detail)
+
 
     return None, True
