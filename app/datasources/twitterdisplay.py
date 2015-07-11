@@ -147,7 +147,7 @@ class DisplayStatus(object):
                         entity_anchor_text = escape(entity_url_anchor_text)
                     if e.type == 'photo':
                         add_media_thumbnail()
-                    elif e.type == 'animated_gif':
+                    elif e.type == 'animated_gif' or e.type == "video":
                         video_url = e.video_url
                         if video_url is not None:
                             video_attributes = [
