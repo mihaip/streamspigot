@@ -200,6 +200,12 @@ class DisplayStatus(object):
 
             add_tweet_chunk(status.text[last_entity_end:])
 
+            if footer_as_html:
+                add_raw_chunk('<p>')
+                text_as_html.extend(footer_as_html)
+                add_raw_chunk('</p>')
+                del footer_as_html[:]
+
         escape = xml.sax.saxutils.escape
 
         def add_raw_chunk(chunk):
@@ -316,34 +322,34 @@ class DisplayStatus(object):
                 add_footer_thumbnail_chunk(
                     url, thumb_url, thumb_width, thumb_height)
 
-        # For native retweets, render retweeted status, so that the RT prefix is
-        # not counted against the 140 character limit and so that we get media
-        # entities.
-        if status.retweeted_status:
-            add_raw_chunk('RT: <a href="')
-            add_escaped_chunk(status.retweeted_status.user.screen_name)
-            add_raw_chunk('" %s>@' % _LINK_ATTRIBUTES)
-            add_escaped_chunk(status.retweeted_status.user.screen_name)
-            add_raw_chunk('</a>: ')
-            add_status_chunks(status.retweeted_status)
-        elif status.quoted_status:
-            quoted_screen_name = status.quoted_status.user.screen_name
-            add_status_chunks(status, skip_entity_urls=[
-                "https://twitter.com/%s/status/%s" %
-                    (quoted_screen_name, status.quoted_status.id)
-            ])
-            add_raw_chunk(' RT: <a href="')
-            add_escaped_chunk(quoted_screen_name)
-            add_raw_chunk('" %s>@' % _LINK_ATTRIBUTES)
-            add_escaped_chunk(quoted_screen_name)
-            add_raw_chunk('</a>: ')
-            add_status_chunks(status.quoted_status)
-        else:
-            add_status_chunks(status)
+        def add_status(status):
+            if status.retweeted_status:
+                add_raw_chunk('RT: <a href="')
+                add_escaped_chunk(status.retweeted_status.user.screen_name)
+                add_raw_chunk('" %s>@' % _LINK_ATTRIBUTES)
+                add_escaped_chunk(status.retweeted_status.user.screen_name)
+                add_raw_chunk('</a>: ')
+                add_status(status.retweeted_status)
+            elif status.quoted_status:
+                quoted_screen_name = status.quoted_status.user.screen_name
+                add_status_chunks(status, skip_entity_urls=[
+                    "https://twitter.com/%s/status/%s" %
+                        (quoted_screen_name, status.quoted_status.id)
+                ])
+                add_raw_chunk('<div style="padding:10px;margin:5px 0;background:%s">' %
+                    CONSTANTS.BUBBLE_QUOTED_COLOR)
+                add_raw_chunk('<a href="')
+                add_escaped_chunk(quoted_screen_name)
+                add_raw_chunk('" %s>@' % _LINK_ATTRIBUTES)
+                add_escaped_chunk(quoted_screen_name)
+                add_raw_chunk('</a>: ')
+                add_status(status.quoted_status)
+                add_raw_chunk('</div>')
+            else:
+                add_status_chunks(status)
+        add_status(status)
 
         result = ''.join(text_as_html)
-        if footer_as_html:
-            result += '<p>' + ''.join(footer_as_html) + '</p>'
         return result
 
     @staticmethod

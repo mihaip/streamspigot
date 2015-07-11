@@ -11,9 +11,10 @@ CONSTANTS = _ConstantsDict(
 
     USER_LINK_COLOR='#333',
     BUBBLE_COLOR='#f6f6f6',
+    BUBBLE_QUOTED_COLOR='#eaeef9',
     BUBBLE_REPLY_COLOR='#e6e6e6',
     BUBBLE_TEXT_COLOR='#41419b',
-    BUBBLE_SEPARATOR_COLOR='#d6E0ff',
+    BUBBLE_SEPARATOR_COLOR='#d6e0ff',
     HEADER_COLOR='#666',
 
     APP_NAME='Stream Spigot',
