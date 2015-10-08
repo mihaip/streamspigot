@@ -147,9 +147,8 @@ class DisplayStatus(object):
                         entity_anchor_text = escape(entity_url_anchor_text)
                     if e.type == 'photo':
                         add_media_thumbnail()
-                    elif e.type == 'animated_gif' or e.type == "video":
-                        video_url = e.video_url
-                        if video_url is not None:
+                    elif e.type == 'animated_gif' or e.type == 'video':
+                        if e.video_variants:
                             video_attributes = [
                                 'loop="loop"',
                                 'muted="muted"',
@@ -168,7 +167,7 @@ class DisplayStatus(object):
                                 width = size[0]
                                 height = size[1]
                             add_footer_video_chunk(
-                                video_url,
+                                e.video_variants,
                                 " ".join(video_attributes),
                                 width,
                                 height)
@@ -300,13 +299,16 @@ class DisplayStatus(object):
                 % (escape(iframe_url), iframe_attributes))
 
         def add_footer_video_chunk(
-                video_url, video_attributes, width=None, height=None):
+                video_variants, video_attributes, width=None, height=None):
             if width:
                 video_attributes += (' width="%d" '
                     'style="width:100%%;max-width:%dpx"') % (width, width)
-            add_footer_raw_chunk(
-                '<video src="%s" %s></video>' % (
-                  escape(video_url), video_attributes))
+            add_footer_raw_chunk('<video %s>' % video_attributes)
+            for variant in video_variants:
+                if variant.url:
+                    add_footer_raw_chunk('<source src="%s" type="%s"/>' % (
+                        variant.url, variant.content_type or ''))
+            add_footer_raw_chunk('</video>')
 
         def maybe_add_thumbnail_chunk(url):
             iframe_url, iframe_width, iframe_height = \

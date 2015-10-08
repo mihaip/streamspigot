@@ -2087,6 +2087,32 @@ class Hashtag(object):
                    start_index=data.get('indices', [-1, -1])[0],
                    end_index=data.get('indices', [-1, -1])[1])
 
+class VideoVariant(object):
+  ''' A class representing a video media entity variant
+  '''
+  def __init__(self,
+               url,
+               content_type=None,
+               bitrate=None):
+    self.url = url
+    self.content_type = content_type
+    self.bitrate = bitrate
+
+  @staticmethod
+  def NewFromJsonDict(data):
+    '''Create a new instance based on a JSON dict.
+
+    Args:
+      data:
+        A JSON dict, as converted from the JSON in the twitter API
+
+    Returns:
+      A twitter.VideoVariant instance
+    '''
+    return VideoVariant(url=data.get('url'),
+                        content_type=data.get('content_type'),
+                        bitrate=data.get('bitrate'))
+
 class Media(object):
   ''' A class representing a media entity
   '''
@@ -2107,7 +2133,7 @@ class Media(object):
                sizes={},
                start_index=-1,
                end_index=-1,
-               video_url=None):
+               video_variants=None):
     self.url = url
     self.media_url = media_url
     self.display_url = display_url
@@ -2116,7 +2142,7 @@ class Media(object):
     self.sizes = sizes
     self.start_index = start_index
     self.end_index = end_index
-    self.video_url = video_url
+    self.video_variants = video_variants
 
   def GetUrlForSize(self, size):
     if size in self.sizes:
@@ -2153,12 +2179,10 @@ class Media(object):
           size_dict.get('h', None),
           size_dict.get('resize', None)
       )
-    video_url = None
+    video_variants = []
     if 'video_info' in data:
         for variant_data in data['video_info'].get('variants', []):
-          if 'url' in variant_data:
-            video_url = variant_data['url']
-            break
+            video_variants.append(VideoVariant.NewFromJsonDict(variant_data))
     return Media(url=data.get('url', None),
                  media_url=data.get('media_url', None),
                  display_url=data.get('display_url', None),
@@ -2167,7 +2191,7 @@ class Media(object):
                  sizes=sizes,
                  start_index=data.get('indices', [-1, -1])[0],
                  end_index=data.get('indices', [-1, -1])[1],
-                 video_url=video_url)
+                 video_variants=video_variants)
 
 class Trend(object):
   ''' A class representing a trending topic
