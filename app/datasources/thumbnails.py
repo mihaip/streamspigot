@@ -15,21 +15,21 @@ import base.handlers
 LARGE_THUMBNAIL = 'large'
 SMALL_THUMBNAIL = 'small'
 
-_YFROG_PATH_RE = re.compile('/(\\w+).*')
-_INSTAGRAM_PATH_RE = re.compile('/p/([\\w\\-]+).*')
-_FLICKR_SHORT_PATH_RE = re.compile('/p/(\\w+).*')
-_FLICKR_LONG_HOSTNAME_RE = re.compile('farm\\d+\\.static\\.?flickr\\.com')
-_FLICKR_LONG_PATH_RE = re.compile('(/\\d+/\\d+_[a-f0-9]+)(_.)?(\\....)')
-_FLICKR_PHOTO_PAGE_PATH_RE = re.compile('/photos/[^/]+/(\d+).*')
-_FLICKR_SHORT_ID_ALPHABET ='123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
-_IMGUR_PATH_RE = re.compile('/(\\w+)(\\....).*')
-_IMGUR_GALLERY_PATH_RE = re.compile('/(gallery/)(\\w+).*')
-_TWITPIC_PATH_RE = re.compile('/(\\w+).*')
-_LOCKERZ_PATH_RE = re.compile('/s/\\w+.*')
-_IMGLY_FULL_PATH_RE = re.compile('/images/(\\d+)/full.*')
-_IMGLY_SHORT_PATH_RE = re.compile('/(\\w+).*')
-_OWLY_PATH_RE = re.compile('/i/(\\w+).*')
-_VINE_PATH_RE = re.compile('/v/(\\w+).*')
+_YFROG_PATH_RE = re.compile(r'/(\w+).*')
+_INSTAGRAM_PATH_RE = re.compile(r'/p/([\w\-]+).*')
+_FLICKR_SHORT_PATH_RE = re.compile(r'/p/(\w+).*')
+_FLICKR_LONG_HOSTNAME_RE = re.compile(r'farm\d+\.static\.?flickr\.com')
+_FLICKR_LONG_PATH_RE = re.compile(r'(/\d+/\d+_[a-f0-9]+)(_.)?(\....)')
+_FLICKR_PHOTO_PAGE_PATH_RE = re.compile(r'/photos/[^/]+/(\d+).*')
+_FLICKR_SHORT_ID_ALPHABET =r'123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
+_IMGUR_PATH_RE = re.compile(r'/(\w+)(\....).*')
+_IMGUR_GALLERY_PATH_RE = re.compile(r'/(gallery/)(\w+).*')
+_TWITPIC_PATH_RE = re.compile(r'/(\w+).*')
+_LOCKERZ_PATH_RE = re.compile(r'/s/\w+.*')
+_IMGLY_FULL_PATH_RE = re.compile(r'/images/(\d+)/full.*')
+_IMGLY_SHORT_PATH_RE = re.compile(r'/(\w+).*')
+_OWLY_PATH_RE = re.compile(r'/i/(\w+).*')
+_VINE_PATH_RE = re.compile(r'/v/(\w+).*')
 
 def _get_short_flickr_photo_id(photo_id):
     result = ''
