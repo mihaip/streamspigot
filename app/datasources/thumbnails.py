@@ -69,7 +69,7 @@ def get_thumbnail_info(url, size):
                 thumb_url += ':small'
             else:
                 thumb_url += ':iphone'
-    elif hostname == 'instagr.am' or hostname == 'instagram.com':
+    elif hostname in ('instagr.am', 'instagram.com', 'www.instagram.com'):
         # See http://instagram.com/developer/embedding/#media
         match = _INSTAGRAM_PATH_RE.match(path)
         if match:
