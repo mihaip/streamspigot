@@ -129,9 +129,8 @@ class DisplayStatus(object):
                     entity_url = e.screen_name
                 elif isinstance(e, twitter.Media):
                     def add_media_thumbnail():
-                        # Appending /large seems to generate a lightbox view of
-                        # that image
-                        link_url = e.expanded_url + '/large'
+                        link_url, _, _ = e.GetUrlForSize(
+                            twitter.Media.LARGE_SIZE)
                         thumb_url, thumb_width, thumb_height = e.GetUrlForSize(
                             twitter.Media.THUMB_SIZE
                                 if self._thumbnail_size ==
