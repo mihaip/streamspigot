@@ -108,6 +108,7 @@ class Status(object):
     status.place
     status.coordinates
     status.contributors
+    status.display_text_range
   '''
   def __init__(self,
                created_at=None,
@@ -134,6 +135,7 @@ class Status(object):
                retweeted_status=None,
                retweet_count=None,
                quoted_status=None,
+               display_text_range=None,
                original_json_dict=None):
     '''An object to hold a Twitter status message.
 
@@ -198,6 +200,7 @@ class Status(object):
     self.retweeted_status = retweeted_status
     self.retweet_count = retweet_count
     self.quoted_status = quoted_status
+    self.display_text_range = display_text_range
     self.original_json_dict = original_json_dict
 
   def GetCreatedAt(self):
@@ -508,6 +511,15 @@ class Status(object):
   quoted_status = property(GetQuotedStatus, SetQuotedStatus,
                               doc='')
 
+  def GetDisplayTextRange(self):
+    return self._display_text_range
+
+  def SetDisplayTextRange(self, display_text_range):
+    self._display_text_range = display_text_range
+
+  display_text_range = property(GetDisplayTextRange, SetDisplayTextRange,
+                              doc='')
+
   def __ne__(self, other):
     return not self.__eq__(other)
 
@@ -532,7 +544,8 @@ class Status(object):
              self.contributors == other.contributors and \
              self.retweeted_status == other.retweeted_status and \
              self.retweet_count == other.retweet_count and \
-             self.quoted_status == other.quoted_status
+             self.quoted_status == other.quoted_status and \
+             self.display_text_range == other.display_text_range
     except AttributeError:
       return False
 
@@ -620,6 +633,8 @@ class Status(object):
       data['user_mentions'] = [um.AsDict() for um in self.user_mentions]
     if self.quoted_status:
       data['quoted_status'] = self.quoted_status.AsDict()
+    if self.display_text_range:
+      data['display_text_range'] = self.display_text_range
     return data
 
   @staticmethod
@@ -663,7 +678,7 @@ class Status(object):
     return Status(created_at=data.get('created_at', None),
                   favorited=data.get('favorited', None),
                   id=data.get('id', None),
-                  text=data.get('text', None),
+                  text=data.get('full_text', data.get('text', None)),
                   location=data.get('location', None),
                   in_reply_to_screen_name=data.get('in_reply_to_screen_name', None),
                   in_reply_to_user_id=data.get('in_reply_to_user_id', None),
@@ -683,6 +698,7 @@ class Status(object):
                   retweeted_status=retweeted_status,
                   retweet_count=data.get('retweet_count', None),
                   quoted_status=quoted_status,
+                  display_text_range=data.get('display_text_range', None),
                   original_json_dict=data)
 
 
@@ -2472,7 +2488,7 @@ class Api(object):
     Returns:
       An sequence of twitter.Status instances, one for each message
     '''
-    parameters = {}
+    parameters = {'tweet_mode': 'extended'}
 
     if since_id:
       parameters['since_id'] = since_id
@@ -2558,7 +2574,7 @@ class Api(object):
       the term
     '''
     # Build request parameters
-    parameters = {}
+    parameters = {'tweet_mode': 'extended'}
 
     if since_id:
       parameters['since_id'] = since_id
@@ -2774,7 +2790,7 @@ class Api(object):
     if not self._oauth_consumer:
       raise TwitterError("API must be authenticated.")
     url = '%s/statuses/home_timeline.json' % self.base_url
-    parameters = {}
+    parameters = {'tweet_mode': 'extended'}
     if count is not None:
       try:
         if int(count) > 200:
@@ -2857,7 +2873,7 @@ class Api(object):
     if not self._oauth_consumer:
       raise TwitterError("User must be specified if API is not authenticated.")
 
-    parameters = {}
+    parameters = {'tweet_mode': 'extended'}
     url = '%s/statuses/user_timeline.json' % (self.base_url)
     if user_id:
       parameters['user_id'] = long(user_id)
@@ -2905,7 +2921,7 @@ class Api(object):
     except:
       raise TwitterError("id must be an long integer")
 
-    parameters = {}
+    parameters = {'tweet_mode': 'extended'}
     if include_entities:
       parameters['include_entities'] = 1
 
@@ -3048,7 +3064,7 @@ class Api(object):
      url = '%s/statuses/retweeted_by_me.json' % self.base_url
      if not self._oauth_consumer:
        raise TwitterError("The twitter.Api instance must be authenticated.")
-     parameters = {}
+     parameters = {'tweet_mode': 'extended'}
      if count is not None:
        try:
          if int(count) > 100:
@@ -3093,7 +3109,7 @@ class Api(object):
     url = '%s/statuses/replies.json' % self.base_url
     if not self._oauth_consumer:
       raise TwitterError("The twitter.Api instance must be authenticated.")
-    parameters = {}
+    parameters = {'tweet_mode': 'extended'}
     if since:
       parameters['since'] = since
     if since_id:
@@ -3118,7 +3134,7 @@ class Api(object):
     if not self._oauth_consumer:
       raise TwitterError("The twitter.Api instsance must be authenticated.")
     url = '%s/statuses/retweets/%s.json?include_entities=true&include_rts=true' % (self.base_url, statusid)
-    parameters = {}
+    parameters = {'tweet_mode': 'extended'}
     json = self._FetchUrl(url, parameters=parameters)
     data = self._ParseAndCheckTwitter(json)
     return [Status.NewFromJsonDict(s) for s in data]
@@ -3530,7 +3546,7 @@ class Api(object):
     if not self._oauth_consumer:
       raise TwitterError("The twitter.Api instance must be authenticated.")
 
-    parameters = {}
+    parameters = {'tweet_mode': 'extended'}
 
     if since_id:
       parameters['since_id'] = since_id
@@ -3737,7 +3753,7 @@ class Api(object):
     if not self._oauth_consumer:
       raise TwitterError("Api instance must first be given user credentials.")
 
-    parameters = {}
+    parameters = {'tweet_mode': 'extended'}
     url = '%s/lists/statuses.json' % (self.base_url)
     if list_id:
       parameters['list_id'] = long(list_id)

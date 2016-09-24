@@ -175,6 +175,16 @@ class DisplayStatus(object):
                     else:
                       logging.info("Unknown media type: %s", e.type)
 
+                # Don't display the entity if it's outside the display range.
+                # We only hide entities after the end of the display text
+                # range, we still want to display usernames at the start of
+                # the text since it's easier to scan.
+                if status.display_text_range:
+                  if e.start_index >= status.display_text_range[1]:
+                    last_entity_start = e.start_index
+                    last_entity_end = e.end_index
+                    continue
+
                 if e.start_index == last_entity_start and \
                       e.end_index == last_entity_end:
                     # For tweets with multiple pictures we will get multiple
@@ -196,7 +206,11 @@ class DisplayStatus(object):
                 last_entity_start = e.start_index
                 last_entity_end = e.end_index
 
-            add_tweet_chunk(status.text[last_entity_end:])
+            if status.display_text_range:
+              add_tweet_chunk(
+                  status.text[last_entity_end:status.display_text_range[1]])
+            else:
+              add_tweet_chunk(status.text[last_entity_end:])
 
             if footer_as_html:
                 add_raw_chunk('<p>')
