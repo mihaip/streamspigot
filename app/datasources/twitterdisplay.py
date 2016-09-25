@@ -35,12 +35,16 @@ class DisplayStatus(object):
         self._thumbnail_size = thumbnail_size
         self._timezone = timezone
 
+    def permalink_status(self):
+        return self._status.retweeted_status or self._status
+
     def permalink(self, base_url=_BASE_TWITTER_URL):
+        status = self.permalink_status()
         return '%s/%s/status/%s' % (
-            base_url, self._status.user.screen_name, self._status.id)
+          base_url, status.user.screen_name, status.id)
 
     def permalink_no_base(self):
-        return self.url(base_url='')
+        return self.permalink(base_url='')
 
     def title_as_text(self):
         # Simplified variant of the entity procesing done by body_as_html that

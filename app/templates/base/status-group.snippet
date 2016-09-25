@@ -18,17 +18,19 @@
           {{ display_status.body_as_html|safe }}
           {% spaceless %}
             <div style="font-size:0.8em;text-align:right;margin:0.2em 0 0 0">
-              <a href="/{{ status.user.screen_name }}/status/{{ status.id }}"
+              <a href="{{ display_status.permalink_no_base }}"
                 {#  Only include the full date as a tooltip if using relative (script) dates, since otherwise it's a repetition #}
                 {% if use_relative_dates %}
                     title="{{ status.created_at }}"
                 {% endif %}
                  style="color:{{ ANCHOR_COLOR }}">
                 {% if use_relative_dates %}{{ status.relative_created_at }}{% else %}at {{ display_status.created_at_formatted }}{% endif %}</a>
-              from {{ status.source|striptags }}
-              {%if status.in_reply_to_status_id %}
-                <a href="{{ status.in_reply_to_screen_name }}/status/{{ status.in_reply_to_status_id }}" style="color:{{ ANCHOR_COLOR }}">in reply to {{ status.in_reply_to_screen_name }}</a>
-              {% endif %}
+              {% with display_status.permalink_status as permalink_status %}
+                from {{ permalink_status.source|striptags }}
+                {%if permalink_status.in_reply_to_status_id %}
+                  <a href="{{ permalink_status.in_reply_to_screen_name }}/status/{{ permalink_status.in_reply_to_status_id }}" style="color:{{ ANCHOR_COLOR }}">in reply to {{ permalink_status.in_reply_to_screen_name }}</a>
+                {% endif %}
+              {% endwith %}
             </div>
             {% if include_status_json %}
               <pre class="status-json collapsed" onclick="this.classList.remove('collapsed')">{{ status.AsOriginalJsonString }}</pre>
