@@ -313,8 +313,12 @@ class DisplayStatus(object):
         def add_footer_video_chunk(
                 video_variants, video_attributes, width=None, height=None):
             if width:
+                # <video> tags get the same NewsBlur CSS overrides as images,
+                # see add_footer_thumbnail_chunk for why we need to specify
+                # the width and margin.
                 video_attributes += (' width="%d" '
-                    'style="width:100%%;max-width:%dpx"') % (width, width)
+                    'style="width:100%% !important;margin: 0 !important;'
+                    'max-width:%dpx"') % (width, width)
             add_footer_raw_chunk('<video %s>' % video_attributes)
             for variant in video_variants:
                 if variant.url:
