@@ -155,11 +155,6 @@ class DisplayStatus(object):
                             video_attributes = [
                                 'loop="loop"',
                                 'muted="muted"',
-                                'autoplay="autoplay"',
-                                # Even though we don't normally want controls,
-                                # NewsBlur strips out the autoplay attribute,
-                                # so they're needed to initiate playback on the
-                                # desktop.
                                 'controls="controls"',
                                 'poster="%s"' % e.media_url,
                             ]
