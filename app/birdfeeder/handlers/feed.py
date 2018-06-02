@@ -77,7 +77,7 @@ class TimelineFeedHandler(FeedHandler):
         status_data = data.StatusData.get_by_status_ids(feed_status_ids)
         statuses = [s.to_status() for s in status_data]
 
-        timezone = twitterdisplay.get_timezone_for_user(user)
+        timezone = twitterdisplay.get_timezone_for_auth_user(self._caching_api)
 
         # We don't actually want statuses grouped, instead we want one status
         # per item.

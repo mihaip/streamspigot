@@ -3826,6 +3826,19 @@ class Api(object):
     data = self._ParseAndCheckTwitter(json)
     return User.NewFromJsonDict(data)
 
+  def GetAccountSettings(self):
+    '''Returns a dictionary with the account settings JSON data.
+
+    Returns:
+      A dictionary with the account settings JSON data.
+    '''
+    if not self._oauth_consumer:
+      raise TwitterError("Api instance must first be given user credentials.")
+    url = '%s/account/settings.json' % self.base_url
+    json = self._FetchUrl(url)
+    data = self._ParseAndCheckTwitter(json)
+    return data
+
   def SetCache(self, cache):
     '''Override the default cache.  Set to None to prevent caching.
 

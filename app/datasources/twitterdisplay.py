@@ -541,4 +541,20 @@ def get_timezone_for_user(user):
         timezone.dst = lambda self: datetime.timedelta(0)
         return timezone
 
-    return None
+    # Starting in April 2018*, Twitter no longer returns timezone data for users.
+    # We default to PST since it's more likely to be accurate (at least for
+    # Mihai) than UTC. The above code thus will never run, but keep it in case
+    # Twitter changes their mind.
+    #
+    # * https://twittercommunity.com/t/upcoming-changes-to-the-developer-platform/104603
+    return pytz.timezone('America/Los_Angeles')
+
+def get_timezone_for_auth_user(api):
+    # Starting in April 2018* the account settings is the only place where
+    # you can get timezone information for a user.
+    #
+    # * https://twittercommunity.com/t/upcoming-changes-to-the-developer-platform/104603
+    account_settings = api.GetAccountSettings()
+    timezone_name = account_settings.get(
+        'time_zone', {}).get('tzinfo_name', 'America/Los_Angeles')
+    return pytz.timezone(timezone_name)
