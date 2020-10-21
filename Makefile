@@ -2,7 +2,7 @@ dev:
 	@PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python /usr/local/bin/dev_appserver.py --port=8081 app
 
 deploy:
-	@PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python /usr/local/bin/appcfg.py update app
+	gcloud app deploy --project streamspigot-hrd app/app.yaml
 
 twitter-digest-stub-dev:
 	@PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python /usr/local/bin/dev_appserver.py --port=8082 twitter-digest-stub

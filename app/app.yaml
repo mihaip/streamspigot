@@ -1,5 +1,3 @@
-application: streamspigot-hrd
-version: 3
 runtime: python27
 api_version: 1
 threadsafe: false
@@ -45,7 +43,7 @@ handlers:
 
 libraries:
 - name: django
-  version: "1.2"
+  version: "1.4"
 
 env_variables:
   DJANGO_SETTINGS_MODULE: 'django_settings'
