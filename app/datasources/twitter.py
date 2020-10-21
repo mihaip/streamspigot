@@ -918,7 +918,7 @@ class User(object):
     Returns:
       The url of the thumbnail of this user
     '''
-    return self._profile_image_url
+    return fix_http_url(self._profile_image_url)
 
   def SetProfileImageUrl(self, profile_image_url):
     '''Set the url of the thumbnail of this user.
@@ -2174,7 +2174,7 @@ class Media(object):
     url_with_size = self.media_url
     if size != Media.MEDIUM_SIZE:
       url_with_size += ':' + size
-    return url_with_size, width, height
+    return fix_http_url(url_with_size), width, height
 
   @staticmethod
   def NewFromJsonDict(data):
@@ -4291,3 +4291,11 @@ class _FileCache(object):
 
   def _GetPrefix(self,hashed_key):
     return os.path.sep.join(hashed_key[0:_FileCache.DEPTH])
+
+def fix_http_url(url):
+  # The Twitter REST API still returns HTTP URLs for thumbnails and other
+  # media. Rewrite those as HTTPS to avoid getting blocked for mixed content
+  # and/or proxied by NewsBlur.
+  if url.startswith("http:"):
+    return "https:" + url[5:]
+  return url
