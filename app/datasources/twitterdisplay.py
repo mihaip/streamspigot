@@ -5,7 +5,12 @@ import re
 import string
 import xml.sax.saxutils
 
-from pytz.gae import pytz
+try:
+    from pytz.gae import pytz
+except:
+    # When running with the gcloud development App Engine server there's
+    # already a pytz module imported, so let that take precedence
+    import pytz
 
 from base.constants import CONSTANTS
 import base.util
