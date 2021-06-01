@@ -1,36 +1,39 @@
 {% spaceless %}
-  <tr style="display:table-row">
-    <td style="text-align:right;padding:0 0.2em 0 0 !important;width:60px !important;display:table-cell" valign="top">
-      <div style="margin:0 0 {{ bottom_margin }} 0">
-          <a href="/{{ status_group.user.screen_name }}"
-             title="{{ status_group.user.name }}"
-             style="color:{{ USER_LINK_COLOR }};text-decoration:none"><img src="{{ status_group.user.profile_image_url }}" width="48" height="48" style="border:solid 6px {{ BUBBLE_COLOR }};background:{{ BUBBLE_COLOR }};" /><br />{{ status_group.user.screen_name }}</a>
-       </div>
-    </td>
-    <td valign="top" style="width:13px !important;display:table-cell">
-      <div style="margin-top:0.35em;width:1px;height:1px;border:solid;border-color:transparent {{ BUBBLE_COLOR }} transparent transparent;border-width:6px 12px 13px 0"></div>
-    </td>
-    <td valign="top" style="display:table-cell">
-      <div style="background: {{ BUBBLE_COLOR }};margin:0 0 {{ bottom_margin }} 0">
+  <div style="display:flex;margin: 0 0 {{ bottom_margin }} 0">
+    <div style="padding:0.5em 0.5em 0 0 !important;flex-shrink:0;white-space:nowrap;text-align:center">
+      <a href="/{{ status_group.user.screen_name }}"
+          title="{{ status_group.user.name }}"
+          style="color:{{ USER_LINK_COLOR }};text-decoration:none">
+        <img src="{{ status_group.user.profile_image_url }}"
+            width="48"
+            height="48"
+            style="border-radius:24px;overflow:hidden"
+            class="nnw-nozoom"/><br />
+        @{{ status_group.user.screen_name }}
+      </a>
+    </div>
+    <div style="background:{{ BUBBLE_COLOR }};border-radius:6px">
 {% endspaceless %}
       {% for status, display_status in status_group.status_pairs %}
         <div style="padding:0.5em;{% if not forloop.first %} border-top:solid 1px {{ BUBBLE_SEPARATOR_COLOR }} {% endif %}">
           {{ display_status.body_as_html|safe }}
           {% spaceless %}
-            <div style="font-size:0.8em;text-align:right;margin:0.2em 0 0 0">
-              <a href="{{ display_status.permalink_no_base }}"
-                {#  Only include the full date as a tooltip if using relative (script) dates, since otherwise it's a repetition #}
-                {% if use_relative_dates %}
-                    title="{{ status.created_at }}"
-                {% endif %}
-                 style="color:{{ ANCHOR_COLOR }}">
-                {% if use_relative_dates %}{{ status.relative_created_at }}{% else %}at {{ display_status.created_at_formatted }}{% endif %}</a>
-              {% with display_status.permalink_status as permalink_status %}
-                from {{ permalink_status.source|striptags }}
-                {%if permalink_status.in_reply_to_status_id %}
-                  <a href="{{ permalink_status.in_reply_to_screen_name }}/status/{{ permalink_status.in_reply_to_status_id }}" style="color:{{ ANCHOR_COLOR }}">in reply to {{ permalink_status.in_reply_to_screen_name }}</a>
-                {% endif %}
-              {% endwith %}
+            <div style="text-align:right;margin:0.2em 0 0 0">
+              <font size="-2">
+                <a href="{{ display_status.permalink_no_base }}"
+                  {#  Only include the full date as a tooltip if using relative (script) dates, since otherwise it's a repetition #}
+                  {% if use_relative_dates %}
+                      title="{{ status.created_at }}"
+                  {% endif %}
+                  style="color:{{ ANCHOR_COLOR }}">
+                  {% if use_relative_dates %}{{ status.relative_created_at }}{% else %}at {{ display_status.created_at_formatted }}{% endif %}</a>
+                {% with display_status.permalink_status as permalink_status %}
+                  from {{ permalink_status.source|striptags }}
+                  {%if permalink_status.in_reply_to_status_id %}
+                    <a href="{{ permalink_status.in_reply_to_screen_name }}/status/{{ permalink_status.in_reply_to_status_id }}" style="color:{{ ANCHOR_COLOR }}">in reply to {{ permalink_status.in_reply_to_screen_name }}</a>
+                  {% endif %}
+                {% endwith %}
+              </font>
             </div>
             {% if include_status_json %}
               <pre class="status-json collapsed" onclick="this.classList.remove('collapsed')">{{ status.AsOriginalJsonString }}</pre>
@@ -39,7 +42,6 @@
         </div>
       {% endfor %}
 {% spaceless %}
-      </div>
-    </td>
-  </tr>
+    </div>
+  </div>
 {% endspaceless %}

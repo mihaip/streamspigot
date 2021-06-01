@@ -295,7 +295,7 @@ class DisplayStatus(object):
 
             add_footer_raw_chunk(
                 '<a href="%s" border="0">'
-                  '<img src="%s" alt="" style="%s"%s/>'
+                  '<img src="%s" alt="" class="nnw-nozoom" style="%s"%s/>'
                 '</a>' % (
                     escape(link_url),
                     escape(thumb_url),
@@ -359,8 +359,8 @@ class DisplayStatus(object):
                     "https://twitter.com/%s/status/%s" %
                         (quoted_screen_name, status.quoted_status.id)
                 ])
-                add_raw_chunk('<div style="padding:10px;margin:5px 0;background:%s">' %
-                    CONSTANTS.BUBBLE_QUOTED_COLOR)
+                add_raw_chunk('<div style="padding:10px;margin:5px 0;background:%s;border:solid 1px %s;border-radius:6px">' %
+                    (CONSTANTS.BUBBLE_QUOTED_COLOR, CONSTANTS.BUBBLE_QUOTED_BORDER_COLOR))
                 add_raw_chunk('<a href="')
                 add_escaped_chunk(quoted_screen_name)
                 add_raw_chunk('" %s>@' % _LINK_ATTRIBUTES)

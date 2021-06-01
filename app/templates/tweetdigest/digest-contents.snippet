@@ -1,4 +1,4 @@
-<table style="border-spacing:0;border-collapse:collapse;font-family:sans-serif;font-size:inherit;font-weight:inherit;font-style:inherit;font-variant:inherit;color:{{ BUBBLE_TEXT_COLOR }};width:100%" cellpadding="0">
+<div style="color:{{ BUBBLE_TEXT_COLOR }}">
   {% if grouped_statuses %}
     {% for status_group in grouped_statuses %}
       {% with '1.5em' as bottom_margin %}
@@ -6,10 +6,8 @@
       {% endwith %}
     {% endfor %}
   {% else %}
-    <tr>
-      <td style="padding:0.5em">
-        No updates for this day.
-      </td>
-    </tr>
+    <div style="padding:0.5em">
+      No updates for this day.
+    </div>
   {% endif %}
-</table>
+</div>
