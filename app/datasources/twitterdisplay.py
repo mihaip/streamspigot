@@ -70,6 +70,8 @@ class DisplayStatus(object):
 
             title_text = base.util.strip_control_characters(title_text)
             title_text = _WHITESPACE_RE.sub(' ', title_text).strip()
+            if len(title_text) > 64:
+                title_text = title_text[:64] + "..."
             return title_text
 
         status = self._status
