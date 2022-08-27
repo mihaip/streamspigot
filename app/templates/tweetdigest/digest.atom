@@ -13,13 +13,11 @@
     <title type="text">Tweet Digest for {{ title_date }}</title>
     <updated>{{ end_date_iso }}Z</updated>
     <link rel="alternate" type="text/html" href="{{ html_url }}"/>
-    <content type="xhtml" xml:base="http://twitter.com/">
-      <div xmlns="http://www.w3.org/1999/xhtml">
-        {{ digest_contents|safe }}
-        {% if digest_errors %}
-          <p style="padding:.5em;background:#fdd;">{{ digest_errors|safe }}</p>
-        {% endif %}
-      </div>
+    <content type="html">
+      {{ digest_contents }}
+      {% if digest_errors %}
+        &lt;p style="padding:.5em;background:#fdd;"&gt;{{ digest_errors }}&lt;/p&gt;
+      {% endif %}
     </content>
   </entry>
 </feed>

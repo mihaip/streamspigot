@@ -1,5 +1,4 @@
 import datetime
-import os
 import re
 
 from base.constants import CONSTANTS

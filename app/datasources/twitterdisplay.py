@@ -48,9 +48,6 @@ class DisplayStatus(object):
         return '%s/%s/status/%s' % (
           base_url, status.user.screen_name, status.id)
 
-    def permalink_no_base(self):
-        return self.permalink(base_url='')
-
     def title_as_text(self):
         # Simplified variant of the entity procesing done by body_as_html that
         # skips over all URLs.
@@ -261,7 +258,7 @@ class DisplayStatus(object):
 
             # Convert newlines to HTML (Twitter seems to normalize all line
             # endings to \n).
-            chunk = chunk.replace('\n', '<br/>')
+            chunk = chunk.replace('\n', '<br />')
 
             add_raw_chunk(chunk)
 
@@ -330,7 +327,7 @@ class DisplayStatus(object):
             for variant in video_variants:
                 if variant.url:
                     add_footer_raw_chunk('<source src="%s" type="%s"/>' % (
-                        variant.url, variant.content_type or ''))
+                        escape(variant.url), variant.content_type or ''))
             add_footer_raw_chunk('</video>')
 
         def maybe_add_thumbnail_chunk(url):

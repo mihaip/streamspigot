@@ -10,7 +10,7 @@
     <id>tag:persistent.info,2007:/twitter-digest/legacy</id>
     <title type="text">Legacy Tweet Digest, Action Required</title>
     <updated>2015-03-11T00:00:00Z</updated>
-    <content type="xhtml" xml:base="http://twitter.com/">
+    <content type="xhtml">
       <div xmlns="http://www.w3.org/1999/xhtml">
         <p>You are subscribed to a <code>twitter-digest.appspot.com</code> feed
         URL. That application is no longer running.</p>

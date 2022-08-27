@@ -1,7 +1,7 @@
 {% spaceless %}
   <div style="display:table-row">
     <div style="width:48px;padding:0 .5em 0 0 !important;display:table-cell;vertical-align:top">
-      <a href="/{{ status_group.user.screen_name }}">
+      <a href="https://twitter.com/{{ status_group.user.screen_name }}">
         <img src="{{ status_group.user.profile_image_url }}"
             width="48"
             height="48"
@@ -12,7 +12,7 @@
     <div style="display:table-cell;vertical-align:top;padding-bottom:{{ bottom_margin }}">
       <div style="padding:0 .5em">
         <b>{{ status_group.user.name }} </b>
-        <a href="/{{ status_group.user.screen_name }}"
+        <a href="https://twitter.com/{{ status_group.user.screen_name }}"
             style="text-decoration:none">
           <font color="{{ USER_LINK_COLOR }}">@{{ status_group.user.screen_name }}</font>
         </a>
@@ -25,7 +25,7 @@
           {% spaceless %}
             <div style="text-align:right;margin:0.2em 0 0 0">
               <font size="-2">
-                <a href="{{ display_status.permalink_no_base }}"
+                <a href="{{ display_status.permalink }}"
                   {#  Only include the full date as a tooltip if using relative (script) dates, since otherwise it's a repetition #}
                   {% if use_relative_dates %}
                       title="{{ status.created_at }}"
@@ -35,7 +35,7 @@
                 {% with display_status.permalink_status as permalink_status %}
                   from {{ permalink_status.source|striptags }}
                   {%if permalink_status.in_reply_to_status_id %}
-                    <a href="{{ permalink_status.in_reply_to_screen_name }}/status/{{ permalink_status.in_reply_to_status_id }}" style="color:{{ ANCHOR_COLOR }}">in reply to {{ permalink_status.in_reply_to_screen_name }}</a>
+                    <a href="https://twitter.com/{{ permalink_status.in_reply_to_screen_name }}/status/{{ permalink_status.in_reply_to_status_id }}" style="color:{{ ANCHOR_COLOR }}">in reply to {{ permalink_status.in_reply_to_screen_name }}</a>
                   {% endif %}
                 {% endwith %}
               </font>
