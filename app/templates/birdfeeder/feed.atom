@@ -23,14 +23,14 @@
         <title type="text">{{ display_status.title_as_text }}</title>
         <published>{{ display_status.created_at_iso }}Z</published>
         <updated>{{ display_status.created_at_iso }}Z</updated>
-        <content type="xhtml">
-          <div xmlns="http://www.w3.org/1999/xhtml">
+        <content type="html">
+          {% filter force_escape %}
             <table style="border-spacing:0;border-collapse:collapse;font-family:sans-serif;font-size:inherit;font-weight:inherit;font-style:inherit;font-variant:inherit;color:{{ BUBBLE_TEXT_COLOR }};width:100%" cellpadding="0">
               {% with '0' as bottom_margin %}
                 {% include 'base/status-group.snippet' %}
               {% endwith %}
             </table>
-          </div>
+          {% endfilter %}
         </content>
       </entry>
     {% endwith %}

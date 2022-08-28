@@ -23,12 +23,6 @@ del _CONTROL_CHARACTER_MAP[0x9] # tab,
 del _CONTROL_CHARACTER_MAP[0xA] # line feed,
 del _CONTROL_CHARACTER_MAP[0xD] # and newline.
 
-def strip_html_whitespace(html):
-    html = _CONSECUTIVE_WHITESPACE_RE.sub(' ', html)
-    html = _TAG_WHITESPACE_RE1.sub('><\\1', html)
-    html = _TAG_WHITESPACE_RE2.sub('> <a', html)
-    return html
-
 def generate_id(prefix):
     return prefix + base64.urlsafe_b64encode(
         uuid.uuid4().bytes).replace('=', '')

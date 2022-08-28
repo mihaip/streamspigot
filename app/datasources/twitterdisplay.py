@@ -122,6 +122,9 @@ class DisplayStatus(object):
                 add_tweet_chunk(status.text[last_entity_end:e.start_index])
 
                 entity_anchor_text = status.text[e.start_index:e.end_index]
+                # Make it more likely that anchor text will wrap by inserting
+                # zero-width spaces after slashes.
+                entity_anchor_text = entity_anchor_text.replace("/", u"/\u200B")
                 entity_url = None
 
                 if isinstance(e, twitter.Hashtag):
@@ -236,23 +239,6 @@ class DisplayStatus(object):
             # would be wrong.
             chunk = base.util.strip_control_characters(chunk)
 
-            # Insert zero-width spaces after punctuation and every so often in
-            # longer tokens to make sure that the display wraps. Has to be done
-            # this way since NewsBlur's CSS whitelist does not allow
-            # "word-break: break-word" and its HTML whitelist does not allow
-            # <wbr> tags.
-            run_length = 0
-            chunk_with_breaks = u""
-            for c in chunk:
-              chunk_with_breaks += c
-              run_length += 1
-              if c in string.whitespace:
-                run_length = 0
-              elif c in string.punctuation or run_length > 24:
-                chunk_with_breaks += u"\u200B"
-                run_length = 0
-            chunk = chunk_with_breaks
-
             # HTML-escape
             chunk = escape(chunk)
 
@@ -347,7 +333,7 @@ class DisplayStatus(object):
         def add_status(status):
             if status.retweeted_status:
                 add_raw_chunk('RT: <a href="')
-                add_escaped_chunk(status.retweeted_status.user.screen_name)
+                add_escaped_chunk(_BASE_TWITTER_URL + "/" + status.retweeted_status.user.screen_name)
                 add_raw_chunk('" %s>@' % _LINK_ATTRIBUTES)
                 add_escaped_chunk(status.retweeted_status.user.screen_name)
                 add_raw_chunk('</a>: ')
@@ -361,7 +347,7 @@ class DisplayStatus(object):
                 add_raw_chunk('<div style="padding:10px;margin:5px 0;background:%s;border:solid 1px %s;border-radius:6px">' %
                     (CONSTANTS.BUBBLE_QUOTED_COLOR, CONSTANTS.BUBBLE_QUOTED_BORDER_COLOR))
                 add_raw_chunk('<a href="')
-                add_escaped_chunk(quoted_screen_name)
+                add_escaped_chunk(_BASE_TWITTER_URL + "/" + quoted_screen_name)
                 add_raw_chunk('" %s>@' % _LINK_ATTRIBUTES)
                 add_escaped_chunk(quoted_screen_name)
                 add_raw_chunk('</a>: ')

@@ -130,14 +130,12 @@ class DigestHandler(base.handlers.BaseHandler):
             self._add_caching_headers(
                 last_modified_date=end_date,
                 max_age_sec=data.DIGEST_LENGTH_SEC)
-        digest_contents = self._render_template(
+        digest_contents = unicode(self._render_template(
             'tweetdigest/digest-contents.snippet', {
                 'grouped_statuses': grouped_statuses,
                 'use_relative_dates': output_template.use_relative_dates,
                 'include_status_json': include_status_json,
-            })
-        if not include_status_json:
-            digest_contents = base.util.strip_html_whitespace(digest_contents)
+            }))
 
         self._write_template(output_template.template_file, {
             'digest_source': digest_source,

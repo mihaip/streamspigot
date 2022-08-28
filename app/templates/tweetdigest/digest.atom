@@ -16,7 +16,9 @@
     <content type="html">
       {{ digest_contents }}
       {% if digest_errors %}
-        &lt;p style="padding:.5em;background:#fdd;"&gt;{{ digest_errors }}&lt;/p&gt;
+        {% filter force_escape %}
+          <p style="padding:.5em;background:#fdd;">{{ digest_errors }}</p>
+        {% endfilter %}
       {% endif %}
     </content>
   </entry>
