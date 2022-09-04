@@ -40,7 +40,7 @@
 
 <p>
   {{ APP_NAME }} was created by <a href="https://persistent.info">Mihai
-  Parparita</a>, who can be reached at <script>streamspigot.util.printEmail();</script>. To keep
+  Parparita</a>, who can be reached at <a id="email"></a>. To keep
   up with {{ APP_NAME }} developments, you can
   <a href="http://twitter.com/streamspigot"><img src="/static/twitter-icon.png" width="16" height="16" alt="" style="vertical-align: top; padding-right: 1px;">follow us on Twitter</a>.
 </p>
@@ -49,4 +49,5 @@
   <a href="https://github.com/mihaip/streamspigot">Source is available</a>
   on <a href="https://github.com/">GitHub</a>.
 </p>
+  <script>onload = () => streamspigot.main.init();</script>
 {% endblock %}

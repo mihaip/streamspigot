@@ -12,7 +12,7 @@ The various tools (tweet digest, feed playback, etc.) are pretty distinct. Paral
 
 Base/utility code goes in `app/base` and `app/templates/base`.
 
-UI JavaScript currently uses a checked in copy of [Closure Lite](http://www.programmingclosure.com/closure-lite/) but the plan is to switch to [Plovr](http://plovr.com/) once needs become more complex.
+UI JavaScript is minimal, and is composed of a few modules in `app/static`.
 
 The tweet digest component of the app was formerly known as Twitter Digest and used to run at `twitter-digest.appspot.com`. A small "stub" App Engine app that redirects requests from there to `www.streamspigot.com/tweet-digest` is in `twitter-digest-stub`.
 
