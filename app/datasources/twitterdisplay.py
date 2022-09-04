@@ -128,7 +128,7 @@ class DisplayStatus(object):
                 entity_url = None
 
                 if isinstance(e, twitter.Hashtag):
-                    entity_url = 'search?q=%23' + e.text
+                    entity_url = _BASE_TWITTER_URL + '/search?q=%23' + e.text
                 elif isinstance(e, twitter.Url):
                     entity_url = e.expanded_url or e.url
                     entity_url_anchor_text = \
@@ -137,7 +137,7 @@ class DisplayStatus(object):
                         entity_anchor_text = escape(entity_url_anchor_text)
                     maybe_add_thumbnail_chunk(e.expanded_url or e.url)
                 elif isinstance(e, twitter.User):
-                    entity_url = e.screen_name
+                    entity_url = _BASE_TWITTER_URL + '/' + e.screen_name
                 elif isinstance(e, twitter.Media):
                     def add_media_thumbnail():
                         link_url, _, _ = e.GetUrlForSize(
