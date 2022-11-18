@@ -17,6 +17,7 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 
 import base.handlers
+import birdfeeder.handlers.backup
 import birdfeeder.handlers.main
 import birdfeeder.handlers.feed
 import birdfeeder.handlers.pinger
@@ -53,6 +54,7 @@ def main():
             ('/bird-feeder/sign-in', birdfeeder.handlers.session.SignInHandler),
             ('/bird-feeder/sign-out', birdfeeder.handlers.session.SignOutHandler),
             ('/bird-feeder/callback', birdfeeder.handlers.session.CallbackHandler),
+            ('/bird-feeder/backup', birdfeeder.handlers.backup.BackupHandler),
             ('/bird-feeder/reset-feed-id', birdfeeder.handlers.session.ResetFeedIdHandler),
             ('/bird-feeder/feed/timeline/(.*)', birdfeeder.handlers.feed.TimelineFeedHandler),
             ('/bird-feeder/pinger/following', birdfeeder.handlers.pinger.FollowingHandler),

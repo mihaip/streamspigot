@@ -20,13 +20,6 @@ TWITTER_OAUTH_CLIENT = TWITTER_SERVICE_PROVIDER.get_oauth_client()
 
 BASE_PATH = '/bird-feeder'
 
-WHITELISTED_TWITTER_IDS = [
-  '28203', # mihai
-  '17116881', # annparparita
-  '5634412', # robot_friend
-  '233087105', # streamspigot
-]
-
 class BaseHandler(base.handlers.BaseHandler):
     def _get_path(self, path=''):
         return '%s/%s' % (BASE_PATH, path)
@@ -38,8 +31,8 @@ class SessionHandler(BaseHandler):
         return self.SESSION_COOKIE_NAME in self.request.cookies
 
     def _get_session_from_request(self):
-        return data.Session.get_by_session_id(
-            self.request.cookies[self.SESSION_COOKIE_NAME])
+        session_id = self.request.cookies[self.SESSION_COOKIE_NAME]
+        return data.Session.get_by_session_id(session_id)
 
     def _set_request_session(self, session):
         cookie = Cookie.SimpleCookie()
@@ -74,14 +67,14 @@ class SessionApiHandler(SessionHandler):
         if self._has_request_session():
             session = self._get_session_from_request()
 
-            if session and session.twitter_id in WHITELISTED_TWITTER_IDS:
+            if session:
                 self._session = session
                 self._api = session.create_api()
                 self._caching_api = session.create_caching_api()
                 signed_in()
                 return
             else:
-                self._remove_request_session()
+                logging.info("Cannot find session")
 
         signed_out()
 
@@ -164,10 +157,6 @@ class CallbackHandler(SessionHandler):
         twitter_id = access_token_response['user_id']
         access_token = access_token_response['oauth_token']
         access_token_secret = access_token_response['oauth_token_secret']
-
-        if not twitter_id in WHITELISTED_TWITTER_IDS:
-          self.redirect(self._get_path())
-          return
 
         session = data.Session.get_by_twitter_id(twitter_id)
         if session:

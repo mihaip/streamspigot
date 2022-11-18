@@ -392,8 +392,10 @@ class Status(object):
       return 'about %d hours ago' % (delta / (60 * 60))
     elif delta < (60 * 60 * 24 * fudge) or delta / (60 * 60 * 24) == 1:
       return 'about a day ago'
-    else:
+    elif delta < 7 * (60 * 60 * 24):
       return 'about %d days ago' % (delta / (60 * 60 * 24))
+    else:
+      return datetime.datetime.fromtimestamp(self.created_at_in_seconds).strftime('%b %d, %Y')
 
   relative_created_at = property(GetRelativeCreatedAt,
                                  doc='Get a human readable string representing '
@@ -3486,8 +3488,11 @@ class Api(object):
     return Status.NewFromJsonDict(data)
 
   def GetFavorites(self,
-                   user=None,
-                   page=None):
+                   user_id=None,
+                   screen_name=None,
+                   since_id=None,
+                   count=None,
+                   max_id=None):
     '''Return a list of Status objects representing favorited tweets.
     By default, returns the (up to) 20 most recent tweets for the
     authenticated user.
@@ -3500,17 +3505,19 @@ class Api(object):
         Specifies the page of results to retrieve.
         Note: there are pagination limits. [Optional]
     '''
-    parameters = {}
+    parameters = {'tweet_mode': 'extended'}
 
-    if page:
-      parameters['page'] = page
-
-    if user:
-      url = '%s/favorites/%s.json' % (self.base_url, user)
-    elif not user and not self._oauth_consumer:
-      raise TwitterError("User must be specified if API is not authenticated.")
-    else:
-      url = '%s/favorites.json' % self.base_url
+    url = '%s/favorites/list.json' % (self.base_url)
+    if user_id:
+      parameters['user_id'] = long(user_id)
+    if screen_name:
+      parameters['screen_name'] = screen_name
+    if since_id:
+      parameters['since_id'] = long(since_id)
+    if count:
+      parameters['count'] = int(count)
+    if max_id:
+      parameters['max_id'] = long(max_id)
 
     json = self._FetchUrl(url, parameters=parameters)
     data = self._ParseAndCheckTwitter(json)

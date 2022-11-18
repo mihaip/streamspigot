@@ -15,6 +15,19 @@
 <div id="birdfeeder-feed-container">
   <a href="{{ timeline_feed_url }}" class="feed-link">@{{ twitter_user.screen_name }} timeline feed</a>
 </div>
+
+<p>
+  <a href="https://twitter.com/{{ twitter_user.screen_name }}">@{{ twitter_user.screen_name }}</a> Twitter data backups:
+  <ul>
+    <li>
+      Tweets: <a href="{{ backup_path }}?content=tweets&format=html">HTML</a>, <a href="{{ backup_path }}?content=tweets&format=json">JSON</a>
+    </li>
+    <li>
+      Likes: <a href="{{ backup_path }}?content=likes&format=html">HTML</a>, <a href="{{ backup_path }}?content=likes&format=json">JSON</a>
+    </li>
+  </ul>
+</p>
+
 {% endblock %}
 
 

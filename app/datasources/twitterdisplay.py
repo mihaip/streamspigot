@@ -2,7 +2,7 @@ import datetime
 import itertools
 import logging
 import re
-import string
+import time
 import xml.sax.saxutils
 
 try:
@@ -280,12 +280,11 @@ class DisplayStatus(object):
 
             add_footer_raw_chunk(
                 '<a href="%s" border="0">'
-                  '<img src="%s" alt="" class="nnw-nozoom" style="%s"%s/>'
+                  '<img src="%s" alt="" class="nnw-nozoom" style="%s"/>'
                 '</a>' % (
                     escape(link_url),
                     escape(thumb_url),
                     ";".join(img_styles),
-                    img_attributes
                 ))
 
         def add_footer_iframe_chunk(iframe_url, iframe_width, iframe_height):
