@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <id>{{ feed_url }}</id>
+  <link rel="self" href="{{ feed_url }}"/>
+  <link rel="alternate" type="text/html" href="{{ html_url }}"/>
+  <title>Twitter Backup - {{ subtitle }}</title>
+  <updated>{{ backup_date_iso }}Z</updated>
+  <author>
+    <name>{{ APP_NAME }}</name>
+  </author>
+  {% for status_group in status_groups %}
+    {% with status_group.display_statuses.0 as display_status %}
+      <entry>
+        <id>{{ display_status.permalink }}</id>
+        <link rel="alternate" href="{{ display_status.permalink }}" type="text/html"/>
+        <title type="text">{{ display_status.title_as_text }}</title>
+        <published>{{ display_status.created_at_iso }}Z</published>
+        <updated>{{ display_status.created_at_iso }}Z</updated>
+        <content type="html">
+          {% filter force_escape %}
+            <table style="border-spacing:0;border-collapse:collapse;font-family:sans-serif;font-size:inherit;font-weight:inherit;font-style:inherit;font-variant:inherit;color:{{ BUBBLE_TEXT_COLOR }};width:100%" cellpadding="0">
+              {% with '0' as bottom_margin %}
+                {% include 'base/status-group.snippet' %}
+              {% endwith %}
+            </table>
+          {% endfilter %}
+        </content>
+      </entry>
+    {% endwith %}
+  {% endfor %}
+</feed>

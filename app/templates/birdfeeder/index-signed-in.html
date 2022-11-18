@@ -22,10 +22,16 @@
   <a href="https://twitter.com/{{ twitter_user.screen_name }}">@{{ twitter_user.screen_name }}</a> Twitter data backups:
   <ul>
     <li>
-      Tweets: <a href="{{ backup_path }}?content=tweets&format=html">HTML</a>, <a href="{{ backup_path }}?content=tweets&format=json">JSON</a>
+      Tweets:
+        <a href="{{ backup_path }}?content=tweets&format=html">HTML</a>,
+        <a href="{{ backup_path }}?content=tweets&format=json">JSON</a>,
+        <a href="{{ backup_path }}?content=tweets&format=atom">Atom</a>
     </li>
     <li>
-      Likes: <a href="{{ backup_path }}?content=likes&format=html">HTML</a>, <a href="{{ backup_path }}?content=likes&format=json">JSON</a>
+      Likes:
+        <a href="{{ backup_path }}?content=likes&format=html">HTML</a>,
+        <a href="{{ backup_path }}?content=likes&format=json">JSON</a>,
+        <a href="{{ backup_path }}?content=likes&format=atom">Atom</a>
     </li>
   </ul>
 </p>

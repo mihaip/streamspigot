@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import urlparse
@@ -44,8 +45,9 @@ class BackupHandler(session.SessionApiHandler):
             self.response.headers['Content-Disposition'] = 'attachment; filename="%s.json"' % content
             self.response.headers['Content-Type'] = 'application/json'
             self.response.out.write(json.dumps([s.original_json_dict for s in statuses], indent=4))
-        elif format == "html":
-            self.response.headers['Content-Disposition'] = 'attachment; filename="%s.html"' % content
+        elif format in {"atom", "html"}:
+            self.response.headers['Content-Disposition'] = 'attachment; filename="%s.%s"' % (
+                content, "xml" if format == "atom" else "html")
 
             twitter_user = self._api.GetUser(self._session.twitter_id)
             timezone = twitterdisplay.get_timezone_for_auth_user(self._caching_api)
@@ -62,14 +64,29 @@ class BackupHandler(session.SessionApiHandler):
             ]
 
             request_url = urlparse.urlparse(self.request.url)
-            json_url = '%s://%s%s?content=%s&format=json' % (
-                    request_url.scheme, request_url.netloc, self._get_path('backup'), content)
 
-            self._write_template('birdfeeder/backup.html', {
-                'subtitle': '@%s\'s %s' % (twitter_user.screen_name, content),
-                'status_groups': status_groups,
-                'json_url': json_url,
-            }, content_type='text/html')
+            if format == "html":
+                json_url = '%s://%s%s?content=%s&format=json' % (
+                        request_url.scheme, request_url.netloc, self._get_path('backup'), content)
+
+                self._write_template('birdfeeder/backup.html', {
+                    'subtitle': '@%s\'s %s' % (twitter_user.screen_name, content),
+                    'status_groups': status_groups,
+                    'json_url': json_url,
+                }, content_type='text/html')
+            else:
+                feed_url = '%s://%s%s?content=%s&format=atom' % (
+                        request_url.scheme, request_url.netloc, self._get_path('backup'), content)
+                html_url = '%s://%s%s?content=%s&format=html' % (
+                        request_url.scheme, request_url.netloc, self._get_path('backup'), content)
+
+                self._write_template('birdfeeder/backup.atom', {
+                    'subtitle': '@%s\'s %s' % (twitter_user.screen_name, content),
+                    'backup_date_iso': datetime.datetime.utcnow().isoformat(),
+                    'status_groups': status_groups,
+                    'feed_url': feed_url,
+                    'html_url': html_url,
+                }, content_type='application/atom+xml')
         else:
             logging.warning("unknown format type: %s", format)
             self._write_error(400)
