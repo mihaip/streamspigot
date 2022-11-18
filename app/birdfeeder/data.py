@@ -91,11 +91,23 @@ class Session(db.Model):
         return '%s/bird-feeder/feed/timeline/%s' % (
             CONSTANTS.APP_URL, self.feed_id)
 
+    def allows_feed_updates(self):
+        return self.twitter_id in {
+            '28203', # mihai
+            '17116881', # annparparita
+            '5634412', # robot_friend
+            '233087105', # streamspigot
+        }
+
     def enqueue_update_task(
             self,
             countdown=None,
             expected_status_id=None,
             update_retry_count=None):
+        if not self.allows_feed_updates():
+            logging.warning("Crawling not allowed for account %s", self.twitter_id)
+            return
+
         params = {}
         if expected_status_id is not None:
             params['expected_status_id'] = expected_status_id

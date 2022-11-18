@@ -35,6 +35,8 @@ class UpdateCronHandler(base.handlers.BaseHandler):
     def get(self):
         update_task_count = 0
         for session in data.Session.all():
+            if not session.allows_feed_updates():
+                continue
             update_task_count += 1
             session.enqueue_update_task()
 
@@ -90,6 +92,10 @@ class UpdateTaskHandler(base.handlers.BaseHandler):
             return
 
 def update_timeline(session):
+    if not session.allows_feed_updates():
+        logging.warning("Updating not allowed for account %s", session.twitter_id)
+        return False, stream.status_ids
+
     logging.info('Updating %s' % session.twitter_id)
 
     stream = data.StreamData.get_or_create_timeline_for_user(session.twitter_id)

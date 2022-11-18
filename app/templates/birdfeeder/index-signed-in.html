@@ -13,7 +13,9 @@
 {% block body %}
 
 <div id="birdfeeder-feed-container">
-  <a href="{{ timeline_feed_url }}" class="feed-link">@{{ twitter_user.screen_name }} timeline feed</a>
+  {% if allows_feed_updates %}
+    <a href="{{ timeline_feed_url }}" class="feed-link">@{{ twitter_user.screen_name }} timeline feed</a>
+  {% endif %}
 </div>
 
 <p>
@@ -32,12 +34,14 @@
 
 
 {% block footer %}
+  {% if allows_feed_updates %}
   {% include "footer.snippet" %}
 
   If that happens, you may wish to <span class="link"
   id="birdfeeder-reset-feed-id">reset</span> your feed URL (the old items will
   still be cached by Reader under the old URL, but new items will only come in
   on the new URL).
+  {% endif %}
 
   <script>onload = () => streamspigot.birdfeeder.init();</script>
 {% endblock %}

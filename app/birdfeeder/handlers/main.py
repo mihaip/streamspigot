@@ -14,6 +14,7 @@ class IndexHandler(session.SessionApiHandler):
           'sign_out_path': self._get_path('sign-out'),
           'timeline_feed_url': timeline_feed_url,
           'backup_path': self._get_path('backup'),
+          'allows_feed_updates': self._session.allows_feed_updates(),
         })
 
     def _get_signed_out(self):

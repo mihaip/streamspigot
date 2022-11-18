@@ -31,6 +31,11 @@ class FeedHandler(session.SessionApiHandler):
 class TimelineFeedHandler(FeedHandler):
 
     def _get_signed_in(self):
+        if not self._session.allows_feed_updates():
+            logging.warning("Feed not allowed for account %s", self._session.twitter_id)
+            self._write_error(401)
+            return
+
         twitter_id = self._session.twitter_id
         logging.info('Serving feed for %s' % twitter_id)
 
