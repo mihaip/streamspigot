@@ -72,6 +72,10 @@ class DisplayStatus(object):
 
         def get_status_html(status):
             html = status.content
+            # Replace <p>'s with newlines so that we can avoid leading/trailing
+            # margins.
+            if html.startswith('<p>') and html.endswith('</p>'):
+                html = html[3:-4].replace('</p><p>', '<br><br>')
 
             for attachment in status.media_attachments:
                 html += '<p>'
@@ -101,7 +105,7 @@ class DisplayStatus(object):
 
         status = self._status
         if status.reblog:
-            return u'<div style="opacity: 0.5">↺ boosted <a href="%s" style="color: %s">%s</a></div>' % (
+            return u'<div style="opacity:0.5;margin-bottom:0.5em">↺ boosted <a href="%s" style="color: %s">%s</a></div>' % (
                 escape(status.reblog.account.url),
                 CONSTANTS.USER_LINK_COLOR,
                 escape(display_name(status.reblog.account)),
