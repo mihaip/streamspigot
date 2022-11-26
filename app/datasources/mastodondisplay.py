@@ -41,12 +41,15 @@ class DisplayStatus(object):
         return (self._status.edited_at or self._status.created_at).isoformat()
 
     def title_as_text(self):
+        def truncate(s):
+            return s if len(s) < 100 else s[:100] + u'…'
+
         def get_status_title_text(status):
             if status.get('text'):
-                return status.text
+                return truncate(status.text)
             parser = ContentToTitleTextParser()
             parser.feed(status.content)
-            text = parser.text()
+            text = truncate(parser.text())
             if text:
                 return text
             if status.media_attachments:
