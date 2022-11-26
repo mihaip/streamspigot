@@ -30,7 +30,7 @@ class TimelineFeedHandler(FeedHandler):
         logging.info('Serving timeline feed for %s' % mastodon_id)
 
         mastodon_user = self._api.me()
-        statuses = self._api.timeline_home()
+        statuses = self._api.timeline_home(limit=40)
 
         # We don't actually want statuses grouped, instead we want one status
         # per item.
