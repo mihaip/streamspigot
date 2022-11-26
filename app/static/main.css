@@ -331,6 +331,10 @@ a, .link {
   justify-content: center;
 }
 
+#mastofeeder-sign-in input[type='submit'] {
+  margin-left: 0.5em;
+}
+
 #mastofeeder-feed-container.disabled {
   opacity: .5;
   pointer-events: none;
