@@ -1,6 +1,3 @@
-import urllib
-
-from base.constants import CONSTANTS
 import session
 
 class IndexHandler(session.SessionApiHandler):
