@@ -145,4 +145,12 @@ class ContentToTitleTextParser(HTMLParser):
         return ''.join(self._text).strip()
 
 def display_name(user):
-    return user.display_name or user.username
+    if user.display_name:
+        display_name = user.display_name
+        if ':' in display_name and user.emojis:
+            for emoji in user.emojis:
+                display_name = display_name.replace(
+                    ':%s:' % emoji.shortcode,
+                    '')
+        return display_name
+    return user.username
