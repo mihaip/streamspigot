@@ -1,0 +1,29 @@
+{% extends "base/page.html" %}
+
+{% block title %}{{ APP_NAME}} : Masto Feeder{% endblock %}
+{% block subtitle %}Masto Feeder{% endblock %}
+
+{% block intro %}
+  {% include "intro.snippet" %}
+
+  <p>You're signed in as <a href="{{ mastodon_user.url }}">@{{ mastodon_user.username }}</a>.
+  <a href="{{ sign_out_path }}">Sign out</a>.</p>
+{% endblock %}
+
+{% block body %}
+
+<div id="mastofeeder-feed-container">
+    <a href="{{ timeline_feed_path }}" class="feed-link">@{{ mastodon_user.username }} timeline feed</a>
+</div>
+
+{% endblock %}
+
+
+{% block footer %}
+  {% include "footer.snippet" %}
+
+  If that happens, you may wish to <span class="link"
+  id="mastofeeder-reset-feed-id">reset</span> your feed URLs.
+
+  <script>onload = () => streamspigot.mastofeeder.init();</script>
+{% endblock %}

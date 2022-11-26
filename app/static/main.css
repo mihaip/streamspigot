@@ -323,6 +323,17 @@ a, .link {
 
 #birdfeeder-feed-container.disabled {
   opacity: .5;
+  pointer-events: none;
+}
+
+#mastofeeder-sign-in {
+  display: flex;
+  justify-content: center;
+}
+
+#mastofeeder-feed-container.disabled {
+  opacity: .5;
+  pointer-events: none;
 }
 
 .status-json.collapsed {

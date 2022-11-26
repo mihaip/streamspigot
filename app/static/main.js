@@ -1,5 +1,6 @@
 import { init as birdfeederInit } from "./birdfeeder.js";
 import { init as feedplaybackInit } from "./feedplayback.js";
+import { init as mastofeederInit } from "./mastofeeder.js";
 import { init as tweetdigestInit } from "./tweetdigest.js";
 import { exportFunction, $ } from "./util.js";
 
@@ -16,5 +17,6 @@ function init() {
 
 exportFunction("streamspigot.birdfeeder.init", birdfeederInit);
 exportFunction("streamspigot.feedplayback.init", feedplaybackInit);
+exportFunction("streamspigot.mastofeeder.init", mastofeederInit);
 exportFunction("streamspigot.tweetdigest.init", tweetdigestInit);
 exportFunction("streamspigot.main.init", init);

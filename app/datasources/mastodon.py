@@ -13,6 +13,7 @@ import collections
 from contextlib import closing
 import pytz
 import requests
+import requests_toolbelt.adapters.appengine
 from requests.models import urlencode
 import dateutil
 import dateutil.parser
@@ -62,6 +63,9 @@ try:
 except:
     class PurePath:
         pass
+
+# Ensure that requests is making requests over the App Engine HTTP transport.
+requests_toolbelt.adapters.appengine.monkeypatch()
 
 ###
 # Version check functions, including decorator and parser
@@ -4006,8 +4010,7 @@ class Mastodon:
                             try:
                                 the_connection = self.connect_func()
                                 if the_connection.status_code != 200:
-                                    exception = MastodonNetworkError(f"Could not connect to server. "
-                                                                     f"HTTP status: {the_connection.status_code}")
+                                    exception = MastodonNetworkError("Could not connect to server. HTTP status: %s" % the_connection.status_code)
                                     listener.on_abort(exception)
                                     self._sleep_attentive()
                                 if self.closed:
