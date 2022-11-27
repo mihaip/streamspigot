@@ -33,14 +33,17 @@
                   style="color:{{ ANCHOR_COLOR }}">
                   {% if use_relative_dates %}{{ status.relative_created_at }}{% else %}at {{ display_status.created_at_formatted }}{% endif %}</a>
                 {% with display_status.permalink_status as permalink_status %}
+                  {%if permalink_status.application %}
+                    from {{ permalink_status.application.name }}
+                  {% endif %}
                   {%if permalink_status.in_reply_to_id %}
-                  in reply to <a href="TODO" style="color:{{ ANCHOR_COLOR }}">{{ permalink_status.in_reply_to_account_id }}</a>
+                    in reply to <a href="TODO" style="color:{{ ANCHOR_COLOR }}">{{ permalink_status.in_reply_to_account_id }}</a>
                   {% endif %}
                 {% endwith %}
               </font>
             </div>
             {% if include_status_json %}
-              <pre style="display: pre-wrap" class="status-json collapsed" onclick="this.classList.remove('collapsed')">{{ display_status.debug_json }}</pre>
+              <pre class="status-json collapsed" onclick="this.classList.remove('collapsed')">{{ display_status.debug_json }}</div>
             {% endif %}
           {% endspaceless %}
         </div>

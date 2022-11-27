@@ -4,6 +4,7 @@ from HTMLParser import HTMLParser
 import itertools
 import json
 import logging
+import textwrap
 import xml.sax.saxutils
 
 from base.constants import CONSTANTS
@@ -119,7 +120,8 @@ class DisplayStatus(object):
     def debug_json(self):
         # The Mastodon API client library parses dates as datetime.datetime
         # objects, so we need to force stringification.
-        return json.dumps(self._status, indent=4, default=lambda o: str(o))
+        output = json.dumps(self._status, indent=4, default=lambda o: str(o))
+        return "\n".join([textwrap.fill(l) for l in output.split("\n")])
 
     @staticmethod
     def wrap(statuses, thumbnail_size):
