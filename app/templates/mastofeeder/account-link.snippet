@@ -1,0 +1,9 @@
+{% with display_status.status.account as account %}
+
+<b>{{ display_status.account_display_name }} </b>
+<a href="{{ account.url }}"
+    style="text-decoration:none">
+  <font color="{{ USER_LINK_COLOR }}">@{{ account.username }}</font>
+</a>
+
+{% endwith %}

@@ -1,0 +1,28 @@
+{% with display_status.status as status %}
+
+{% spaceless %}
+  <div style="text-align:right;margin:0.2em 0 0 0">
+    <font size="-2">
+      <a href="{{ display_status.permalink }}"
+        {#  Only include the full date as a tooltip if using relative (script) dates, since otherwise it's a repetition #}
+        {% if use_relative_dates %}
+            title="{{ status.created_at }}"
+        {% endif %}
+        style="color:{{ ANCHOR_COLOR }}">
+        {% if use_relative_dates %}{{ status.relative_created_at }}{% else %}at {{ display_status.created_at_formatted }}{% endif %}</a>
+      {% with display_status.permalink_status as permalink_status %}
+        {%if permalink_status.application %}
+          from {{ permalink_status.application.name }}
+        {% endif %}
+        {%if permalink_status.in_reply_to_id %}
+          in reply to <a href="TODO" style="color:{{ ANCHOR_COLOR }}">{{ permalink_status.in_reply_to_account_id }}</a>
+        {% endif %}
+      {% endwith %}
+    </font>
+  </div>
+  {% if include_status_json %}
+    <pre class="status-json collapsed" onclick="this.classList.remove('collapsed')">{{ display_status.debug_json }}</div>
+  {% endif %}
+{% endspaceless %}
+
+{% endwith %}

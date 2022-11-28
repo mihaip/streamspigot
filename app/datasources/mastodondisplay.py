@@ -16,7 +16,6 @@ class DisplayStatusGroup(object):
         self.statuses = statuses
         self.display_statuses = DisplayStatus.wrap(
             statuses, thumbnail_size)
-        self.status_pairs = itertools.izip(self.statuses, self.display_statuses)
 
     def author_display_name(self):
         return display_name(self.user)
@@ -26,8 +25,19 @@ class DisplayStatus(object):
         self._status = status
         self._thumbnail_size = thumbnail_size
 
+    def status(self):
+        return self._status
+
     def permalink_status(self):
         return self._status.reblog or self._status
+
+    def reblog_display_status(self):
+        if self._status.reblog:
+            return DisplayStatus(self._status.reblog, self._thumbnail_size)
+        return None
+
+    def account_display_name(self):
+        return display_name(self._status.account)
 
     def permalink(self):
         return self.permalink_status().uri
@@ -71,51 +81,41 @@ class DisplayStatus(object):
 
         return u'%s: %s' % (display_name(status.account), title_text)
 
-    def body_as_html(self):
+    def content_as_html(self):
+        status = self._status
         escape = xml.sax.saxutils.escape
 
-        def get_status_html(status):
-            html = status.content
-            # Replace <p>'s with newlines so that we can avoid leading/trailing
-            # margins.
-            if html.startswith('<p>') and html.endswith('</p>'):
-                html = html[3:-4].replace('</p><p>', '<br><br>')
+        html = status.content
+        # Replace <p>'s with newlines so that we can avoid leading/trailing
+        # margins.
+        if html.startswith('<p>') and html.endswith('</p>'):
+            html = html[3:-4].replace('</p><p>', '<br><br>')
 
-            for attachment in status.media_attachments:
-                html += '<p>'
-                if attachment.type == 'image':
-                    html += u' <a href="%s"><img src="%s" alt="%s" class="nnw-nozoom" border=0" /></a>' % (
-                        escape(attachment.url),
-                        escape(attachment.preview_url),
-                        escape(attachment.description or attachment.type),
-                    )
-                elif attachment.type == 'video':
-                    html += u' <video src="%s" alt="%s" />' % (
-                        escape(attachment.url),
-                        escape(attachment.description or attachment.type),
-                    )
-                elif attachment.type == 'gifv':
-                    html += u' <video src="%s" alt="%s" autoplay loop>' % (
-                        escape(attachment.url),
-                        escape(attachment.description or attachment.type),
-                    )
-                else:
-                    html += u' <a href="%s">%s</a>' % (
-                        escape(attachment.url),
-                        escape(attachment.description or attachment.type),
-                    )
-                html += '</p>'
-            return html
-
-        status = self._status
-        if status.reblog:
-            return u'<div style="opacity:0.5;margin-bottom:0.5em">↺ boosted <a href="%s" style="color: %s">%s</a></div>' % (
-                escape(status.reblog.account.url),
-                CONSTANTS.USER_LINK_COLOR,
-                escape(display_name(status.reblog.account)),
-            ) + get_status_html(status.reblog)
-
-        return get_status_html(status)
+        for attachment in status.media_attachments:
+            html += '<p>'
+            if attachment.type == 'image':
+                html += u' <a href="%s"><img src="%s" alt="%s" class="nnw-nozoom" border=0" /></a>' % (
+                    escape(attachment.url),
+                    escape(attachment.preview_url),
+                    escape(attachment.description or attachment.type),
+                )
+            elif attachment.type == 'video':
+                html += u' <video src="%s" alt="%s" />' % (
+                    escape(attachment.url),
+                    escape(attachment.description or attachment.type),
+                )
+            elif attachment.type == 'gifv':
+                html += u' <video src="%s" alt="%s" autoplay loop>' % (
+                    escape(attachment.url),
+                    escape(attachment.description or attachment.type),
+                )
+            else:
+                html += u' <a href="%s">%s</a>' % (
+                    escape(attachment.url),
+                    escape(attachment.description or attachment.type),
+                )
+            html += '</p>'
+        return html
 
     def debug_json(self):
         # The Mastodon API client library parses dates as datetime.datetime

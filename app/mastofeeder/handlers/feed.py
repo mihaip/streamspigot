@@ -32,17 +32,10 @@ class TimelineFeedHandler(FeedHandler):
         mastodon_user = self._api.me()
         statuses = self._api.timeline_home(limit=40)
 
-        # We don't actually want statuses grouped, instead we want one status
-        # per item.
-        status_groups = [
-            mastodondisplay.DisplayStatusGroup(
-                user=status["account"],
-                statuses=[status],
-                thumbnail_size=thumbnails.LARGE_THUMBNAIL)
-            for status in statuses
-        ]
+        display_statuses = mastodondisplay.DisplayStatus.wrap(
+            statuses, thumbnails.LARGE_THUMBNAIL)
 
-        logging.info('  Feed has %d items' % len(status_groups))
+        logging.info('  Feed has %d items' % len(display_statuses))
 
         # TODO: if-modified-since support
         updated_date = datetime.datetime.utcnow()
@@ -51,7 +44,7 @@ class TimelineFeedHandler(FeedHandler):
               'feed_title': '@%s Timeline' % mastodon_user.username,
               'updated_date_iso': updated_date.isoformat(),
               'feed_url': self.request.url,
-              'status_groups': status_groups,
+              'display_statuses': display_statuses,
               'include_status_json': include_status_json,
             },
             # text/xml is pretty-printed and thus easier to see

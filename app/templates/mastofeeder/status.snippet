@@ -1,0 +1,54 @@
+{% with display_status.status as status %}
+
+{% spaceless %}
+  <div style="display:table-row">
+    <div style="width:48px;padding:0 .5em 0 0 !important;display:table-cell;vertical-align:top">
+      {% if status.reblog %}
+      <a href="{{ status.reblog.account.url }}">
+        <img src="{{ status.reblog.account.avatar }}"
+            width="48"
+            height="48"
+            style="border-radius:4px;overflow:hidden;max-width:none"
+            class="nnw-nozoom"/>
+          <img src="{{ status.account.avatar }}"
+            width="30"
+            height="30"
+            style="border-radius:4px;overflow:hidden;max-width:none;transform:translate(24px,-24px);box-shadow:1px 1px 6px rgba(0, 0, 0, 0.3);"
+            class="nnw-nozoom"/>
+        </a>
+      {% else %}
+        <a href="{{ status.account.url }}">
+          <img src="{{ status.account.avatar }}"
+              width="48"
+              height="48"
+              style="border-radius:4px;overflow:hidden;max-width:none"
+              class="nnw-nozoom"/>
+        </a>
+      {% endif %}
+    </div>
+    <div style="display:table-cell;vertical-align:top">
+      <div style="padding:0 .5em">
+        {% if status.reblog %}
+          <font size="-1" style="opacity:0.5">
+            {% include 'account-link.snippet' %} ↺ boosted<br>
+          </font>
+          {% with display_status.reblog_display_status as display_status %}
+            {% include 'account-link.snippet' %}
+          {% endwith %}
+        {% else %}
+          {% include 'account-link.snippet' %}
+        {% endif %}
+      </div>
+      <div style="background:{{ BUBBLE_COLOR }};border-radius:6px;margin-top:.5em;padding:.5em">
+        {% if status.reblog %}
+          {{ display_status.reblog_display_status.content_as_html|safe }}
+        {% else %}
+          {{ display_status.content_as_html|safe }}
+        {% endif %}
+        {% include 'status-footer.snippet' %}
+      </div>
+    </div>
+  </div>
+{% endspaceless %}
+
+{% endwith %}
