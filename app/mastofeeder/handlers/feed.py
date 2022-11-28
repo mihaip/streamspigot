@@ -40,15 +40,23 @@ class TimelineFeedHandler(FeedHandler):
         # TODO: if-modified-since support
         updated_date = datetime.datetime.utcnow()
 
-        self._write_template('mastofeeder/feed.atom', {
-              'feed_title': '@%s Timeline' % mastodon_user.username,
-              'updated_date_iso': updated_date.isoformat(),
-              'feed_url': self.request.url,
-              'display_statuses': display_statuses,
-              'include_status_json': include_status_json,
-            },
-            # text/xml is pretty-printed and thus easier to see
-            content_type='text/xml' if include_status_json else 'application/atom+xml')
+        params = {
+            'feed_title': '@%s Timeline' % mastodon_user.username,
+            'updated_date_iso': updated_date.isoformat(),
+            'feed_url': self.request.url,
+            'display_statuses': display_statuses,
+            'include_status_json': include_status_json,
+        }
+
+        if self.request.get('output') == 'html':
+            self._write_template('mastofeeder/feed.html', params)
+        else:
+            self._write_template(
+                'mastofeeder/feed.atom',
+                params,
+                # text/xml is pretty-printed and thus easier to see
+                content_type='text/xml' if include_status_json
+                    else 'application/atom+xml')
 
         self._add_last_modified_header(updated_date)
 

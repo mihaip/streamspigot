@@ -1,0 +1,21 @@
+{% extends "base/page.html" %}
+
+{% block title %}{{ APP_NAME }}: {{ feed_title }}{% endblock %}
+
+{% block subtitle %}{{ feed_title }}{% endblock %}
+
+{% block intro %}
+  <p>Debug HTML output.</p>
+{% endblock %}
+
+{% block body %}
+  {% for display_status in display_statuses %}
+    <table style="border-spacing:0;border-collapse:collapse;font-family:sans-serif;font-size:inherit;font-weight:inherit;font-style:inherit;font-variant:inherit;color:{{ BUBBLE_TEXT_COLOR }};width:100%;margin-bottom:1em;" cellpadding="0">
+      {% include 'status.snippet' %}
+    </table>
+  {% endfor %}
+{% endblock %}
+
+{% block footer %}
+
+{% endblock %}
