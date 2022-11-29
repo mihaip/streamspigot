@@ -56,6 +56,8 @@ class DisplayStatus(object):
             return s if len(s) < 100 else s[:100] + u'…'
 
         def get_status_title_text(status):
+            if status.spoiler_text:
+                return truncate(status.spoiler_text)
             if status.get('text'):
                 return truncate(status.text)
             parser = ContentToTitleTextParser()
@@ -115,6 +117,11 @@ class DisplayStatus(object):
                     escape(attachment.description or attachment.type),
                 )
             html += '</p>'
+
+        if status.spoiler_text:
+            return '<details><summary style="cursor:pointer">%s</summary>%s</details>' % (
+                escape(status.spoiler_text), html)
+
         return html
 
     def debug_json(self):
