@@ -11,19 +11,20 @@ from base.constants import CONSTANTS
 import base.util
 
 class DisplayStatusGroup(object):
-    def __init__(self, user, statuses, thumbnail_size):
+    def __init__(self, user, statuses, thumbnail_size, timezone=None):
         self.user = user
         self.statuses = statuses
         self.display_statuses = DisplayStatus.wrap(
-            statuses, thumbnail_size)
+            statuses, thumbnail_size, timezone)
 
     def author_display_name(self):
         return display_name(self.user)
 
 class DisplayStatus(object):
-    def __init__(self, status, thumbnail_size):
+    def __init__(self, status, thumbnail_size, timezone):
         self._status = status
         self._thumbnail_size = thumbnail_size
+        self._timezone = timezone
 
     def status(self):
         return self._status
@@ -33,7 +34,7 @@ class DisplayStatus(object):
 
     def reblog_display_status(self):
         if self._status.reblog:
-            return DisplayStatus(self._status.reblog, self._thumbnail_size)
+            return DisplayStatus(self._status.reblog, self._thumbnail_size, self._timezone)
         return None
 
     def account_display_name(self):
@@ -46,6 +47,9 @@ class DisplayStatus(object):
         return self._status.created_at.isoformat()
 
     def created_at_formatted(self):
+        if self._timezone:
+            return self._status.created_at.astimezone(
+                self._timezone).strftime('%I:%M %p')
         return self._status.created_at.strftime('%I:%M %p GMT')
 
     def updated_at_iso(self):
@@ -131,8 +135,8 @@ class DisplayStatus(object):
         return "\n".join([textwrap.fill(l) for l in output.split("\n")])
 
     @staticmethod
-    def wrap(statuses, thumbnail_size):
-        return [DisplayStatus(s, thumbnail_size) for s in statuses]
+    def wrap(statuses, thumbnail_size, timezone):
+        return [DisplayStatus(s, thumbnail_size, timezone) for s in statuses]
 
 # Gets only the first line of content as plain text.
 class ContentToTitleTextParser(HTMLParser):

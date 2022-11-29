@@ -2,6 +2,13 @@ import os
 
 from google.appengine.ext import db
 
+try:
+    from pytz.gae import pytz
+except:
+    # When running with the gcloud development App Engine server there's
+    # already a pytz module imported, so let that take precedence
+    import pytz
+
 from base.constants import CONSTANTS
 import base.util
 from datasources import mastodon
@@ -65,6 +72,10 @@ class Session(db.Model):
             user_agent='StreamSpigot/%s (+%s)' % (
             os.environ.get('CURRENT_VERSION_ID', '1'),
             CONSTANTS.APP_URL))
+
+    def timezone(self):
+        # TODO: allow timezone to be customized
+        return pytz.timezone('America/Los_Angeles')
 
     @staticmethod
     def get_by_session_id(session_id):

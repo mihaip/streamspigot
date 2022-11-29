@@ -33,7 +33,7 @@ class TimelineFeedHandler(FeedHandler):
         statuses = self._api.timeline_home(limit=40)
 
         display_statuses = mastodondisplay.DisplayStatus.wrap(
-            statuses, thumbnails.LARGE_THUMBNAIL)
+            statuses, thumbnails.LARGE_THUMBNAIL, self._session.timezone())
 
         logging.info('  Feed has %d items' % len(display_statuses))
 
