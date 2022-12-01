@@ -67,7 +67,11 @@ class BaseHandler(webapp.RequestHandler):
     def _write_json(self, obj, pretty_print=False):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(
-            json.dumps(obj, indent=pretty_print and 2 or None))
+            json.dumps(
+                obj,
+                indent=pretty_print and 2 or None,
+                default=lambda o: str(o),
+            ))
 
     def _get_if_modified_since(self):
         if 'If-Modified-Since' not in self.request.headers:
