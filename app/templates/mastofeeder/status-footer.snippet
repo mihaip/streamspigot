@@ -15,7 +15,7 @@
           from {{ permalink_status.application.name }}
         {% endif %}
         {%if permalink_status.in_reply_to_id %}
-          in reply to <a href="TODO" style="color:{{ ANCHOR_COLOR }}">{{ permalink_status.in_reply_to_account_id }}</a>
+          (<a href="{{ reply_base_url }}/{{ permalink_status.id }}" style="color:{{ ANCHOR_COLOR }}">in reply to</a>)
         {% endif %}
       {% endwith %}
     </font>

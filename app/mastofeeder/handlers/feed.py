@@ -9,8 +9,7 @@ import session
 # on the feed ID in the URL, instead of the SID cookie.
 class FeedHandler(session.SessionApiHandler):
     def _get_feed_id(self):
-        path = self.request.path.split('/')
-        return path[3] # /masto-feeder/feed/<id>/...
+        return self.request.route_args[0]
 
     def _has_request_session(self):
         return self._get_feed_id()
@@ -44,6 +43,7 @@ class TimelineFeedHandler(FeedHandler):
             'feed_title': '@%s Timeline' % mastodon_user.username,
             'updated_date_iso': updated_date.isoformat(),
             'feed_url': self.request.url,
+            'reply_base_url': self._get_url('feed/%s/parent' % self._session.feed_id),
             'display_statuses': display_statuses,
             'include_status_json': include_status_json,
         }
@@ -60,3 +60,17 @@ class TimelineFeedHandler(FeedHandler):
 
         self._add_last_modified_header(updated_date)
 
+
+# Redirect to the parent of a status. Done as a separate handler so that we
+# don't need to do the "context" API call for every status in the feed.
+class FeedStatusParentHandler(FeedHandler):
+    def _get_signed_in(self):
+        status_id = self.request.route_args[1]
+        context = self._api.status_context(status_id)
+        if not context:
+            self._write_not_found()
+            return
+        if not context.ancestors:
+            self._write_not_found()
+            return
+        self.redirect(context.ancestors[-1].url)
