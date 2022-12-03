@@ -14,6 +14,17 @@
 
 <div id="mastofeeder-feed-container">
     <a href="{{ timeline_feed_path }}" class="feed-link">@{{ mastodon_user.username }} timeline feed</a>
+
+    {% if lists_and_feed_paths %}
+      <p>You can also subscribe to feeds for your lists:</p>
+      <ul>
+          {% for list, feed_path in lists_and_feed_paths %}
+            <li><a href="{{ feed_path }}" class="feed-link">{{ list.title }}</a></li>
+          {% endfor %}
+      </ul>
+    {% else %}
+      <p>You don't have any lists, but if you did, you could also subscribe to feeds for them.</p>
+    {% endif %}
 </div>
 
 {% endblock %}

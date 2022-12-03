@@ -68,6 +68,7 @@ def main():
             ('/masto-feeder/sign-in-callback', mastofeeder.handlers.session.SignInCallbackHandler),
             ('/masto-feeder/sign-out', mastofeeder.handlers.session.SignOutHandler),
             ('/masto-feeder/reset-feed-id', mastofeeder.handlers.session.ResetFeedIdHandler),
+            ('/masto-feeder/feed/(.*)/list/(\d+)/timeline', mastofeeder.handlers.feed.ListTimelineFeedHandler),
             ('/masto-feeder/feed/(.*)/timeline', mastofeeder.handlers.feed.TimelineFeedHandler),
             ('/masto-feeder/feed/(.*)/parent/(.*)', mastofeeder.handlers.feed.FeedStatusParentHandler),
 

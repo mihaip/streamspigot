@@ -20,27 +20,21 @@ class FeedHandler(session.SessionApiHandler):
     def _get_signed_out(self):
         self._write_error(403)
 
-class TimelineFeedHandler(FeedHandler):
+class BaseTimelineFeedHandler(FeedHandler):
     def _get_signed_in(self):
-
-        include_status_json = self.request.get('include_status_json') == 'true'
-
-        mastodon_id = self._session.mastodon_id
-        logging.info('Serving timeline feed for %s' % mastodon_id)
-
-        mastodon_user = self._api.me()
-        statuses = self._api.timeline_home(limit=40)
-
+        statuses = self._get_statuses()
         display_statuses = mastodondisplay.DisplayStatus.wrap(
             statuses, thumbnails.LARGE_THUMBNAIL, self._session.timezone())
 
-        logging.info('  Feed has %d items' % len(display_statuses))
+        logging.info('  Feed has %d items', len(display_statuses))
+
+        include_status_json = self.request.get('include_status_json') == 'true'
 
         # TODO: if-modified-since support
         updated_date = datetime.datetime.utcnow()
 
         params = {
-            'feed_title': '@%s Timeline' % mastodon_user.username,
+            'feed_title': self._get_title(),
             'updated_date_iso': updated_date.isoformat(),
             'feed_url': self.request.url,
             'reply_base_url': self._get_url('feed/%s/parent' % self._session.feed_id),
@@ -60,6 +54,34 @@ class TimelineFeedHandler(FeedHandler):
 
         self._add_last_modified_header(updated_date)
 
+    def _get_statuses(self):
+        raise NotImplementedError()
+
+    def _get_title(self):
+        raise NotImplementedError()
+
+class TimelineFeedHandler(BaseTimelineFeedHandler):
+    def _get_statuses(self):
+        mastodon_id = self._session.mastodon_id
+        logging.info('Serving timeline feed for %s', mastodon_id)
+        return self._api.timeline_home(limit=40)
+
+    def _get_title(self):
+        mastodon_user = self._api.me()
+        return '@%s Timeline' % mastodon_user.username
+
+class ListTimelineFeedHandler(BaseTimelineFeedHandler):
+    def _get_statuses(self):
+        list_id = self._get_list_id()
+        logging.info('Serving timeline feed for user %s list %s', self._session.mastodon_id, list_id)
+        return self._api.timeline_list(id=list_id, limit=40)
+
+    def _get_title(self):
+        list = self._api.list(self._get_list_id())
+        return '%s Timeline' % list.title
+
+    def _get_list_id(self):
+        return int(self.request.route_args[1])
 
 # Redirect to the parent of a status. Done as a separate handler so that we
 # don't need to do the "context" API call for every status in the feed.
