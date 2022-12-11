@@ -72,7 +72,7 @@ class DisplayStatus(object):
             if status.media_attachments:
                 attachment = status.media_attachments[0]
                 if attachment.description:
-                    return '[%s: %s]' % (attachment.type, attachment.description)
+                    return '[%s: %s]' % (attachment.type, truncate(attachment.description))
                 return attachment.type
             return ''
 
