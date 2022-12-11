@@ -82,8 +82,12 @@ class DisplayStatus(object):
                 display_name(status.reblog.account),
                 get_status_title_text(status.reblog),
             )
+            if status.reblog.poll:
+                title_text += u' 📊'
         else:
             title_text = get_status_title_text(status)
+            if status.poll:
+                title_text += u' 📊'
 
         return u'%s: %s' % (display_name(status.account), title_text)
 
@@ -96,6 +100,14 @@ class DisplayStatus(object):
         # margins.
         if html.startswith('<p>') and html.endswith('</p>'):
             html = html[3:-4].replace('</p><p>', '<br><br>')
+
+        if status.poll:
+            html += '<table border="1" cellspacing="0" cellpadding="2" style="border-collapse:collapse">'
+            html += '<caption style="background:#00000011">Poll</caption>'
+            for option in status.poll.options:
+                percent = 100.0 * option.votes_count / status.poll.votes_count
+                html += '<tr><td>%s</td><td>%.2f%%</td></tr>' % (option.title, percent)
+            html += '</table>'
 
         for attachment in status.media_attachments:
             html += '<p>'
