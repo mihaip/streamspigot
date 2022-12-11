@@ -1,0 +1,13 @@
+<div style="color:{{ BUBBLE_TEXT_COLOR }}">
+  {% if status_groups %}
+    <div style="display:table;border-spacing:0;border-collapse:collapse;font-family:sans-serif;font-size:inherit;font-weight:inherit;font-style:inherit;font-variant:inherit;color:{{ BUBBLE_TEXT_COLOR }};width:100%" cellpadding="0">
+      {% for status_group in status_groups %}
+        {% include 'status-group.snippet' %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div style="padding:0.5em">
+      No updates for this day.
+    </div>
+  {% endif %}
+</div>

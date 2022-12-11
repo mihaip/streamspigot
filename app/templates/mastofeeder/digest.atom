@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <id>{{ feed_url }}</id>
+  <link rel="self" href="{{ feed_url }}"/>
+  <link rel="alternate" href="{{ html_url }}" type="text/html"/>
+  <title>{{ feed_title }}</title>
+  <updated>{{ end_date_iso }}Z</updated>
+  <author>
+    <name>{{ APP_NAME }} : Masto Feeder</name>
+  </author>
+  <entry>
+    <id>{{ digest_html_url }}</id>
+    <title type="text">Digest for {{ title_date }}</title>
+    <updated>{{ end_date_iso }}Z</updated>
+    <link rel="alternate" type="text/html" href="{{ digest_html_url }}"/>
+    <content type="html">
+      {{ digest_contents }}
+    </content>
+  </entry>
+</feed>

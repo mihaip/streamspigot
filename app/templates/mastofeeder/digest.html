@@ -1,0 +1,18 @@
+{% extends "base/page.html" %}
+
+{% block title %}{{ APP_NAME }}: {{ feed_title }}{% endblock %}
+
+{% block subtitle %}{{ feed_title }}{% endblock %}
+{% block subsubtitle %}{{ title_date }}{% endblock %}
+
+{% block intro %}
+  <p>Debug HTML output.</p>
+{% endblock %}
+
+{% block body %}
+    {{ digest_contents|safe }}
+{% endblock %}
+
+{% block footer %}
+
+{% endblock %}

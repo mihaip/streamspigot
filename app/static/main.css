@@ -89,7 +89,7 @@ a, .link {
 }
 
 #footer {
-  margin-top: 5em;
+  margin-top: 2em;
   background: #dde8ff;
 }
 
@@ -338,6 +338,21 @@ a, .link {
 #mastofeeder-feed-container.disabled {
   opacity: .5;
   pointer-events: none;
+}
+
+#mastofeeder-feed-container ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+#mastofeeder-feed-container li {
+  margin-bottom: 0.5em;
+}
+
+#mastofeeder-feed-container h3 {
+  font-size: 1em;
+  font-weight: bold;
 }
 
 .status-json.collapsed {

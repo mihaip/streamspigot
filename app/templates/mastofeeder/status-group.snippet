@@ -9,7 +9,7 @@
             class="nnw-nozoom"/>
       </a>
     </div>
-    <div style="display:table-cell;vertical-align:top;padding-bottom:{{ bottom_margin }}">
+    <div style="display:table-cell;vertical-align:top;padding-bottom:1.5em">
       <div style="padding:0 .5em">
         <b>{{ status_group.author_display_name }} </b>
         <a href="{{ status_group.user.url }}"
@@ -18,10 +18,9 @@
         </a>
       </div>
       <div style="background:{{ BUBBLE_COLOR }};border-radius:6px;margin-top:.5em">
-{% endspaceless %}
       {% for display_status in status_group.display_statuses %}
         <div style="padding:.5em;{% if not forloop.first %} border-top:solid 1px {{ BUBBLE_SEPARATOR_COLOR }} {% endif %}">
-          {% if status.reblog %}
+          {% if display_status.status.reblog %}
             {% with display_status.reblog_display_status as display_status %}
               <div style="opacity:0.5;margin-bottom:0.5em">↺ boosted
                 {% include 'account-link.snippet' %}
@@ -34,7 +33,6 @@
           {% include 'status-footer.snippet' %}
         </div>
       {% endfor %}
-{% spaceless %}
       </div>
     </div>
   </div>

@@ -1,4 +1,5 @@
 import datetime
+import itertools
 import logging
 
 from mastofeeder import data
@@ -22,7 +23,16 @@ class FeedHandler(session.SessionApiHandler):
 
 class BaseTimelineFeedHandler(FeedHandler):
     def _get_signed_in(self):
-        statuses = self._get_statuses()
+        if self.request.get('mode') == 'digest':
+            self._get_digest()
+        else:
+            self._get_feed()
+
+    def _get_feed(self):
+        title_label, log_label = self._get_labels()
+        logging.info('Serving feed for %s', log_label)
+
+        statuses = self._get_statuses(limit=40)
         display_statuses = mastodondisplay.DisplayStatus.wrap(
             statuses, thumbnails.LARGE_THUMBNAIL, self._session.timezone())
 
@@ -34,7 +44,7 @@ class BaseTimelineFeedHandler(FeedHandler):
         updated_date = datetime.datetime.utcnow()
 
         params = {
-            'feed_title': self._get_title(),
+            'feed_title': '%s Timeline' % title_label,
             'updated_date_iso': updated_date.isoformat(),
             'feed_url': self.request.url,
             'reply_base_url': self._get_url('feed/%s/parent' % self._session.feed_id),
@@ -54,31 +64,117 @@ class BaseTimelineFeedHandler(FeedHandler):
 
         self._add_last_modified_header(updated_date)
 
-    def _get_statuses(self):
+    def _get_digest(self):
+        include_status_json = self.request.get('include_status_json') == 'true'
+        dev_mode = self.request.get('dev') == 'true'
+
+        end_date = None
+        end_date_str = self.request.get('end_date')
+        if end_date_str:
+            try:
+                end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%dT%H:%M:%S')
+            except ValueError:
+                pass
+        if not end_date:
+            end_date = datetime.datetime.utcnow().replace(
+                hour=0, minute=0, second=0, microsecond=0)
+        digest_length = datetime.timedelta(days=1)
+        start_date = end_date - digest_length
+
+        if not dev_mode and self._handle_not_modified(last_modified_date=end_date):
+            return
+
+        title_label, log_label = self._get_labels()
+        logging.info('Serving digest for %s for the range %s to %s', log_label, start_date.isoformat(), end_date.isoformat())
+
+        max_id = None
+        statuses = []
+        while True:
+            chunk_statuses = self._get_statuses(limit=40, max_id=max_id)
+            chunk_statuses = [s for s in chunk_statuses if s.created_at.replace(tzinfo=None) >= start_date]
+            if not chunk_statuses:
+                break
+            statuses.extend([s for s in chunk_statuses if s.created_at.replace(tzinfo=None) < end_date])
+            max_id = chunk_statuses[-1].id
+        statuses = list(reversed(statuses))
+
+        timezone = self._session.timezone()
+        status_groups = []
+        for _, group_statuses in itertools.groupby(
+                statuses, lambda status: status.account.url):
+            group_statuses = list(group_statuses)
+            status_groups.append(mastodondisplay.DisplayStatusGroup(
+                group_statuses[0].account,
+                group_statuses,
+                thumbnails.LARGE_THUMBNAIL,
+                timezone))
+
+        logging.info('  Digest has %d statuses, %d groups', len(statuses), len(status_groups))
+
+        digest_contents = unicode(self._render_template('mastofeeder/digest-contents.snippet', {
+            'reply_base_url': self._get_url('feed/%s/parent' % self._session.feed_id),
+            'status_groups': status_groups,
+            'include_status_json': include_status_json,
+        }))
+
+        params = {
+            'feed_title': '%s Digest' % title_label,
+            'end_date_iso': end_date.isoformat(),
+            'title_date': '%s (UTC)' % start_date.strftime('%A, %B %d, %Y'),
+            'feed_url': self.request.url,
+            'html_url': self.request.url + '&output=html',
+            'digest_html_url': self.request.url + '&output=html&end_date=' + end_date.isoformat(),
+            'digest_contents': digest_contents,
+        }
+
+        if not dev_mode:
+            self._add_caching_headers(
+                last_modified_date=end_date,
+                max_age_sec=digest_length.total_seconds())
+
+        if self.request.get('output') == 'html':
+            self._write_template('mastofeeder/digest.html', params)
+        else:
+            self._write_template(
+                'mastofeeder/digest.atom',
+                params,
+                # text/xml is pretty-printed and thus easier to see
+                content_type='text/xml' if include_status_json
+                    else 'application/atom+xml')
+
+    def _get_statuses(self, max_id=None, min_id=None, since_id=None, limit=None):
         raise NotImplementedError()
 
-    def _get_title(self):
+    def _get_labels(self):
         raise NotImplementedError()
 
 class TimelineFeedHandler(BaseTimelineFeedHandler):
-    def _get_statuses(self):
-        mastodon_id = self._session.mastodon_id
-        logging.info('Serving timeline feed for %s', mastodon_id)
-        return self._api.timeline_home(limit=40)
+    def _get_statuses(self, max_id=None, min_id=None, since_id=None, limit=None):
+        return self._api.timeline_home(
+            max_id=max_id,
+            min_id=min_id,
+            since_id=since_id,
+            limit=limit,
+        )
 
-    def _get_title(self):
+    def _get_labels(self):
         mastodon_user = self._api.me()
-        return '@%s Timeline' % mastodon_user.username
+        return '@%s' % mastodon_user.username, 'user %s' % self._session.mastodon_id
 
 class ListTimelineFeedHandler(BaseTimelineFeedHandler):
-    def _get_statuses(self):
-        list_id = self._get_list_id()
-        logging.info('Serving timeline feed for user %s list %s', self._session.mastodon_id, list_id)
-        return self._api.timeline_list(id=list_id, limit=40)
+    def _get_statuses(self, max_id=None, min_id=None, since_id=None, limit=None):
+        return self._api.timeline_list(
+            id=self._get_list_id(),
+            max_id=max_id,
+            min_id=min_id,
+            since_id=since_id,
+            limit=limit,
+        )
 
-    def _get_title(self):
-        list = self._api.list(self._get_list_id())
-        return '%s Timeline' % list.title
+    def _get_labels(self):
+        list_id = self._get_list_id()
+        list = self._api.list(list_id)
+        return '%s' % list.title, 'user %s list %s' % (self._session.mastodon_id, list_id)
 
     def _get_list_id(self):
         return int(self.request.route_args[1])
