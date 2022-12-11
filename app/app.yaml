@@ -40,6 +40,7 @@ handlers:
 
 - url: .*
   script: main.py
+  secure: always
 
 libraries:
 - name: django
