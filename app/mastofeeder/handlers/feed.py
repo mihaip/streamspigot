@@ -32,7 +32,18 @@ class BaseTimelineFeedHandler(FeedHandler):
         title_label, log_label = self._get_labels()
         logging.info('Serving feed for %s', log_label)
 
-        statuses = self._get_statuses(limit=40)
+        # Include items from the past 12 hours, which should be enough to cover
+        # most federation delays.
+        limit_date = datetime.datetime.utcnow()  - datetime.timedelta(hours=12)
+        max_id = None
+        statuses = []
+        while True:
+            chunk_statuses = self._get_statuses(limit=40, max_id=max_id)
+            chunk_statuses = [s for s in chunk_statuses if s.created_at.replace(tzinfo=None) >= limit_date]
+            if not chunk_statuses:
+                break
+            statuses.extend(chunk_statuses)
+            max_id = chunk_statuses[-1].id
         display_statuses = mastodondisplay.DisplayStatus.wrap(
             statuses, thumbnails.LARGE_THUMBNAIL, self._session.timezone())
 
@@ -40,7 +51,6 @@ class BaseTimelineFeedHandler(FeedHandler):
 
         include_status_json = self.request.get('include_status_json') == 'true'
 
-        # TODO: if-modified-since support
         updated_date = datetime.datetime.utcnow()
 
         params = {
