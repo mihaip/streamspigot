@@ -105,7 +105,10 @@ class DisplayStatus(object):
             html += '<table border="1" cellspacing="0" cellpadding="2" style="border-collapse:collapse">'
             html += '<caption style="background:#00000011">Poll</caption>'
             for option in status.poll.options:
-                percent = 100.0 * option.votes_count / status.poll.votes_count
+                if status.poll.votes_count > 0:
+                    percent = 100.0 * option.votes_count / status.poll.votes_count
+                else:
+                    percent = 0
                 html += '<tr><td>%s</td><td>%.2f%%</td></tr>' % (option.title, percent)
             html += '</table>'
 
