@@ -32,6 +32,18 @@ class ListsHandler(base.handlers.BaseHandler):
         else:
             self._write_error(502)
 
+class RetiredDigestHandler(base.handlers.BaseHandler):
+    def get(self):
+        if self.request.get('output') == 'html':
+            self._write_template(
+                'tweetdigest/retired-digest.html',
+                content_type='text/html')
+        else:
+            self._write_template(
+                'tweetdigest/retired-digest.atom',
+                content_type='text/xml')
+
+
 class DigestHandler(base.handlers.BaseHandler):
     class OutputTemplate(object):
         def __init__(self, template_file, content_type, use_relative_dates):

@@ -43,7 +43,7 @@ def main():
     application = webapp.WSGIApplication([
             ('/tweet-digest/?', tweetdigest.handlers.MainHandler),
             ('/tweet-digest/lists', tweetdigest.handlers.ListsHandler),
-            ('/tweet-digest/digest', tweetdigest.handlers.DigestHandler),
+            ('/tweet-digest/digest', tweetdigest.handlers.RetiredDigestHandler),
             ('/tweet-digest/legacy-digest', tweetdigest.handlers.LegacyDigestHandler),
 
             ('/feed-playback/?', feedplayback.handlers.MainHandler),

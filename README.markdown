@@ -1,8 +1,10 @@
 # Introduction
 
-Stream Spigot a collection of tools to make consumption of real time-ish datasources more manageable. For now two tools have been built:
+Stream Spigot a collection of tools to make consumption of real time-ish datasources more manageable. Four tools have been built, but only Masto Feeder is still active:
 * Tweet Digest lets tweets be consumed in daily digests (ideally via a feed reader). This is useful for high-volume accounts that would be annoying to follow directly. Digests can be defined either with explicit lists of usernames or by using the built-in Twitter list functionality.
 * Feed Playback allows RSS/Atom feed content to be played back (Google Reader is used for historical data). This makes it easy to read a newly-discovered blog from the beginning in a manageable fashion.
+* Bird Feeder is similar to Tweet Digest, but instead of daily digests, it lets you read your Twitter timeline in a feed reader. This is useful for people who follow a lot of people and don't want to miss anything.
+* Masto Feeder is similar to Bird Feeder, but for Mastodon timelines. It's the only tool that's still active.
 
 A running instance is at [www.streamspigot.com](http://www.streamspigot.com/).
 
