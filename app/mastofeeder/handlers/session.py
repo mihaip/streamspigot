@@ -65,18 +65,23 @@ class SessionApiHandler(SessionHandler):
             lambda: self._post_signed_in(), lambda: self._post_signed_out())
 
     def _dispatch_request(self, signed_in, signed_out):
-        if self._has_request_session():
-            session = self._get_session_from_request()
+        try:
+            if self._has_request_session():
+                session = self._get_session_from_request()
 
-            if session:
-                self._session = session
-                self._api = session.create_api()
-                signed_in()
-                return
-            else:
-                logging.info("Cannot find session")
+                if session:
+                    self._session = session
+                    self._api = session.create_api()
+                    signed_in()
+                    return
+                else:
+                    logging.info("Cannot find session")
 
-        signed_out()
+            signed_out()
+        except mastodon.MastodonNotFoundError:
+            self._write_error(404)
+            return
+
 
     def _get_signed_in(self):
         raise NotImplementedError()
