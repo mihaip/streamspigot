@@ -141,6 +141,21 @@ class DisplayStatus(object):
                 )
             html += '</p>'
 
+        if status.card and status.card.title:
+            html += '<table style="margin-top:1em;border-radius:4px;border:solid 1px #ccc;" border="0">'
+            if status.card.image:
+                html += '<tr><td valign="top"><a href="%s"><img src="%s" alt="%s" class="nnw-nozoom" width="48" border=0"/></a></td>' % (
+                    escape(status.card.url),
+                    escape(status.card.image),
+                    escape(status.card.title),
+                )
+            html += '<td valign="top"><a href="%s"><b>%s</b></a><br>%s</td></tr>' % (
+                escape(status.card.url),
+                escape(status.card.title),
+                escape(status.card.description),
+            )
+            html += '</table>'
+
         if status.spoiler_text:
             return '<details><summary style="cursor:pointer">%s</summary>%s</details>' % (
                 escape(status.spoiler_text), html)
