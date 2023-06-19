@@ -114,26 +114,30 @@ class DisplayStatus(object):
 
         for attachment in status.media_attachments:
             html += '<p>'
+            attachment_url = attachment.remote_url or attachment.url
+            description = attachment.description or attachment.type
             if attachment.type == 'image':
-                html += u' <a href="%s"><img src="%s" alt="%s" class="nnw-nozoom" border=0" /></a>' % (
-                    escape(attachment.url),
-                    escape(attachment.preview_url),
-                    escape(attachment.description or attachment.type),
+                html += u' <a href="%s"><img src="%s" alt="%s" class="nnw-nozoom" border=0"/></a>' % (
+                    escape(attachment_url),
+                    escape(attachment.remote_url or attachment.preview_url),
+                    escape(description),
                 )
             elif attachment.type == 'video':
-                html += u' <video src="%s" alt="%s" />' % (
-                    escape(attachment.url),
-                    escape(attachment.description or attachment.type),
+                html += u' <video src="%s" poster="%s" alt="%s" />' % (
+                    escape(attachment_url),
+                    escape(attachment.preview_remote_url or ""),
+                    escape(description),
                 )
             elif attachment.type == 'gifv':
-                html += u' <video src="%s" alt="%s" autoplay loop>' % (
-                    escape(attachment.url),
-                    escape(attachment.description or attachment.type),
+                html += u' <video src="%s" poster="%s" alt="%s" autoplay loop>' % (
+                    escape(attachment_url),
+                    escape(attachment.preview_remote_url or ""),
+                    escape(description),
                 )
             else:
                 html += u' <a href="%s">%s</a>' % (
-                    escape(attachment.url),
-                    escape(attachment.description or attachment.type),
+                    escape(attachment_url),
+                    escape(description),
                 )
             html += '</p>'
 
