@@ -101,13 +101,17 @@ class SignInHandler(BaseHandler):
 
         app = data.MastodonApp.get_by_instance_url(instance_url)
         if not app:
-            client_id, client_secret = mastodon.Mastodon.create_app(
-                '%s - Masto Feeder' % CONSTANTS.APP_NAME,
-                scopes=SCOPES,
-                api_base_url=instance_url,
-                redirect_uris=[self._get_url('sign-in-callback')],
-                website=self._get_url(''),
-            )
+            try:
+                client_id, client_secret = mastodon.Mastodon.create_app(
+                    '%s - Masto Feeder' % CONSTANTS.APP_NAME,
+                    scopes=SCOPES,
+                    api_base_url=instance_url,
+                    redirect_uris=[self._get_url('sign-in-callback')],
+                    website=self._get_url(''),
+                )
+            except mastodon.MastodonNetworkError:
+                self._write_input_error('Invalid instance URL %s' % instance_url)
+                return
             app = data.MastodonApp.create(instance_url, client_id, client_secret)
             app.put()
 
