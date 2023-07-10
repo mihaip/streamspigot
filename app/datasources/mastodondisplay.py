@@ -122,7 +122,12 @@ class DisplayStatus(object):
                     escape(attachment.remote_url or attachment.preview_url),
                     escape(description),
                 )
-            elif attachment.type == 'video':
+            elif attachment.type == 'video' or (
+                    # Fall back to detecting video by file extension if the
+                    # type is unknown.
+                    attachment.type == 'unknown' and
+                    attachment_url and
+                    attachment_url.endswith('.mp4')):
                 html += u' <video src="%s" poster="%s" alt="%s" />' % (
                     escape(attachment_url),
                     escape(attachment.preview_remote_url or ""),
