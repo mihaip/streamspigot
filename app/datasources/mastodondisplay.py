@@ -41,6 +41,9 @@ class DisplayStatus(object):
         return display_name(self._status.account)
 
     def permalink(self):
+        return self.permalink_status().url
+
+    def id(self):
         return self.permalink_status().uri
 
     def created_at_iso(self):

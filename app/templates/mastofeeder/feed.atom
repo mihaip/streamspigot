@@ -16,7 +16,7 @@
   </author>
   {% for display_status in display_statuses %}
     <entry>
-      <id>{{ display_status.permalink }}</id>
+      <id>{{ display_status.id }}</id>
       <link rel="alternate" href="{{ display_status.permalink }}" type="text/html"/>
       <title type="text">{{ display_status.title_as_text }}</title>
       <published>{{ display_status.created_at_iso }}</published>
