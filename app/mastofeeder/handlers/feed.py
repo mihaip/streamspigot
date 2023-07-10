@@ -37,12 +37,16 @@ class BaseTimelineFeedHandler(FeedHandler):
         limit_date = datetime.datetime.utcnow()  - datetime.timedelta(hours=12)
         max_id = None
         statuses = []
+        status_ids = set()
         while True:
             chunk_statuses = self._get_statuses(limit=40, max_id=max_id)
-            chunk_statuses = [s for s in chunk_statuses if s.created_at.replace(tzinfo=None) >= limit_date]
+            chunk_statuses = [s for s in chunk_statuses if s.created_at.replace(tzinfo=None) >= limit_date and s.id not in status_ids]
             if not chunk_statuses:
                 break
             statuses.extend(chunk_statuses)
+            # Ensure that we don't get stuck in a loop if the server returns
+            # the same chunk over and over again (which Sky Bridge appears to).
+            status_ids.update(s.id for s in chunk_statuses)
             max_id = chunk_statuses[-1].id
         display_statuses = mastodondisplay.DisplayStatus.wrap(
             statuses, thumbnails.LARGE_THUMBNAIL, self._session.timezone())

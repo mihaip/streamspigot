@@ -64,7 +64,7 @@ class Session(db.Model):
 
     def create_api(self):
         app = MastodonApp.get_by_instance_url(self.instance_url)
-        return mastodon.Mastodon(
+        client = mastodon.Mastodon(
             client_id=app.client_id,
             client_secret=app.client_secret,
             api_base_url=app.instance_url,
@@ -72,6 +72,10 @@ class Session(db.Model):
             user_agent='StreamSpigot/%s (+%s)' % (
             os.environ.get('CURRENT_VERSION_ID', '1'),
             CONSTANTS.APP_URL))
+        # Sky Bridge reports version 1.0, so for now disable version checks
+        # altogether.
+        client.version_check_mode = "none"
+        return client
 
     def timezone(self):
         # TODO: allow timezone to be customized
