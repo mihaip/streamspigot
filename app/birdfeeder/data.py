@@ -92,12 +92,14 @@ class Session(db.Model):
             CONSTANTS.APP_URL, self.feed_id)
 
     def allows_feed_updates(self):
-        return self.twitter_id in {
-            '28203', # mihai
-            '17116881', # annparparita
-            '5634412', # robot_friend
-            '233087105', # streamspigot
-        }
+        # Disable due to Twitter API access being removed.
+        # return self.twitter_id in {
+        #     '28203', # mihai
+        #     '17116881', # annparparita
+        #     '5634412', # robot_friend
+        #     '233087105', # streamspigot
+        # }
+        return False
 
     def enqueue_update_task(
             self,
