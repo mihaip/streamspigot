@@ -1,0 +1,10 @@
+name = "streamspigot"
+account_id = "2ccb840de076261467812cbc32f8aa47"
+workers_dev = true
+compatibility_date = "2024-04-13"
+
+main = "./.cloudflare/worker.js"
+site.bucket = "./.cloudflare/public"
+
+build.command = "npm run build"
+
