@@ -106,7 +106,7 @@
     }
 
     .container {
-        width: 625px;
+        max-width: 625px;
         margin: 2em auto 0;
     }
 
@@ -118,5 +118,27 @@
     .footer {
         margin-top: 2em;
         background: #dde8ff;
+    }
+
+    @media (max-width: 500px) {
+        .header {
+            background-size: 32px 97px;
+            min-height: 97px;
+        }
+
+        .app-title {
+            background-size: 490px 97px;
+            height: 97px;
+        }
+
+        .page-title {
+            top: 68px;
+            margin-right: -35px;
+            font-size: 20px;
+        }
+
+        .container {
+            margin-top: 1em;
+        }
     }
 </style>

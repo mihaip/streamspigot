@@ -21,20 +21,22 @@
         </p>
     </svelte:fragment>
 
-    <p>
-        To get started, sign in to your Mastodon instance to allow Masto Feeder
-        access to your timeline and lists.
-    </p>
+    <div class="sign-in">
+        <p>
+            To get started, sign in to your Mastodon instance to allow Masto
+            Feeder access to your timeline and lists.
+        </p>
 
-    <form method="POST" class="sign-in">
-        <input
-            type="url"
-            name="instance_url"
-            placeholder="https://mastodon.social"
-            required
-            size="30" />
-        <input type="submit" value="Sign In" />
-    </form>
+        <form method="POST" class="sign-in">
+            <input
+                type="url"
+                name="instance_url"
+                placeholder="https://mastodon.social"
+                required
+                size="30" />
+            <input type="submit" value="Sign In" />
+        </form>
+    </div>
 
     <svelte:fragment slot="footer">
         Feeds are exported under randomly-generated URLs. Though they should not
@@ -44,11 +46,15 @@
 
 <style>
     .sign-in {
+        margin: 0 2em;
+    }
+
+    .sign-in form {
         display: flex;
         justify-content: center;
     }
 
-    .sign-in input[type="submit"] {
+    .sign-in form input[type="submit"] {
         margin-left: 0.5em;
     }
 </style>

@@ -100,6 +100,16 @@
         position: relative;
     }
 
+    @media (max-width: 500px) {
+        .tools {
+            width: 320px;
+        }
+
+        .tool {
+            width: 240px;
+        }
+    }
+
     .tool:before {
         display: block;
         width: 10px;
