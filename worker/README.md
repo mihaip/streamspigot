@@ -18,6 +18,14 @@ npm run dev
 
 It will be running at [localhost:3413](http://localhost:3413/).
 
+If working on things that need Cloudflare-specific functionality (e.g. KV namespaces) then you'll need to start the worker in dev mode:
+
+```bash
+npm run worker-dev
+```
+
+It will be running at [localhost:5413](http://localhost:5413/).
+
 ## Building
 
 To build and run a preview version:

@@ -28,6 +28,12 @@ export default [
         },
     },
     {
-        ignores: ["build/", ".svelte-kit/", "package/", ".cloudflare/"],
+        ignores: [
+            "build/",
+            ".svelte-kit/",
+            "package/",
+            ".cloudflare/",
+            ".wrangler/",
+        ],
     },
 ];

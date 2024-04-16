@@ -8,3 +8,9 @@ site.bucket = "./.cloudflare/public"
 
 build.command = "npm run build"
 
+[[kv_namespaces]]
+binding = "MASTOFEEDER"
+id = "0d58678cdea94a018dc79669f6bc9a76"
+
+[dev]
+port = 5413

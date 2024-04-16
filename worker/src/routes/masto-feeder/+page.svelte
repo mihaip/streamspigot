@@ -1,6 +1,9 @@
 <script lang="ts">
     import {APP_NAME} from "$lib/constants";
     import Layout from "$lib/components/Layout.svelte";
+    import type {PageData} from "./$types";
+
+    export let data: PageData;
 </script>
 
 <Layout title="Masto Feeder">
@@ -21,22 +24,26 @@
         </p>
     </svelte:fragment>
 
-    <div class="sign-in">
-        <p>
-            To get started, sign in to your Mastodon instance to allow Masto
-            Feeder access to your timeline and lists.
-        </p>
+    {#if data.mastoFeederSession}
+        Signed in!
+    {:else}
+        <div class="sign-in">
+            <p>
+                To get started, sign in to your Mastodon instance to allow Masto
+                Feeder access to your timeline and lists.
+            </p>
 
-        <form method="POST" class="sign-in">
-            <input
-                type="url"
-                name="instance_url"
-                placeholder="https://mastodon.social"
-                required
-                size="30" />
-            <input type="submit" value="Sign In" />
-        </form>
-    </div>
+            <form action="?/sign-in" method="POST" class="sign-in">
+                <input
+                    type="url"
+                    name="instance_url"
+                    placeholder="https://mastodon.social"
+                    required
+                    size="30" />
+                <input type="submit" value="Sign In" />
+            </form>
+        </div>
+    {/if}
 
     <svelte:fragment slot="footer">
         Feeds are exported under randomly-generated URLs. Though they should not

@@ -1,12 +1,18 @@
-// See https://kit.svelte.dev/docs/types#app
-// for information about these interfaces
+/// <reference types="@sveltejs/adapter-cloudflare-workers" />
+/// <reference types="@cloudflare/workers-types/2023-07-01" />
+
+import type {MastoFeederSession} from "$lib/controllers/masto-feeder";
+
 declare global {
     namespace App {
-        // interface Error {}
-        // interface Locals {}
-        // interface PageData {}
-        // interface PageState {}
-        // interface Platform {}
+        interface Platform {
+            env?: {
+                MASTOFEEDER: KVNamespace;
+            };
+        }
+        interface Locals {
+            mastoFeederSession?: MastoFeederSession;
+        }
     }
 }
 
