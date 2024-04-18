@@ -1,5 +1,11 @@
 import {APP_NAME} from "$lib/constants";
-import {error, redirect, type Cookies, type Redirect} from "@sveltejs/kit";
+import {
+    error,
+    redirect,
+    type Cookies,
+    type Redirect,
+    type RequestEvent,
+} from "@sveltejs/kit";
 import {createOAuthAPIClient, createRestAPIClient} from "masto";
 
 const SCOPES = ["read:accounts", "read:follows", "read:lists", "read:statuses"];
@@ -18,39 +24,35 @@ export class MastoFeederController {
     #kv: MastoFeederKV;
     #appProtocol: string;
     #appHost: string;
+    #cookies: Cookies;
 
-    constructor(
-        platform: Readonly<App.Platform> | undefined,
-        appProtocol: string,
-        appHost: string
-    ) {
+    constructor(event: RequestEvent) {
+        const {cookies, platform, url} = event;
         const kv = platform?.env?.MASTOFEEDER;
         if (!kv) {
             throw new Error(
                 "Could not find MASTOFEEDER KV namespace. Make sure you're running with wrangler"
             );
         }
-        this.#kv = new MastoFeederKV(kv);
-        this.#appProtocol = appProtocol;
-        this.#appHost = appHost;
+        this.#kv = new MastoFeederKV(new WorkerKV(kv));
+        this.#appProtocol = url.protocol;
+        this.#appHost = url.host;
+        this.#cookies = cookies;
     }
 
-    async getSession(cookies: Cookies): Promise<MastoFeederSession | null> {
-        const sessionId = cookies.get(SESSION_COOKIE_NAME);
+    async getSession(): Promise<MastoFeederSession | null> {
+        const sessionId = this.#cookies.get(SESSION_COOKIE_NAME);
         if (!sessionId) {
             return null;
         }
         return this.#kv.getSessionById(sessionId);
     }
 
-    async handleSignIn(
-        instanceUrl: string,
-        cookies: Cookies
-    ): Promise<Redirect> {
+    async handleSignIn(instanceUrl: string): Promise<Redirect> {
         const app = await this.#getOrCreateApp(instanceUrl);
         const authRequest = await this.#createAuthRequest(instanceUrl);
 
-        cookies.set(
+        this.#cookies.set(
             AUTH_REQUEST_COOKIE_NAME,
             authRequest.id,
             AUTH_REQUEST_COOKIE_OPTIONS
@@ -61,14 +63,16 @@ export class MastoFeederController {
 
     async handleSignInCallback(
         code: string,
-        state: string | null,
-        cookies: Cookies
+        state: string | null
     ): Promise<Response> {
-        const authRequestId = cookies.get(AUTH_REQUEST_COOKIE_NAME);
+        const authRequestId = this.#cookies.get(AUTH_REQUEST_COOKIE_NAME);
         if (!authRequestId) {
             return error(400, "No auth request cookie found");
         }
-        cookies.delete(AUTH_REQUEST_COOKIE_NAME, AUTH_REQUEST_COOKIE_OPTIONS);
+        this.#cookies.delete(
+            AUTH_REQUEST_COOKIE_NAME,
+            AUTH_REQUEST_COOKIE_OPTIONS
+        );
 
         // Sky Bridge does not send back the state parameter.
         if (state && state != authRequestId) {
@@ -123,13 +127,43 @@ export class MastoFeederController {
             await this.#kv.putSession(session);
         }
 
-        cookies.set(
+        this.#cookies.set(
             SESSION_COOKIE_NAME,
             session.sessionId,
             SESSION_COOKIE_OPTIONS
         );
 
         return redirect(302, "/masto-feeder");
+    }
+
+    async handleSignOut(): Promise<Redirect> {
+        const session = await this.getSession();
+        if (session) {
+            this.#cookies.delete(SESSION_COOKIE_NAME, SESSION_COOKIE_OPTIONS);
+        }
+        return redirect(302, "/masto-feeder");
+    }
+
+    async handleResetFeedId(): Promise<Redirect> {
+        const session = await this.getSession();
+        if (!session) {
+            return redirect(302, "/masto-feeder");
+        }
+
+        const feedId = crypto.randomUUID();
+        await this.#kv.updateSessionFeedId(session, feedId);
+
+        return redirect(302, "/masto-feeder");
+    }
+
+    async handleTimelineFeed(feedId: string): Promise<Response> {
+        const session = await this.#kv.getSessionByFeedId(feedId);
+        if (!session) {
+            return error(404, "Unknown feed ID");
+        }
+        return new Response(JSON.stringify(session), {
+            headers: {"Content-Type": "application/json"},
+        });
     }
 
     async #getOrCreateApp(instanceUrl: string): Promise<MastoFeederApp> {
@@ -211,19 +245,56 @@ export type MastoFeederSession = {
     accessToken: string;
 };
 
-class MastoFeederKV {
+interface KV {
+    get(key: string): Promise<string | null>;
+    put(key: string, value: string): Promise<void>;
+    delete(key: string): Promise<void>;
+
+    getJSON<T>(key: string): Promise<T | null>;
+    putJSON<T>(key: string, value: T): Promise<void>;
+}
+
+class WorkerKV implements KV {
     #kv: KVNamespace;
 
     constructor(kv: KVNamespace) {
         this.#kv = kv;
     }
 
+    async get(key: string): Promise<string | null> {
+        return await this.#kv.get(key);
+    }
+
+    async put(key: string, value: string): Promise<void> {
+        return await this.#kv.put(key, value);
+    }
+
+    async delete(key: string): Promise<void> {
+        return await this.#kv.delete(key);
+    }
+
+    async getJSON<T>(key: string): Promise<T | null> {
+        return await this.#kv.get(key, {type: "json"});
+    }
+
+    async putJSON<T>(key: string, value: T): Promise<void> {
+        return await this.#kv.put(key, JSON.stringify(value));
+    }
+}
+
+class MastoFeederKV {
+    #kv: KV;
+
+    constructor(kv: KV) {
+        this.#kv = kv;
+    }
+
     async getApp(instanceUrl: string): Promise<MastoFeederApp | null> {
-        return await this.#get(this.#appKey(instanceUrl));
+        return await this.#kv.getJSON(this.#appKey(instanceUrl));
     }
 
     async putApp(app: MastoFeederApp): Promise<void> {
-        return await this.#put(this.#appKey(app.instanceUrl), app);
+        return await this.#kv.putJSON(this.#appKey(app.instanceUrl), app);
     }
 
     #appKey(instanceUrl: string): string {
@@ -231,11 +302,11 @@ class MastoFeederKV {
     }
 
     async getAuthRequest(id: string): Promise<MastoFeederAuthRequest | null> {
-        return await this.#get(this.#authRequestKey(id));
+        return await this.#kv.getJSON(this.#authRequestKey(id));
     }
 
     async putAuthRequest(authRequest: MastoFeederAuthRequest): Promise<void> {
-        return await this.#put(
+        return await this.#kv.putJSON(
             this.#authRequestKey(authRequest.id),
             authRequest
         );
@@ -250,7 +321,7 @@ class MastoFeederKV {
     }
 
     async getSessionById(id: string): Promise<MastoFeederSession | null> {
-        return this.#get(this.#sessionKey(id));
+        return this.#kv.getJSON(this.#sessionKey(id));
     }
 
     async getSessionByFeedId(
@@ -285,7 +356,10 @@ class MastoFeederKV {
             this.#sessionMastodonIdKey(session.instanceUrl, session.mastodonId),
             session.sessionId
         );
-        return await this.#put(this.#sessionKey(session.sessionId), session);
+        return await this.#kv.putJSON(
+            this.#sessionKey(session.sessionId),
+            session
+        );
     }
 
     // We don't expose generic mutation methods so that we can know which
@@ -295,7 +369,7 @@ class MastoFeederKV {
         accessToken: string
     ): Promise<MastoFeederSession> {
         session.accessToken = accessToken;
-        await this.#put(this.#sessionKey(session.sessionId), session);
+        await this.#kv.putJSON(this.#sessionKey(session.sessionId), session);
         return session;
     }
 
@@ -305,8 +379,8 @@ class MastoFeederKV {
     ): Promise<MastoFeederSession> {
         await this.#kv.delete(this.#sessionFeedIdKey(session.feedId));
         session.feedId = feedId;
-        await this.#put(this.#sessionKey(session.sessionId), session);
-        await this.#put(this.#sessionFeedIdKey(feedId), session.sessionId);
+        await this.#kv.putJSON(this.#sessionKey(session.sessionId), session);
+        await this.#kv.put(this.#sessionFeedIdKey(feedId), session.sessionId);
         return session;
     }
 
@@ -320,13 +394,5 @@ class MastoFeederKV {
 
     #sessionMastodonIdKey(instanceUrl: string, mastodonId: string) {
         return `session_mastodon_id:${btoa(instanceUrl)}:${mastodonId}`;
-    }
-
-    async #get<T>(key: string): Promise<T | null> {
-        return await this.#kv.get<T>(key, {type: "json"});
-    }
-
-    async #put<T>(key: string, value: T): Promise<void> {
-        return await this.#kv.put(key, JSON.stringify(value));
     }
 }

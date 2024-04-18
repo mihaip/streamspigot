@@ -1,14 +1,8 @@
 import {MastoFeederController} from "$lib/controllers/masto-feeder";
-import type {LayoutServerLoad} from "./$types";
 
-export const load: LayoutServerLoad = async event => {
-    const controller = new MastoFeederController(
-        event.platform,
-        event.url.protocol,
-        event.url.host
-    );
+export async function load(event) {
+    const controller = new MastoFeederController(event);
     return {
-        mastoFeederSession:
-            (await controller.getSession(event.cookies)) ?? undefined,
+        session: (await controller.getSession()) ?? undefined,
     };
-};
+}

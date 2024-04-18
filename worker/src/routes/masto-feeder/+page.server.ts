@@ -1,20 +1,45 @@
 import {MastoFeederController} from "$lib/controllers/masto-feeder";
-import type {Actions} from "./$types";
+import {createRestAPIClient} from "masto";
 import {fail} from "@sveltejs/kit";
 
-export const actions: Actions = {
-    "sign-in": async ({cookies, request, platform, url}) => {
-        const formData = await request.formData();
+export async function load(event) {
+    const {session} = await event.parent();
+    if (!session) {
+        return;
+    }
+
+    const controller = new MastoFeederController(event);
+
+    const masto = createRestAPIClient({
+        url: session.instanceUrl,
+        accessToken: session.accessToken,
+    });
+    const user = await masto.v1.accounts.verifyCredentials();
+
+    return {
+        user,
+        timelineFeedPath: `/masto-feeder/feed/${session.feedId}/timeline`,
+    };
+}
+
+export const actions = {
+    "sign-in": async event => {
+        const formData = await event.request.formData();
         const instanceUrl = formData.get("instance_url") as string | null;
+        ("");
         if (!instanceUrl) {
             return fail(400, {instance_url: instanceUrl, missing: true});
         }
 
-        const controller = new MastoFeederController(
-            platform,
-            url.protocol,
-            url.host
-        );
-        return controller.handleSignIn(instanceUrl, cookies);
+        const controller = new MastoFeederController(event);
+        return controller.handleSignIn(instanceUrl);
+    },
+    "sign-out": async event => {
+        const controller = new MastoFeederController(event);
+        return controller.handleSignOut();
+    },
+    "reset-feed-id": async event => {
+        const controller = new MastoFeederController(event);
+        return controller.handleResetFeedId();
     },
 };

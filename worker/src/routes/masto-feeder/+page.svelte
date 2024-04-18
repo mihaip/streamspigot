@@ -1,9 +1,8 @@
 <script lang="ts">
     import {APP_NAME} from "$lib/constants";
     import Layout from "$lib/components/Layout.svelte";
-    import type {PageData} from "./$types";
 
-    export let data: PageData;
+    export let data;
 </script>
 
 <Layout title="Masto Feeder">
@@ -24,8 +23,19 @@
         </p>
     </svelte:fragment>
 
-    {#if data.mastoFeederSession}
-        Signed in!
+    {#if data.session && data.user}
+        You're signed in as <a href={data.user.url}>@{data.user.username}</a>
+        (
+        <form action="?/sign-out" method="POST" class="inline-form">
+            <button>sign out</button>
+        </form>
+        )
+
+        <p>
+            Your <a href={data.timelineFeedPath} class="feed-link"
+                ><b>@{data.user.username} timeline feed</b></a>
+            is ready. You can subscribe to the URL in your preferred feed reader.
+        </p>
     {:else}
         <div class="sign-in">
             <p>
@@ -48,6 +58,16 @@
     <svelte:fragment slot="footer">
         Feeds are exported under randomly-generated URLs. Though they should not
         be guessable, they may end up "leaking" if accidentally sent to someone.
+
+        {#if data.session}
+            If that happens, you may wish to <form
+                action="?/reset-feed-id"
+                method="POST"
+                class="inline-form">
+                <button>reset</button>
+            </form>
+            your feed URLs.
+        {/if}
     </svelte:fragment>
 </Layout>
 
@@ -63,5 +83,19 @@
 
     .sign-in form input[type="submit"] {
         margin-left: 0.5em;
+    }
+
+    .inline-form {
+        display: inline;
+    }
+
+    .inline-form button {
+        -webkit-appearance: none;
+        appearance: none;
+        border: none;
+        background: none;
+        padding: 0;
+        color: #2db300;
+        text-decoration: underline;
     }
 </style>
