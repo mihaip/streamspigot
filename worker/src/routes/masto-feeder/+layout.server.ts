@@ -1,4 +1,4 @@
-import {MastoFeederController} from "$lib/controllers/masto-feeder";
+import {MastoFeederController} from "$lib/masto-feeder/controller";
 
 export async function load(event) {
     const controller = new MastoFeederController(event);

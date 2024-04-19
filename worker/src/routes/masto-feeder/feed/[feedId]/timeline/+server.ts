@@ -1,4 +1,4 @@
-import {MastoFeederController} from "$lib/controllers/masto-feeder";
+import {MastoFeederController} from "$lib/masto-feeder/controller";
 import {error, type RequestHandler} from "@sveltejs/kit";
 
 export const GET: RequestHandler = async event => {

@@ -1,4 +1,4 @@
-import {MastoFeederController} from "$lib/controllers/masto-feeder";
+import {MastoFeederController} from "$lib/masto-feeder/controller";
 import {createRestAPIClient} from "masto";
 import {fail} from "@sveltejs/kit";
 
