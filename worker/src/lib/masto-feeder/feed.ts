@@ -72,7 +72,14 @@ export async function renderTimelineFeed(
         const {html: statusesHtml} = renderToHtml(MastodonDebugHtml, {
             statuses,
         });
-        body = `<!DOCTYPE html><html><body><div>${statusesHtml}<div></body></html>`;
+        body = `<!DOCTYPE html>
+<html>
+    <head>
+    <title>${escape(title)}</title>
+    <style>img.nnw-nozoom{max-width: 100%;}</style>
+    </head>
+    <body>${statusesHtml}</body>
+</html>`;
     } else {
         body = xml`<?xml version="1.0"?>
 <feed xmlns="http://www.w3.org/2005/Atom">

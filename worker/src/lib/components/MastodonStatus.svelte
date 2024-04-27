@@ -2,10 +2,14 @@
     import {BUBBLE_COLOR, BUBBLE_TEXT_COLOR} from "$lib/constants";
     import type {DisplayStatus} from "$lib/masto-feeder/display-status";
     import AccountLink from "./AccountLink.svelte";
+    import MastodonStatusContent from "./MastodonStatusContent.svelte";
     import MastodonStatusFooter from "./MastodonStatusFooter.svelte";
 
     export let displayStatus: DisplayStatus;
-    const status = displayStatus.status;
+    const {status} = displayStatus;
+    const contentDisplayStatus =
+        displayStatus.reblogDisplayStatus ?? displayStatus;
+    const contentStatus = contentDisplayStatus.status;
 </script>
 
 <div
@@ -55,10 +59,16 @@
             </div>
             <div
                 style="background:{BUBBLE_COLOR};border-radius:6px;margin-top:.5em;padding:.5em">
-                {#if status.reblog}
-                    {@html displayStatus.reblogDisplayStatus?.contentAsHtml}
+                {#if contentStatus.spoilerText}
+                    <details>
+                        <summary style="cursor:pointer"
+                            >{contentStatus.spoilerText}</summary>
+                        <MastodonStatusContent
+                            displayStatus={contentDisplayStatus} />
+                    </details>
                 {:else}
-                    {@html displayStatus.contentAsHtml}
+                    <MastodonStatusContent
+                        displayStatus={contentDisplayStatus} />
                 {/if}
                 <MastodonStatusFooter {displayStatus} />
             </div>
