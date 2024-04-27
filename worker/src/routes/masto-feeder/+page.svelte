@@ -32,7 +32,7 @@
         )
 
         <p>
-            Your <a href={data.timelineFeedPath} class="feed-link"
+            Your <a href={data.timelineFeedUrl} class="feed-link"
                 ><b>@{data.user.username} timeline feed</b></a>
             is ready. You can subscribe to the URL in your preferred feed reader.
         </p>

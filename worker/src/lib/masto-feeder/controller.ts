@@ -14,6 +14,7 @@ import type {
     MastoFeederApp,
     MastoFeederAuthRequest,
 } from "./types";
+import {renderTimelineFeed} from "./feed";
 
 const SCOPES = ["read:accounts", "read:follows", "read:lists", "read:statuses"];
 
@@ -65,7 +66,7 @@ export class MastoFeederController {
             AUTH_REQUEST_COOKIE_OPTIONS
         );
 
-        return redirect(302, this.#getAuthURL(app, authRequest));
+        return redirect(302, this.#getAuthUrl(app, authRequest));
     }
 
     async handleSignInCallback(
@@ -107,7 +108,7 @@ export class MastoFeederController {
             grantType: "authorization_code",
             clientId: app.clientId,
             clientSecret: app.clientSecret,
-            redirectUri: this.#redirectUri(),
+            redirectUri: this.#redirectUrl(),
             scope: SCOPES.join(" "),
             code,
         });
@@ -163,13 +164,25 @@ export class MastoFeederController {
         return redirect(302, "/masto-feeder");
     }
 
-    async handleTimelineFeed(feedId: string): Promise<Response> {
+    async handleTimelineFeed(
+        feedId: string,
+        options: {debug?: boolean; html?: boolean}
+    ): Promise<Response> {
         const session = await this.#kv.getSessionByFeedId(feedId);
         if (!session) {
             return error(404, "Unknown feed ID");
         }
-        return new Response(JSON.stringify(session), {
-            headers: {"Content-Type": "application/json"},
+        const {body, contentType} = await renderTimelineFeed(
+            session,
+            this.timelineFeedUrl(session),
+            this.#baseUrl(),
+            options
+        );
+        const encodedBody = new TextEncoder().encode(body);
+        return new Response(encodedBody, {
+            headers: {
+                "Content-Type": `${contentType}; charset=utf-8`,
+            },
         });
     }
 
@@ -183,7 +196,7 @@ export class MastoFeederController {
 
         const apiApp = await masto.v1.apps.create({
             clientName: `${APP_NAME} - Masto Feeder`,
-            redirectUris: this.#redirectUri(),
+            redirectUris: this.#redirectUrl(),
             scopes: SCOPES.join(" "),
         });
 
@@ -213,7 +226,7 @@ export class MastoFeederController {
         return authRequest;
     }
 
-    #getAuthURL(
+    #getAuthUrl(
         app: MastoFeederApp,
         authRequest: MastoFeederAuthRequest
     ): string {
@@ -221,14 +234,22 @@ export class MastoFeederController {
         url.pathname = "/oauth/authorize";
         url.searchParams.set("client_id", app.clientId);
         url.searchParams.set("response_type", "code");
-        url.searchParams.set("redirect_uri", this.#redirectUri());
+        url.searchParams.set("redirect_uri", this.#redirectUrl());
         url.searchParams.set("scope", SCOPES.join(" "));
         url.searchParams.set("force_login", "false");
         url.searchParams.set("state", authRequest.id);
         return url.toString();
     }
 
-    #redirectUri(): string {
-        return `${this.#appProtocol}//${this.#appHost}/masto-feeder/sign-in-callback`;
+    timelineFeedUrl(session: MastoFeederSession): string {
+        return `${this.#baseUrl()}/feed/${session.feedId}/timeline`;
+    }
+
+    #redirectUrl(): string {
+        return `${this.#baseUrl()}/sign-in-callback`;
+    }
+
+    #baseUrl(): string {
+        return `${this.#appProtocol}//${this.#appHost}/masto-feeder`;
     }
 }

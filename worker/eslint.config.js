@@ -18,6 +18,9 @@ export default [
                 ...globals.node,
             },
         },
+        rules: {
+            "no-constant-condition": "off",
+        },
     },
     {
         files: ["**/*.svelte"],
@@ -25,6 +28,9 @@ export default [
             parserOptions: {
                 parser: ts.parser,
             },
+        },
+        rules: {
+            "svelte/no-at-html-tags": "off",
         },
     },
     {

@@ -18,7 +18,7 @@ export async function load(event) {
 
     return {
         user,
-        timelineFeedPath: `/masto-feeder/feed/${session.feedId}/timeline`,
+        timelineFeedUrl: controller.timelineFeedUrl(session),
     };
 }
 
