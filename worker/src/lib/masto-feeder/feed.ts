@@ -1,5 +1,5 @@
 import {APP_NAME} from "$lib/constants";
-import {createRestAPIClient, type mastodon} from "masto";
+import {createRestAPIClient} from "$lib/masto";
 import type {MastoFeederSession} from "./types";
 import MastodonStatus from "$lib/components/MastodonStatus.svelte";
 import {DisplayStatus} from "./display-status";

@@ -6,7 +6,7 @@ import {
     type Redirect,
     type RequestEvent,
 } from "@sveltejs/kit";
-import {createOAuthAPIClient, createRestAPIClient} from "masto";
+import {createOAuthAPIClient, createRestAPIClient} from "$lib/masto";
 import {MastoFeederKV} from "./kv";
 import {WorkerKV} from "../kv";
 import type {

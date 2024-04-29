@@ -1,5 +1,5 @@
 import {MastoFeederController} from "$lib/masto-feeder/controller";
-import {createRestAPIClient} from "masto";
+import {createRestAPIClient} from "$lib/masto";
 import {fail} from "@sveltejs/kit";
 
 export async function load(event) {
