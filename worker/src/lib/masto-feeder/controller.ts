@@ -14,7 +14,7 @@ import type {
     MastoFeederApp,
     MastoFeederAuthRequest,
 } from "./types";
-import {renderTimelineFeed} from "./feed";
+import {renderTimelineFeed, type FeedOptions} from "./feed";
 
 const SCOPES = ["read:accounts", "read:follows", "read:lists", "read:statuses"];
 
@@ -164,9 +164,37 @@ export class MastoFeederController {
         return redirect(302, "/masto-feeder");
     }
 
+    async handleStatusParent(
+        feedId: string,
+        statusId: string
+    ): Promise<Response> {
+        const session = await this.#kv.getSessionByFeedId(feedId);
+        if (!session) {
+            return error(404, "Unknown feed ID");
+        }
+
+        const masto = createRestAPIClient({
+            url: session.instanceUrl,
+            accessToken: session.accessToken,
+        });
+
+        const context = await masto.v1.statuses
+            .$select(statusId)
+            .context.fetch();
+        const {ancestors} = context;
+        if (ancestors.length === 0) {
+            return error(404, "No ancestors found");
+        }
+        const parent = ancestors[ancestors.length - 1];
+        if (!parent.url) {
+            return error(404, "Ancestor has no URL");
+        }
+        return redirect(302, parent.url);
+    }
+
     async handleTimelineFeed(
         feedId: string,
-        options: {debug?: boolean; html?: boolean}
+        options: FeedOptions
     ): Promise<Response> {
         const session = await this.#kv.getSessionByFeedId(feedId);
         if (!session) {
@@ -176,6 +204,7 @@ export class MastoFeederController {
             session,
             this.timelineFeedUrl(session),
             this.#baseUrl(),
+            this.statusParentUrl.bind(this, session),
             options
         );
         const encodedBody = new TextEncoder().encode(body);
@@ -243,6 +272,10 @@ export class MastoFeederController {
 
     timelineFeedUrl(session: MastoFeederSession): string {
         return `${this.#baseUrl()}/feed/${session.feedId}/timeline`;
+    }
+
+    statusParentUrl(session: MastoFeederSession, statusId: string): string {
+        return `${this.#baseUrl()}/feed/${session.feedId}/parent/${statusId}`;
     }
 
     #redirectUrl(): string {

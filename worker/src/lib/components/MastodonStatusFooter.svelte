@@ -3,7 +3,7 @@
     import type {DisplayStatus} from "$lib/masto-feeder/display-status";
 
     export let displayStatus: DisplayStatus;
-    const {permalinkStatus} = displayStatus;
+    const {permalinkStatus, permalinkDisplayStatus} = displayStatus;
 </script>
 
 <div style="text-align:right;margin:0.2em 0 0 0">
@@ -15,7 +15,7 @@
         {/if}
         {#if permalinkStatus.inReplyToId}
             {" "}(<a
-                href="TODO/{permalinkStatus.id}"
+                href={permalinkDisplayStatus.parentUrl}
                 style="color:{ANCHOR_COLOR}">in reply to</a
             >)
         {/if}

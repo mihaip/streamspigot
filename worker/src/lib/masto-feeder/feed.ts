@@ -9,6 +9,7 @@ import MastodonDebugHtml from "$lib/components/MastodonDebugHtml.svelte";
 export type FeedOptions = {
     debug?: boolean;
     html?: boolean;
+    includeStatusJson?: boolean;
 };
 
 export type FeedOutput = {
@@ -20,7 +21,8 @@ export async function renderTimelineFeed(
     session: MastoFeederSession,
     feedUrl: string,
     homeUrl: string,
-    {debug, html}: FeedOptions = {}
+    statusParentUrlGenerator: (statusId: string) => string,
+    {debug, html, includeStatusJson}: FeedOptions = {}
 ): Promise<FeedOutput> {
     const masto = createRestAPIClient({
         url: session.instanceUrl,
@@ -67,10 +69,15 @@ export async function renderTimelineFeed(
         }
     }
 
+    const displayStatuses = statuses.map(
+        status => new DisplayStatus(status, statusParentUrlGenerator)
+    );
+
     let body;
     if (html) {
         const {html: statusesHtml} = renderToHtml(MastodonDebugHtml, {
-            statuses,
+            displayStatuses,
+            includeStatusJson,
         });
         body = `<!DOCTYPE html>
 <html>
@@ -89,7 +96,7 @@ export async function renderTimelineFeed(
     <title>${title}</title>
     <updated>${updatedDate}</updated>
     <author><name>${authorName}</name></author>
-    ${new RawXml(statuses.map(status => renderStatus(status)).join("\n"))}
+    ${new RawXml(displayStatuses.map(displayStatus => renderStatus(displayStatus, includeStatusJson)).join("\n"))}
 </feed>
 `;
     }
@@ -108,11 +115,13 @@ export async function renderTimelineFeed(
 }
 
 function renderStatus(
-    status: mastodon.v1.Status,
+    displayStatus: DisplayStatus,
     includeStatusJson: boolean = false
 ): string {
-    const displayStatus = new DisplayStatus(status);
-    const {html: statusHtml} = renderToHtml(MastodonStatus, {displayStatus});
+    const {html: statusHtml} = renderToHtml(MastodonStatus, {
+        displayStatus,
+        includeStatusJson,
+    });
 
     return xml`<entry>
         <id>${displayStatus.id}</id>
@@ -123,12 +132,7 @@ function renderStatus(
         <content type="html">
             ${statusHtml}
         </content>
-       ${includeStatusJson ? new RawXml(renderStatusJson(status)) : ""}
     </entry>`;
-}
-
-function renderStatusJson(status: mastodon.v1.Status): string {
-    return xml`<pre>${JSON.stringify(status, null, 2)}</pre>`;
 }
 
 function xml(strings: TemplateStringsArray, ...values: unknown[]): string {

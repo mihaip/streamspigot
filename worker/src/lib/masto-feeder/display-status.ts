@@ -3,9 +3,14 @@ import * as htmlparser2 from "htmlparser2";
 
 export class DisplayStatus {
     #status: mastodon.v1.Status;
+    #statusParentUrlGenerator: (statusId: string) => string;
 
-    constructor(status: mastodon.v1.Status) {
+    constructor(
+        status: mastodon.v1.Status,
+        statusParentUrlGenerator: (statusId: string) => string
+    ) {
         this.#status = status;
+        this.#statusParentUrlGenerator = statusParentUrlGenerator;
     }
 
     get status(): mastodon.v1.Status {
@@ -16,9 +21,19 @@ export class DisplayStatus {
         return this.#status.reblog ?? this.#status;
     }
 
+    get permalinkDisplayStatus(): DisplayStatus {
+        return new DisplayStatus(
+            this.permalinkStatus,
+            this.#statusParentUrlGenerator
+        );
+    }
+
     get reblogDisplayStatus(): DisplayStatus | null {
         if (this.#status.reblog) {
-            return new DisplayStatus(this.#status.reblog);
+            return new DisplayStatus(
+                this.#status.reblog,
+                this.#statusParentUrlGenerator
+            );
         }
         return null;
     }
@@ -94,6 +109,10 @@ export class DisplayStatus {
 
     get contentAsHtml(): string {
         return this.#status.content;
+    }
+
+    get parentUrl(): string {
+        return this.#statusParentUrlGenerator(this.#status.id);
     }
 }
 

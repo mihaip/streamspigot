@@ -7,8 +7,14 @@ export const GET: RequestHandler = async event => {
     if (!feedId) {
         return error(400, "Invalid feed ID");
     }
-    const debug = event.url.searchParams.get("debug") === "true";
-    const html = event.url.searchParams.get("html") === "true";
+    const {searchParams} = event.url;
+    const debug = searchParams.get("debug") === "true";
+    const html = searchParams.get("html") === "true";
+    const includeStatusJson = searchParams.get("includeStatusJson") === "true";
 
-    return controller.handleTimelineFeed(feedId, {debug, html});
+    return controller.handleTimelineFeed(feedId, {
+        debug,
+        html,
+        includeStatusJson,
+    });
 };

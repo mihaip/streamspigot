@@ -6,6 +6,7 @@
     import MastodonStatusFooter from "./MastodonStatusFooter.svelte";
 
     export let displayStatus: DisplayStatus;
+    export let includeStatusJson = false;
     const {status} = displayStatus;
     const contentDisplayStatus =
         displayStatus.reblogDisplayStatus ?? displayStatus;
@@ -75,3 +76,6 @@
         </div>
     </div>
 </div>
+{#if includeStatusJson}
+    <pre>{JSON.stringify(status, null, 2)}</pre>
+{/if}
