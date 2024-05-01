@@ -164,6 +164,21 @@ export class MastoFeederController {
         return redirect(302, "/masto-feeder");
     }
 
+    async handleImport(data: {
+        apps: MastoFeederApp[];
+        sessions: MastoFeederSession[];
+    }): Promise<Response> {
+        for (const app of data.apps) {
+            await this.#kv.putApp(app);
+        }
+        for (const session of data.sessions) {
+            await this.#kv.putSession(session);
+        }
+        return new Response(
+            `Imported ${data.apps.length} apps and ${data.sessions.length} sessions.`
+        );
+    }
+
     async handleStatusParent(
         feedId: string,
         statusId: string

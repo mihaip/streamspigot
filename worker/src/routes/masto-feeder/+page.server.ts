@@ -64,4 +64,8 @@ export const actions = {
         const controller = new MastoFeederController(event);
         return controller.handleResetFeedId();
     },
+    "import": async event => {
+        const controller = new MastoFeederController(event);
+        return controller.handleImport(await event.request.json());
+    },
 };
