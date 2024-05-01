@@ -11,7 +11,7 @@
         <a href={displayStatus.permalink} style="color:{ANCHOR_COLOR}">
             {displayStatus.createdAtFormatted}</a>
         {#if permalinkStatus.application}
-            from {permalinkStatus.application.name}
+            {" "}from {permalinkStatus.application.name}
         {/if}
         {#if permalinkStatus.inReplyToId}
             {" "}(<a
