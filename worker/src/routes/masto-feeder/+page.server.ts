@@ -25,10 +25,32 @@ export async function load(event) {
 export const actions = {
     "sign-in": async event => {
         const formData = await event.request.formData();
-        const instanceUrl = formData.get("instance_url") as string | null;
+        let instanceUrl = formData.get("instance_url") as string | null;
         ("");
         if (!instanceUrl) {
-            return fail(400, {instance_url: instanceUrl, missing: true});
+            return fail(400, {
+                instance_url: instanceUrl,
+                error: "Instance URL is required",
+            });
+        }
+        try {
+            const parsedInstanceUrl = new URL(instanceUrl);
+            if (
+                parsedInstanceUrl.protocol !== "https:" ||
+                !parsedInstanceUrl.hostname
+            ) {
+                return fail(400, {
+                    instance_url: instanceUrl,
+                    error: "Instance URL is invalid",
+                });
+            }
+            instanceUrl =
+                `${parsedInstanceUrl.protocol}//${parsedInstanceUrl.hostname}`.toLowerCase();
+        } catch (e) {
+            return fail(400, {
+                instance_url: instanceUrl,
+                error: "Instance URL is invalid",
+            });
         }
 
         const controller = new MastoFeederController(event);

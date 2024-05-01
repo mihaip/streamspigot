@@ -3,6 +3,7 @@
     import Layout from "$lib/components/Layout.svelte";
 
     export let data;
+    export let form;
 </script>
 
 <Layout title="Masto Feeder">
@@ -43,10 +44,15 @@
                 Feeder access to your timeline and lists.
             </p>
 
+            {#if form?.error}
+                <p class="error">{form.error}</p>
+            {/if}
+
             <form action="?/sign-in" method="POST" class="sign-in">
                 <input
                     type="url"
                     name="instance_url"
+                    value={form?.instance_url ?? ""}
                     placeholder="https://mastodon.social"
                     required
                     size="30" />
@@ -79,6 +85,11 @@
     .sign-in form {
         display: flex;
         justify-content: center;
+    }
+
+    .sign-in .error {
+        background: #fdd;
+        padding: 0.5em;
     }
 
     .sign-in form input[type="submit"] {
