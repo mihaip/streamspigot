@@ -2,7 +2,7 @@ import {APP_NAME} from "$lib/constants";
 import {createRestAPIClient} from "$lib/masto";
 import type {MastoFeederSession} from "./types";
 import MastodonStatus from "$lib/components/MastodonStatus.svelte";
-import {DisplayStatus} from "./display-status";
+import {DisplayStatus, type DisplayStatusEnv} from "./display-status";
 import {renderToHtml} from "$lib/svelte";
 import MastodonDebugHtml from "$lib/components/MastodonDebugHtml.svelte";
 
@@ -21,7 +21,7 @@ export async function renderTimelineFeed(
     session: MastoFeederSession,
     feedUrl: string,
     homeUrl: string,
-    statusParentUrlGenerator: (statusId: string) => string,
+    env: DisplayStatusEnv,
     {debug, html, includeStatusJson}: FeedOptions = {}
 ): Promise<FeedOutput> {
     const masto = createRestAPIClient({
@@ -70,7 +70,7 @@ export async function renderTimelineFeed(
     }
 
     const displayStatuses = statuses.map(
-        status => new DisplayStatus(status, statusParentUrlGenerator)
+        status => new DisplayStatus(status, env)
     );
 
     let body;

@@ -15,4 +15,10 @@ export type MastoFeederSession = {
     instanceUrl: string;
     feedId: string;
     accessToken: string;
+    prefs?: MastoFeederPrefs;
+};
+
+export type MastoFeederPrefs = {
+    timeZone?: string;
+    useLocalUrls?: boolean;
 };

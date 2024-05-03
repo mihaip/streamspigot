@@ -9,10 +9,11 @@ import {
 import {createOAuthAPIClient, createRestAPIClient} from "$lib/masto";
 import {MastoFeederKV} from "./kv";
 import {WorkerKV} from "../kv";
-import type {
-    MastoFeederSession,
-    MastoFeederApp,
-    MastoFeederAuthRequest,
+import {
+    type MastoFeederSession,
+    type MastoFeederApp,
+    type MastoFeederAuthRequest,
+    type MastoFeederPrefs,
 } from "./types";
 import {renderTimelineFeed, type FeedOptions} from "./feed";
 
@@ -164,6 +165,16 @@ export class MastoFeederController {
         return redirect(302, "/masto-feeder");
     }
 
+    async handleUpdatePrefs(prefs: MastoFeederPrefs): Promise<Redirect> {
+        const session = await this.getSession();
+        if (!session) {
+            return redirect(302, "/masto-feeder");
+        }
+
+        await this.#kv.updateSessionPrefs(session, prefs);
+        return redirect(302, "/masto-feeder");
+    }
+
     async handleStatusParent(
         feedId: string,
         statusId: string
@@ -200,11 +211,20 @@ export class MastoFeederController {
         if (!session) {
             return error(404, "Unknown feed ID");
         }
+        const prefs = resolvePrefs(session.prefs);
         const {body, contentType} = await renderTimelineFeed(
             session,
             this.timelineFeedUrl(session),
             this.#baseUrl(),
-            this.statusParentUrl.bind(this, session),
+            {
+                instanceUrl: session.instanceUrl,
+                timeZone: prefs.timeZone,
+                useLocalUrls: prefs.useLocalUrls,
+                statusParentUrlGenerator: this.statusParentUrl.bind(
+                    this,
+                    session
+                ),
+            },
             options
         );
         const encodedBody = new TextEncoder().encode(body);
@@ -285,4 +305,13 @@ export class MastoFeederController {
     #baseUrl(): string {
         return `${this.#appProtocol}//${this.#appHost}/masto-feeder`;
     }
+}
+
+export function resolvePrefs(
+    prefs: MastoFeederPrefs | undefined
+): Required<MastoFeederPrefs> {
+    return {
+        timeZone: prefs?.timeZone ?? "America/Los_Angeles",
+        useLocalUrls: prefs?.useLocalUrls ?? false,
+    };
 }

@@ -1,6 +1,7 @@
 import type {
     MastoFeederApp,
     MastoFeederAuthRequest,
+    MastoFeederPrefs,
     MastoFeederSession,
 } from "./types";
 import type {KV} from "../kv";
@@ -104,6 +105,15 @@ export class MastoFeederKV {
         session.feedId = feedId;
         await this.#kv.putJSON(this.#sessionKey(session.sessionId), session);
         await this.#kv.put(this.#sessionFeedIdKey(feedId), session.sessionId);
+        return session;
+    }
+
+    async updateSessionPrefs(
+        session: MastoFeederSession,
+        prefs: MastoFeederPrefs
+    ): Promise<MastoFeederSession> {
+        session.prefs = prefs;
+        await this.#kv.putJSON(this.#sessionKey(session.sessionId), session);
         return session;
     }
 

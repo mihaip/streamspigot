@@ -3,14 +3,11 @@ import * as htmlparser2 from "htmlparser2";
 
 export class DisplayStatus {
     #status: mastodon.v1.Status;
-    #statusParentUrlGenerator: (statusId: string) => string;
+    #env: DisplayStatusEnv;
 
-    constructor(
-        status: mastodon.v1.Status,
-        statusParentUrlGenerator: (statusId: string) => string
-    ) {
+    constructor(status: mastodon.v1.Status, env: DisplayStatusEnv) {
         this.#status = status;
-        this.#statusParentUrlGenerator = statusParentUrlGenerator;
+        this.#env = env;
     }
 
     get status(): mastodon.v1.Status {
@@ -22,23 +19,20 @@ export class DisplayStatus {
     }
 
     get permalinkDisplayStatus(): DisplayStatus {
-        return new DisplayStatus(
-            this.permalinkStatus,
-            this.#statusParentUrlGenerator
-        );
+        return new DisplayStatus(this.permalinkStatus, this.#env);
     }
 
     get reblogDisplayStatus(): DisplayStatus | null {
         if (this.#status.reblog) {
-            return new DisplayStatus(
-                this.#status.reblog,
-                this.#statusParentUrlGenerator
-            );
+            return new DisplayStatus(this.#status.reblog, this.#env);
         }
         return null;
     }
 
     get permalink(): string {
+        if (this.#env.useLocalUrls) {
+            return `${this.#env.instanceUrl}/@${this.permalinkStatus.account.acct}/${this.permalinkStatus.id}`;
+        }
         return this.permalinkStatus.url ?? this.permalinkStatus.uri;
     }
 
@@ -55,7 +49,7 @@ export class DisplayStatus {
             hour: "numeric",
             minute: "numeric",
             hour12: true,
-            timeZone: "America/Los_Angeles",
+            timeZone: this.#env.timeZone,
         }).format(this.createdAt);
     }
 
@@ -112,9 +106,16 @@ export class DisplayStatus {
     }
 
     get parentUrl(): string {
-        return this.#statusParentUrlGenerator(this.#status.id);
+        return this.#env.statusParentUrlGenerator(this.#status.id);
     }
 }
+
+export type DisplayStatusEnv = {
+    instanceUrl: string;
+    timeZone: string;
+    useLocalUrls: boolean;
+    statusParentUrlGenerator: (statusId: string) => string;
+};
 
 export function displayName(user: mastodon.v1.Account): string {
     if (user.displayName) {

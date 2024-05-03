@@ -1,4 +1,7 @@
-import {MastoFeederController} from "$lib/masto-feeder/controller";
+import {
+    MastoFeederController,
+    resolvePrefs,
+} from "$lib/masto-feeder/controller";
 import {createRestAPIClient} from "$lib/masto";
 import {fail} from "@sveltejs/kit";
 
@@ -15,9 +18,11 @@ export async function load(event) {
         accessToken: session.accessToken,
     });
     const user = await masto.v1.accounts.verifyCredentials();
+    const prefs = resolvePrefs(session.prefs);
 
     return {
         user,
+        prefs,
         timelineFeedUrl: controller.timelineFeedUrl(session),
     };
 }
@@ -26,7 +31,7 @@ export const actions = {
     "sign-in": async event => {
         const formData = await event.request.formData();
         let instanceUrl = formData.get("instance_url") as string | null;
-        ("");
+
         if (!instanceUrl) {
             return fail(400, {
                 instance_url: instanceUrl,
@@ -63,5 +68,19 @@ export const actions = {
     "reset-feed-id": async event => {
         const controller = new MastoFeederController(event);
         return controller.handleResetFeedId();
+    },
+    "update-prefs": async event => {
+        const formData = await event.request.formData();
+        const controller = new MastoFeederController(event);
+        let timeZone = formData.get("time_zone") as string | null;
+        let useLocalUrls = formData.get("use_local_urls") === "true";
+        if (!timeZone) {
+            return fail(400, {
+                timezone: timeZone,
+                error: "Time zone is required",
+            });
+        }
+
+        return controller.handleUpdatePrefs({timeZone, useLocalUrls});
     },
 };

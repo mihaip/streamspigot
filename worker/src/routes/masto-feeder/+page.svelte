@@ -20,7 +20,7 @@
         <p>
             By signing in with your Mastodon account, you enable Masto Feeder to
             generate feeds under "secret" URLs that will contain the statuses of
-            accounts that you follow or have in a list.
+            accounts that you follow.
         </p>
     </svelte:fragment>
 
@@ -37,6 +37,47 @@
                 ><b>@{data.user.username} timeline feed</b></a>
             is ready. You can subscribe to the URL in your preferred feed reader.
         </p>
+
+        {#if form?.error}
+            <p class="error">{form.error}</p>
+        {/if}
+
+        <form action="?/update-prefs" method="POST" class="prefs">
+            <fieldset>
+                <legend>Preferences</legend>
+                <label>
+                    Timezone:
+                    <select name="time_zone">
+                        {#each Intl.supportedValuesOf("timeZone") as timezone}
+                            <option
+                                value={timezone}
+                                selected={timezone === data.prefs.timeZone}>
+                                {timezone}
+                            </option>
+                        {/each}
+                    </select>
+                    <div class="description">
+                        The timezone to use when formatting dates in the feed.
+                    </div>
+                </label>
+                <label>
+                    <input
+                        type="checkbox"
+                        name="use_local_urls"
+                        value="true"
+                        checked={data.prefs.useLocalUrls} />
+                    Use local URLs
+                    <div class="description">
+                        Makes URLs in the feed point to your instance (instead
+                        of the post author's). This may make it easier to
+                        favorite, reply or boost.
+                    </div>
+                </label>
+                <div class="buttons">
+                    <input type="submit" value="Update" />
+                </div>
+            </fieldset>
+        </form>
     {:else}
         <div class="sign-in">
             <p>
@@ -87,11 +128,6 @@
         justify-content: center;
     }
 
-    .sign-in .error {
-        background: #fdd;
-        padding: 0.5em;
-    }
-
     .sign-in form input[type="submit"] {
         margin-left: 0.5em;
     }
@@ -108,5 +144,41 @@
         padding: 0;
         color: #2db300;
         text-decoration: underline;
+    }
+
+    .feed-link {
+        padding-left: 19px;
+        background-position: center left;
+        background-repeat: no-repeat;
+        background-image: url($lib/assets/feed-icon.png);
+        background-image: image-set(
+            url($lib/assets/feed-icon.png) 1x,
+            url($lib/assets/feed-icon@2x.png) 2x
+        );
+    }
+
+    .error {
+        background: #fdd;
+        padding: 0.5em;
+    }
+
+    .prefs {
+        margin: 1em 0;
+    }
+
+    .prefs fieldset {
+        border: solid 1px #00000066;
+        display: flex;
+        flex-direction: column;
+        gap: 1em;
+    }
+
+    .prefs .description {
+        color: #666;
+    }
+
+    .prefs .buttons {
+        display: flex;
+        justify-content: flex-end;
     }
 </style>
