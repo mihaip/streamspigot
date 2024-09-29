@@ -14,3 +14,7 @@ id = "0d58678cdea94a018dc79669f6bc9a76"
 
 [dev]
 port = 5413
+
+[observability]
+enabled = true
+head_sampling_rate = 1
