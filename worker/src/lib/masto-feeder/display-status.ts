@@ -108,6 +108,50 @@ export class DisplayStatus {
     get parentUrl(): string {
         return this.#env.statusParentUrlGenerator(this.#status.id);
     }
+
+    get cardIframe(): {
+        url: string;
+        title: string;
+        width: number;
+        height: number;
+    } | null {
+        const {card} = this.#status;
+        if (!card || card.type !== "link") {
+            return null;
+        }
+        if (card.type !== "link") {
+            return null;
+        }
+
+        let url: URL;
+        try {
+            url = new URL(card.url);
+        } catch (e) {
+            return null;
+        }
+        if (
+            url.hostname === "www.youtube.com" ||
+            url.hostname === "youtube.com" ||
+            url.hostname === "youtu.be"
+        ) {
+            // We can't actually use the card URL, since it's always
+            // https://www.youtube.com/undefined. We therefore need to parse
+            // the content and look for the YouTube links ourselves.
+            const videoId = extractYouTubeVideoIDFromContent(
+                this.#status.content
+            );
+            if (videoId) {
+                return {
+                    url: `http://www.youtube.com/embed/${videoId}`,
+                    title: "YouTube Video",
+                    width: 392,
+                    height: 260,
+                };
+            }
+        }
+
+        return null;
+    }
 }
 
 export type DisplayStatusEnv = {
@@ -150,4 +194,40 @@ function extractTitleTextFromContent(htmlContent: string): string {
     parser.end();
 
     return accumulatedText.trim();
+}
+
+function extractYouTubeVideoIDFromContent(
+    htmlContent: string
+): string | undefined {
+    let videoId: string | undefined;
+    const parser = new htmlparser2.Parser({
+        onopentag(name, attribs) {
+            if (name !== "a" || !attribs.href) {
+                return;
+            }
+            let url: URL;
+            try {
+                url = new URL(attribs.href);
+            } catch (e) {
+                return;
+            }
+
+            if (
+                (url.hostname === "www.youtube.com" ||
+                    url.hostname === "youtube.com") &&
+                url.pathname === "/watch"
+            ) {
+                const videoIdParam = url.searchParams.get("v");
+                if (videoIdParam) {
+                    videoId = videoIdParam;
+                }
+            }
+            if (url.hostname === "youtu.be") {
+                videoId = url.pathname.slice(1);
+            }
+        },
+    });
+    parser.write(htmlContent);
+    parser.end();
+    return videoId;
 }

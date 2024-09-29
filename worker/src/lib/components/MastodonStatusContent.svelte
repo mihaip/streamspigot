@@ -2,7 +2,7 @@
     import type {DisplayStatus} from "$lib/masto-feeder/display-status";
 
     export let displayStatus: DisplayStatus;
-    const {status} = displayStatus;
+    const {status, cardIframe} = displayStatus;
     let html = status.content;
 
     // Replace <p>'s with newlines so that we can avoid leading/trailing margins.
@@ -70,7 +70,16 @@
     </p>
 {/each}
 
-{#if status.card && status.card.title}
+{#if cardIframe}
+    <div style="margin-top:1em">
+        <iframe
+            src={cardIframe.url}
+            title={cardIframe.title}
+            width={cardIframe.width}
+            height={cardIframe.height}
+            frameborder="0" />
+    </div>
+{:else if status.card && status.card.title}
     <!-- Can't use flexbox or real tables due to NetNewsWire style stripping. -->
     <div style="margin-top:1em;border-radius:4px;border:solid 1px #ccc;">
         <div style="display:table;width:100%">
