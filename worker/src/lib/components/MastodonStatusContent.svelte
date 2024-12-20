@@ -44,7 +44,7 @@
     {@const description = attachment.description ?? attachment.type}
     <p>
         {#if attachment.type === "image"}
-            <a href={attachmentUrl}
+            <a href={attachmentUrl} style="border:0"
                 ><img
                     src={attachment.remoteUrl ?? attachment.previewUrl}
                     alt={description}
@@ -65,7 +65,7 @@
                 autoplay
                 loop />
         {:else}
-            <a href={attachmentUrl}>{description}</a>
+            <a href={attachmentUrl} style="border:0">{description}</a>
         {/if}
     </p>
 {/each}
@@ -88,7 +88,7 @@
                 {#if status.card.image && status.card.image != "https://skybridge.fly.dev/1px.png"}
                     <div
                         style="display:table-cell;vertical-align:top;width:128px;padding:2px;">
-                        <a href={status.card.url}
+                        <a href={status.card.url} style="border:0"
                             ><img
                                 src={status.card.image}
                                 alt={status.card.title}

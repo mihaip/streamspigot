@@ -8,7 +8,7 @@
 
 <div style="text-align:right;margin:0.2em 0 0 0">
     <font size="-2">
-        <a href={displayStatus.permalink} style="color:{ANCHOR_COLOR}">
+        <a href={displayStatus.permalink} style="color:{ANCHOR_COLOR};border:0">
             {displayStatus.createdAtFormatted}</a>
         {#if permalinkStatus.application}
             {" "}from {permalinkStatus.application.name}
@@ -16,7 +16,7 @@
         {#if permalinkStatus.inReplyToId}
             {" "}(<a
                 href={permalinkDisplayStatus.parentUrl}
-                style="color:{ANCHOR_COLOR}">in reply to</a
+                style="color:{ANCHOR_COLOR};border:0">in reply to</a
             >)
         {/if}
     </font>

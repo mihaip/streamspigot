@@ -83,7 +83,16 @@ export async function renderTimelineFeed(
 <html>
     <head>
     <title>${escape(title)}</title>
-    <style>img.nnw-nozoom{max-width: 100%;}</style>
+    <style>
+    /* Simulate some styles that NetNewsWire injects, to make testing easier */
+    img.nnw-nozoom {
+        max-width: 100%;
+    }
+    a {
+        border-bottom: 1px solid blue;
+        text-decoration: none;
+    }
+    </style>
     </head>
     <body>${statusesHtml}</body>
 </html>`;

@@ -7,6 +7,6 @@
 </script>
 
 <b>{displayName(account)}</b>
-<a href={account.url} style="text-decoration:none">
+<a href={account.url} style="text-decoration:none;border:0">
     <font color={USER_LINK_COLOR}>@{account.username}</font>
 </a>
