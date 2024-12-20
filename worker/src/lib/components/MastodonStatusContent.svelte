@@ -98,7 +98,7 @@
                     </div>
                 {/if}
                 <div style="display:table-cell;vertical-align:top;padding:2px;">
-                    <a href={status.card.url}><b>{status.card.title}</b></a
+                    <a href={status.card.url} style="border:0"><b>{status.card.title}</b></a
                     ><br />{status.card.description}
                 </div>
             </div>
