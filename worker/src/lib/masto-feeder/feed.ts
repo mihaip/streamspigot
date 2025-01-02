@@ -89,8 +89,10 @@ export async function renderTimelineFeed(
         max-width: 100%;
     }
     a {
-        border-bottom: 1px solid blue;
-        text-decoration: none;
+        text-decoration: underline;
+        text-decoration-color: blue;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 2px;
     }
     </style>
     </head>

@@ -19,7 +19,7 @@
         <div
             style="width:48px;padding:0 .5em 0 0 !important;display:table-cell;vertical-align:top">
             {#if status.reblog}
-                <a href={status.reblog.account.url} style="border:0">
+                <a href={status.reblog.account.url}>
                     <img
                         src={status.reblog.account.avatar}
                         width="36"
@@ -36,7 +36,7 @@
                         class="nnw-nozoom" />
                 </a>
             {:else}
-                <a href={status.account.url} style="border:0">
+                <a href={status.account.url}>
                     <img
                         src={status.account.avatar}
                         width="48"
