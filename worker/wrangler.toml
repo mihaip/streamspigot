@@ -4,7 +4,8 @@ workers_dev = true
 compatibility_date = "2024-04-13"
 
 main = "./.cloudflare/worker.js"
-site.bucket = "./.cloudflare/public"
+assets.directory = ".cloudflare/public"
+assets.binding = "ASSETS"
 
 build.command = "npm run build"
 
