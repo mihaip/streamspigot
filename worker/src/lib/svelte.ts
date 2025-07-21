@@ -1,16 +1,19 @@
+import type {
+    SvelteComponent,
+    Component,
+    ComponentProps,
+    ComponentType,
+} from "svelte";
+import {render} from "svelte/server";
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-// TODO: find a way to type this
-export function renderToHtml(
-    componentClass: any,
-    props: {[key: string]: any}
-): {html: string; css: string} {
-    const {html, css} = componentClass.render(props) as SvelteRenderOutput;
-    return {html, css: css.code};
+export function renderToHtml<
+    Comp extends SvelteComponent<any> | Component<any>,
+    Props extends ComponentProps<Comp> = ComponentProps<Comp>,
+>(
+    component: Comp extends SvelteComponent<any> ? ComponentType<Comp> : Comp,
+    props: Props
+): string {
+    const {body} = render(component, {props});
+    return body;
 }
-
-type SvelteRenderOutput = {
-    html: string;
-    css: {code: string; map: string | null};
-    head: string;
-};

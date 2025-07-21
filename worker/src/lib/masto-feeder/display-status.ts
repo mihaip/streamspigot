@@ -166,7 +166,6 @@ export class DisplayStatus {
         }
         return image;
     }
-
 }
 
 export type DisplayStatusEnv = {

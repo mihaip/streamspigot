@@ -26,16 +26,18 @@
                 ({poll.votesCount} votes)
             {/if}
         </caption>
-        {#each poll.options as option}
-            {@const percent =
-                poll.votesCount > 0 && option.votesCount
-                    ? (100.0 * option.votesCount) / poll.votesCount
-                    : 0}
-            <tr>
-                <td>{option.title}</td>
-                <td>{percent.toFixed(2)}%</td>
-            </tr>
-        {/each}
+        <tbody>
+            {#each poll.options as option}
+                {@const percent =
+                    poll.votesCount > 0 && option.votesCount
+                        ? (100.0 * option.votesCount) / poll.votesCount
+                        : 0}
+                <tr>
+                    <td>{option.title}</td>
+                    <td>{percent.toFixed(2)}%</td>
+                </tr>
+            {/each}
+        </tbody>
     </table>
 {/if}
 
@@ -56,16 +58,17 @@
                 src={attachmentUrl}
                 poster={attachment.previewRemoteUrl}
                 autoplay
-                loop />
+                loop></video>
         {:else if attachment.type === "gifv"}
             <!-- svelte-ignore a11y-media-has-caption -->
             <video
                 src={attachmentUrl}
                 poster={attachment.previewRemoteUrl}
                 autoplay
-                loop />
+                loop></video>
         {:else}
-            <a href={attachmentUrl} style="text-decoration:none">{description}</a>
+            <a href={attachmentUrl} style="text-decoration:none"
+                >{description}</a>
         {/if}
     </p>
 {/each}
@@ -77,14 +80,14 @@
             title={cardIframe.title}
             width={cardIframe.width}
             height={cardIframe.height}
-            frameborder="0" />
+            frameborder="0"></iframe>
     </div>
 {:else if status.card && status.card.title}
     <!-- Can't use flexbox or real tables due to NetNewsWire style stripping. -->
     <div style="margin-top:1em;border-radius:4px;border:solid 1px #ccc;">
         <div style="display:table;width:100%">
             <div style="display:table-row">
-                {#if cardImage }
+                {#if cardImage}
                     <div
                         style="display:table-cell;vertical-align:top;width:128px;padding:2px;">
                         <a href={status.card.url}
@@ -97,7 +100,8 @@
                     </div>
                 {/if}
                 <div style="display:table-cell;vertical-align:top;padding:2px;">
-                    <a href={status.card.url} style="text-decoration:none"><b>{status.card.title}</b></a
+                    <a href={status.card.url} style="text-decoration:none"
+                        ><b>{status.card.title}</b></a
                     ><br />{status.card.description}
                 </div>
             </div>

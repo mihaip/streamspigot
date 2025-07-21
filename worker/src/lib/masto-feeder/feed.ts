@@ -3,8 +3,8 @@ import {createRestAPIClient} from "$lib/masto";
 import type {MastoFeederSession} from "./types";
 import MastodonStatus from "$lib/components/MastodonStatus.svelte";
 import {DisplayStatus, type DisplayStatusEnv} from "./display-status";
-import {renderToHtml} from "$lib/svelte";
 import MastodonDebugHtml from "$lib/components/MastodonDebugHtml.svelte";
+import {render} from "svelte/server";
 
 export type FeedOptions = {
     debug?: boolean;
@@ -12,10 +12,7 @@ export type FeedOptions = {
     includeStatusJson?: boolean;
 };
 
-export type FeedOutput = {
-    body: string;
-    contentType: string;
-};
+export type FeedOutput = {body: string; contentType: string};
 
 export async function renderTimelineFeed(
     session: MastoFeederSession,
@@ -75,9 +72,8 @@ export async function renderTimelineFeed(
 
     let body;
     if (html) {
-        const {html: statusesHtml} = renderToHtml(MastodonDebugHtml, {
-            displayStatuses,
-            includeStatusJson,
+        const {body: statusesHtml} = render(MastodonDebugHtml, {
+            props: {displayStatuses, includeStatusJson},
         });
         body = `<!DOCTYPE html>
 <html>
@@ -129,9 +125,8 @@ function renderStatus(
     displayStatus: DisplayStatus,
     includeStatusJson: boolean = false
 ): string {
-    const {html: statusHtml} = renderToHtml(MastodonStatus, {
-        displayStatus,
-        includeStatusJson,
+    const {body: statusHtml} = render(MastodonStatus, {
+        props: {displayStatus, includeStatusJson},
     });
 
     return xml`<entry>
