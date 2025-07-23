@@ -1,7 +1,20 @@
 <script lang="ts">
     import {APP_NAME} from "$lib/constants";
-    export let title: string | undefined = undefined;
-    export let subtitle: string | undefined = undefined;
+    import type {Snippet} from "svelte";
+
+    let {
+        title,
+        subtitle,
+        intro,
+        children,
+        footer,
+    }: {
+        title?: string;
+        subtitle?: string;
+        intro?: Snippet;
+        children?: Snippet;
+        footer?: Snippet;
+    } = $props();
 </script>
 
 <svelte:head>
@@ -22,13 +35,13 @@
 
 <div class="container">
     <div class="intro block">
-        <slot name="intro" />
+        {@render intro?.()}
     </div>
 
-    <slot />
+    {@render children?.()}
 
     <div class="footer block">
-        <slot name="footer" />
+        {@render footer?.()}
     </div>
 </div>
 

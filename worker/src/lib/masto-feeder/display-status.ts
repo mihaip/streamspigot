@@ -102,7 +102,12 @@ export class DisplayStatus {
     }
 
     get contentAsHtml(): string {
-        return this.#status.content;
+        let html = this.#status.content;
+        // Replace <p>'s with newlines so that we can avoid leading/trailing margins.
+        if (html.startsWith("<p>") && html.endsWith("</p>")) {
+            html = html.slice(3, -4).replaceAll("</p><p>", "<br><br>");
+        }
+        return html;
     }
 
     get parentUrl(): string {

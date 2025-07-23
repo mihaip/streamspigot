@@ -2,27 +2,28 @@
     import {APP_NAME} from "$lib/constants";
     import Layout from "$lib/components/Layout.svelte";
 
-    export let data;
-    export let form;
+    let { data, form } = $props();
 </script>
 
 <Layout title="Masto Feeder">
-    <svelte:fragment slot="intro">
-        <p>
-            This <a href="/">{APP_NAME}</a> tool lets you subscribe to your
-            Mastodon timeline and lists in a feedreader such as
-            <a href="https://netnewswire.com/">NetNewsWire</a>,
-            <a href="https://newsblur.com/">NewsBlur</a>,
-            <a href="https://reederapp.com/">Reeder</a> or
-            <a href="https://feedly.com/">Feedly</a>.
-        </p>
+    {#snippet intro()}
+    
+            <p>
+                This <a href="/">{APP_NAME}</a> tool lets you subscribe to your
+                Mastodon timeline and lists in a feedreader such as
+                <a href="https://netnewswire.com/">NetNewsWire</a>,
+                <a href="https://newsblur.com/">NewsBlur</a>,
+                <a href="https://reederapp.com/">Reeder</a> or
+                <a href="https://feedly.com/">Feedly</a>.
+            </p>
 
-        <p>
-            By signing in with your Mastodon account, you enable Masto Feeder to
-            generate feeds under "secret" URLs that will contain the statuses of
-            accounts that you follow.
-        </p>
-    </svelte:fragment>
+            <p>
+                By signing in with your Mastodon account, you enable Masto Feeder to
+                generate feeds under "secret" URLs that will contain the statuses of
+                accounts that you follow.
+            </p>
+        
+    {/snippet}
 
     {#if data.session && data.user}
         You're signed in as <a href={data.user.url}>@{data.user.username}</a>
@@ -102,20 +103,22 @@
         </div>
     {/if}
 
-    <svelte:fragment slot="footer">
-        Feeds are exported under randomly-generated URLs. Though they should not
-        be guessable, they may end up "leaking" if accidentally sent to someone.
+    {#snippet footer()}
+    
+            Feeds are exported under randomly-generated URLs. Though they should not
+            be guessable, they may end up "leaking" if accidentally sent to someone.
 
-        {#if data.session}
-            If that happens, you may wish to <form
-                action="?/reset-feed-id"
-                method="POST"
-                class="inline-form">
-                <button>reset</button>
-            </form>
-            your feed URLs.
-        {/if}
-    </svelte:fragment>
+            {#if data.session}
+                If that happens, you may wish to <form
+                    action="?/reset-feed-id"
+                    method="POST"
+                    class="inline-form">
+                    <button>reset</button>
+                </form>
+                your feed URLs.
+            {/if}
+        
+    {/snippet}
 </Layout>
 
 <style>

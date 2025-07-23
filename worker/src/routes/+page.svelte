@@ -2,7 +2,7 @@
     import {APP_NAME} from "$lib/constants";
     import Layout from "$lib/components/Layout.svelte";
     import {onMount} from "svelte";
-    let emailNode: HTMLAnchorElement | undefined;
+    let emailNode: HTMLAnchorElement | undefined = $state();
 
     onMount(() => {
         if (!emailNode) {
@@ -20,15 +20,17 @@
 </script>
 
 <Layout>
-    <p slot="intro">
-        {APP_NAME} is a collection of tools that let you keep up with the "real-time
-        web" better (think
-        <a
-            href="http://en.wikipedia.org/wiki/Transmission_Control_Protocol#Flow_control"
-            >flow control</a
-        >). Instead of living in fear of missing something, these tools let you
-        consume information at your desired pace in efficient batches.
-    </p>
+    {#snippet intro()}
+        <p>
+            {APP_NAME} is a collection of tools that let you keep up with the "real-time
+            web" better (think
+            <a
+                href="http://en.wikipedia.org/wiki/Transmission_Control_Protocol#Flow_control"
+                >flow control</a
+            >). Instead of living in fear of missing something, these tools let
+            you consume information at your desired pace in efficient batches.
+        </p>
+    {/snippet}
 
     <div class="tools">
         <a href="/masto-feeder/" class="tool even">
@@ -37,7 +39,7 @@
         </a>
     </div>
 
-    <svelte:fragment slot="footer">
+    {#snippet footer()}
         <p>Retired tools:</p>
 
         <ul>
@@ -77,7 +79,7 @@
                 >Source is available</a
             >.
         </p>
-    </svelte:fragment>
+    {/snippet}
 </Layout>
 
 <style>

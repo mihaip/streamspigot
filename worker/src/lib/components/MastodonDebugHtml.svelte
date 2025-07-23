@@ -2,8 +2,13 @@
     import type {DisplayStatus} from "$lib/masto-feeder/display-status";
     import MastodonStatus from "./MastodonStatus.svelte";
 
-    export let displayStatuses: DisplayStatus[];
-    export let includeStatusJson = false;
+    let {
+        displayStatuses,
+        includeStatusJson = false,
+    }: {
+        displayStatuses: DisplayStatus[];
+        includeStatusJson?: boolean;
+    } = $props();
 </script>
 
 {#each displayStatuses as displayStatus}

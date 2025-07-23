@@ -5,8 +5,13 @@
     import MastodonStatusContent from "./MastodonStatusContent.svelte";
     import MastodonStatusFooter from "./MastodonStatusFooter.svelte";
 
-    export let displayStatus: DisplayStatus;
-    export let includeStatusJson = false;
+    let {
+        displayStatus,
+        includeStatusJson = false,
+    }: {
+        displayStatus: DisplayStatus;
+        includeStatusJson?: boolean;
+    } = $props();
     const {status} = displayStatus;
     const contentDisplayStatus =
         displayStatus.reblogDisplayStatus ?? displayStatus;

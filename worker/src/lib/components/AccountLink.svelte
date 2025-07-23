@@ -3,7 +3,11 @@
     import {displayName} from "$lib/masto-feeder/display-status";
     import type {mastodon} from "masto";
 
-    export let account: mastodon.v1.Account;
+    let {
+        account,
+    }: {
+        account: mastodon.v1.Account;
+    } = $props();
 </script>
 
 <b>{displayName(account)}</b>

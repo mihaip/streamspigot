@@ -1,17 +1,15 @@
 <script lang="ts">
     import type {DisplayStatus} from "$lib/masto-feeder/display-status";
 
-    export let displayStatus: DisplayStatus;
-    const {status, cardIframe, cardImage} = displayStatus;
-    let html = status.content;
-
-    // Replace <p>'s with newlines so that we can avoid leading/trailing margins.
-    if (html.startsWith("<p>") && html.endsWith("</p>")) {
-        html = html.slice(3, -4).replaceAll("</p><p>", "<br><br>");
-    }
+    let {
+        displayStatus,
+    }: {
+        displayStatus: DisplayStatus;
+    } = $props();
+    const {status, contentAsHtml, cardIframe, cardImage} = displayStatus;
 </script>
 
-{@html html}
+{@html contentAsHtml}
 
 {#if status.poll}
     {@const poll = status.poll}
@@ -53,14 +51,14 @@
                     class="nnw-nozoom"
                     style="border: 0" /></a>
         {:else if attachment.type === "video"}
-            <!-- svelte-ignore a11y-media-has-caption -->
+            <!-- svelte-ignore a11y_media_has_caption -->
             <video
                 src={attachmentUrl}
                 poster={attachment.previewRemoteUrl}
                 autoplay
                 loop></video>
         {:else if attachment.type === "gifv"}
-            <!-- svelte-ignore a11y-media-has-caption -->
+            <!-- svelte-ignore a11y_media_has_caption -->
             <video
                 src={attachmentUrl}
                 poster={attachment.previewRemoteUrl}
