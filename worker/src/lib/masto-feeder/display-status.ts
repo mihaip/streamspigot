@@ -29,6 +29,20 @@ export class DisplayStatus {
         return null;
     }
 
+    get quoteDisplayStatus(): DisplayStatus | null {
+        if (
+            this.#status.quote &&
+            "quotedStatus" in this.#status.quote &&
+            this.#status.quote.quotedStatus
+        ) {
+            return new DisplayStatus(
+                this.#status.quote.quotedStatus,
+                this.#env
+            );
+        }
+        return null;
+    }
+
     get permalink(): string {
         if (this.#env.useLocalUrls) {
             return `${this.#env.instanceUrl}/@${this.permalinkStatus.account.acct}/${this.permalinkStatus.id}`;
@@ -96,6 +110,13 @@ export class DisplayStatus {
             if (status.poll) {
                 titleText += " 📊";
             }
+            if (
+                status.quote &&
+                "quotedStatus" in status.quote &&
+                status.quote.quotedStatus
+            ) {
+                titleText += ` (quoting ${displayName(status.quote.quotedStatus?.account)})`;
+            }
         }
 
         return `${displayName(status.account)}: ${titleText}`;
@@ -103,6 +124,8 @@ export class DisplayStatus {
 
     get contentAsHtml(): string {
         let html = this.#status.content;
+        html = stripQuotePrefixFromContent(html);
+
         // Replace <p>'s with newlines so that we can avoid leading/trailing margins.
         if (html.startsWith("<p>") && html.endsWith("</p>")) {
             html = html.slice(3, -4).replaceAll("</p><p>", "<br><br>");
@@ -209,10 +232,18 @@ function extractTitleTextFromContent(htmlContent: string): string {
             }
         },
     });
-    parser.write(htmlContent);
+    parser.write(stripQuotePrefixFromContent(htmlContent));
     parser.end();
 
     return accumulatedText.trim();
+}
+
+function stripQuotePrefixFromContent(html: string): string {
+    // Strip quote prefix inserted into the content for backwards compatibility
+    // (see https://docs.joinmastodon.org/methods/statuses/)
+    const quoteRE =
+        /^<p class="quote-inline">\s*RE:\s*<a\b[^>]*>(?:(?!<\/a><\/p>)[\s\S])*?<\/a><\/p>\s*/i;
+    return html.replace(quoteRE, "");
 }
 
 function extractYouTubeVideoIDFromContent(

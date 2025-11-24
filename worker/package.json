@@ -46,6 +46,6 @@
     },
     "dependencies": {
         "htmlparser2": "^10.0.0",
-        "masto": "^7.2.0"
+        "masto": "^7.5.0"
     }
 }

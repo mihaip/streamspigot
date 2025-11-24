@@ -1,5 +1,6 @@
 <script lang="ts">
     import type {DisplayStatus} from "$lib/masto-feeder/display-status";
+    import MastodonStatus from "./MastodonStatus.svelte";
 
     let {
         displayStatus,
@@ -104,5 +105,12 @@
                 </div>
             </div>
         </div>
+    </div>
+{/if}
+
+{#if displayStatus.quoteDisplayStatus}
+    <div
+        style="margin-top:1em;border-radius:4px;border:solid 1px #ccc;padding:8px;">
+        <MastodonStatus displayStatus={displayStatus.quoteDisplayStatus} />
     </div>
 {/if}
