@@ -224,6 +224,10 @@ export class MastoFeederController {
                     this,
                     session
                 ),
+                youtubeEmbedUrlGenerator: this.youtubeEmbedUrl.bind(
+                    this,
+                    session
+                ),
             },
             options
         );
@@ -296,6 +300,10 @@ export class MastoFeederController {
 
     statusParentUrl(session: MastoFeederSession, statusId: string): string {
         return `${this.#baseUrl()}/feed/${session.feedId}/parent/${statusId}`;
+    }
+
+    youtubeEmbedUrl(session: MastoFeederSession, videoId: string): string {
+        return `${this.#baseUrl()}/feed/${session.feedId}/youtube/${videoId}`;
     }
 
     #redirectUrl(): string {

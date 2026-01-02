@@ -46,6 +46,7 @@
     },
     "dependencies": {
         "htmlparser2": "^10.0.0",
+        "lite-youtube-embed": "^0.3.4",
         "masto": "^7.5.0"
     }
 }

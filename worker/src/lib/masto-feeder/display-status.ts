@@ -171,7 +171,7 @@ export class DisplayStatus {
             }
             if (videoId) {
                 return {
-                    url: `http://www.youtube.com/embed/${videoId}`,
+                    url: this.#env.youtubeEmbedUrlGenerator(videoId),
                     title: "YouTube Video",
                     width: 392,
                     height: 260,
@@ -202,6 +202,7 @@ export type DisplayStatusEnv = {
     timeZone: string;
     useLocalUrls: boolean;
     statusParentUrlGenerator: (statusId: string) => string;
+    youtubeEmbedUrlGenerator: (videoId: string) => string;
 };
 
 export function displayName(user: mastodon.v1.Account): string {
