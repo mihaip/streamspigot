@@ -144,10 +144,7 @@ export class DisplayStatus {
         height: number;
     } | null {
         const {card} = this.#status;
-        if (!card || card.type !== "link") {
-            return null;
-        }
-        if (card.type !== "link") {
+        if (!card || !["link", "video"].includes(card.type)) {
             return null;
         }
 
@@ -162,12 +159,16 @@ export class DisplayStatus {
             url.hostname === "youtube.com" ||
             url.hostname === "youtu.be"
         ) {
-            // We can't actually use the card URL, since it's always
-            // https://www.youtube.com/undefined. We therefore need to parse
-            // the content and look for the YouTube links ourselves.
-            const videoId = extractYouTubeVideoIDFromContent(
-                this.#status.content
-            );
+            let videoId = extractYouTubeVideoIDFromURL(url);
+            if (!videoId) {
+                // Card URls sometimes end up being https://www.youtube.com/undefined
+                // (see https://github.com/mastodon/mastodon/issues/31462). Fall
+                // back to parsing the content and look for the YouTube links
+                // ourselves.
+                videoId = extractYouTubeVideoIDFromContent(
+                    this.#status.content
+                );
+            }
             if (videoId) {
                 return {
                     url: `http://www.youtube.com/embed/${videoId}`,
@@ -262,22 +263,30 @@ function extractYouTubeVideoIDFromContent(
                 return;
             }
 
-            if (
-                (url.hostname === "www.youtube.com" ||
-                    url.hostname === "youtube.com") &&
-                url.pathname === "/watch"
-            ) {
-                const videoIdParam = url.searchParams.get("v");
-                if (videoIdParam) {
-                    videoId = videoIdParam;
-                }
-            }
-            if (url.hostname === "youtu.be") {
-                videoId = url.pathname.slice(1);
+            const linkVideoId = extractYouTubeVideoIDFromURL(url);
+            if (linkVideoId) {
+                videoId = linkVideoId;
             }
         },
     });
     parser.write(htmlContent);
     parser.end();
     return videoId;
+}
+
+function extractYouTubeVideoIDFromURL(url: URL): string | undefined {
+    if (
+        (url.hostname === "www.youtube.com" ||
+            url.hostname === "youtube.com") &&
+        url.pathname === "/watch"
+    ) {
+        const videoIdParam = url.searchParams.get("v");
+        if (videoIdParam) {
+            return videoIdParam;
+        }
+    }
+    if (url.hostname === "youtu.be") {
+        return url.pathname.slice(1);
+    }
+    return undefined;
 }
