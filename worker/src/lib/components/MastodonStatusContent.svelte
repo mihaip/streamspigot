@@ -7,7 +7,10 @@
     }: {
         displayStatus: DisplayStatus;
     } = $props();
-    const {status, contentAsHtml, cardIframe, cardImage} = displayStatus;
+    let status = $derived(displayStatus.status);
+    let contentAsHtml = $derived(displayStatus.contentAsHtml);
+    let cardIframe = $derived(displayStatus.cardIframe);
+    let cardImage = $derived(displayStatus.cardImage);
 </script>
 
 {@html contentAsHtml}
@@ -26,7 +29,7 @@
             {/if}
         </caption>
         <tbody>
-            {#each poll.options as option}
+            {#each poll.options as option (option.title)}
                 {@const percent =
                     poll.votesCount > 0 && option.votesCount
                         ? (100.0 * option.votesCount) / poll.votesCount
@@ -40,12 +43,12 @@
     </table>
 {/if}
 
-{#each status.mediaAttachments as attachment}
+{#each status.mediaAttachments as attachment (attachment.id)}
     {@const attachmentUrl = attachment.remoteUrl ?? attachment.url}
     {@const description = attachment.description ?? attachment.type}
     <p>
         {#if attachment.type === "image"}
-            <a href={attachmentUrl}
+            <a href={attachmentUrl} rel="external"
                 ><img
                     src={attachment.remoteUrl ?? attachment.previewUrl}
                     alt={description}
@@ -66,7 +69,7 @@
                 autoplay
                 loop></video>
         {:else}
-            <a href={attachmentUrl} style="text-decoration:none"
+            <a href={attachmentUrl} rel="external" style="text-decoration:none"
                 >{description}</a>
         {/if}
     </p>
@@ -89,7 +92,7 @@
                 {#if cardImage}
                     <div
                         style="display:table-cell;vertical-align:top;width:128px;padding:2px;">
-                        <a href={status.card.url}
+                        <a href={status.card.url} rel="external"
                             ><img
                                 src={cardImage}
                                 alt={status.card.title}
@@ -99,7 +102,10 @@
                     </div>
                 {/if}
                 <div style="display:table-cell;vertical-align:top;padding:2px;">
-                    <a href={status.card.url} style="text-decoration:none"
+                    <a
+                        href={status.card.url}
+                        rel="external"
+                        style="text-decoration:none"
                         ><b>{status.card.title}</b></a
                     ><br />{status.card.description}
                 </div>

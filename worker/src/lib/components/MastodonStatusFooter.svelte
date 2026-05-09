@@ -7,21 +7,24 @@
     }: {
         displayStatus: DisplayStatus;
     } = $props();
-    const {permalinkStatus, permalinkDisplayStatus} = displayStatus;
+    let permalinkStatus = $derived(displayStatus.permalinkStatus);
+    let permalinkDisplayStatus = $derived(displayStatus.permalinkDisplayStatus);
 </script>
 
 <div style="text-align:right;margin:0.2em 0 0 0">
     <font size="-2">
         <a
             href={displayStatus.permalink}
+            rel="external"
             style="color:{ANCHOR_COLOR};text-decoration:none">
             {displayStatus.createdAtFormatted}</a>
         {#if permalinkStatus.application}
-            {" "}from {permalinkStatus.application.name}
+            from {permalinkStatus.application.name}
         {/if}
         {#if permalinkStatus.inReplyToId}
-            {" "}(<a
+            (<a
                 href={permalinkDisplayStatus.parentUrl}
+                rel="external"
                 style="color:{ANCHOR_COLOR};text-decoration:none">in reply to</a
             >)
         {/if}

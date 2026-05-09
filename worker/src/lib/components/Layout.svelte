@@ -1,4 +1,5 @@
 <script lang="ts">
+    import {resolve} from "$app/paths";
     import {APP_NAME} from "$lib/constants";
     import type {Snippet} from "svelte";
 
@@ -22,7 +23,7 @@
 </svelte:head>
 
 <div class="header">
-    <a href="/" class="app-title"><h1>{APP_NAME}</h1></a>
+    <a href={resolve("/")} class="app-title"><h1>{APP_NAME}</h1></a>
     {#if title}
         <div class="page-title">
             {title}

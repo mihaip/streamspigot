@@ -11,7 +11,7 @@
     } = $props();
 </script>
 
-{#each displayStatuses as displayStatus}
+{#each displayStatuses as displayStatus (displayStatus.id)}
     <div style="margin: 1em 0">
         <h1>{displayStatus.titleAsText}</h1>
         <MastodonStatus {displayStatus} {includeStatusJson} />

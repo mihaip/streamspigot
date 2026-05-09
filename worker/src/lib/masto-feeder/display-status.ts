@@ -98,7 +98,7 @@ export class DisplayStatus {
         };
 
         const status = this.#status;
-        let titleText = "";
+        let titleText: string;
 
         if (status.reblog) {
             titleText = `↺ ${displayName(status.reblog.account)}: ${getStatusTitleText(status.reblog)}`;
@@ -151,7 +151,7 @@ export class DisplayStatus {
         let url: URL;
         try {
             url = new URL(card.url);
-        } catch (e) {
+        } catch {
             return null;
         }
         if (
@@ -260,7 +260,7 @@ function extractYouTubeVideoIDFromContent(
             let url: URL;
             try {
                 url = new URL(attribs.href);
-            } catch (e) {
+            } catch {
                 return;
             }
 

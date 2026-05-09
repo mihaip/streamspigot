@@ -1,5 +1,6 @@
 import {APP_NAME} from "$lib/constants";
 import {createRestAPIClient} from "$lib/masto";
+import type {mastodon} from "masto";
 import type {MastoFeederSession} from "./types";
 import MastodonStatus from "$lib/components/MastodonStatus.svelte";
 import {DisplayStatus, type DisplayStatusEnv} from "./display-status";
@@ -38,9 +39,9 @@ export async function renderTimelineFeed(
     // Include items from the past 12 hours, which should be enough to cover
     // most federation delays.
     const limitTime = Date.now() - 12 * 60 * 60 * 1000;
-    let maxId = undefined;
-    const statuses = [];
-    const statusIds = new Set();
+    let maxId: string | undefined;
+    const statuses: mastodon.v1.Status[] = [];
+    const statusIds = new Set<string>();
     while (true) {
         const chunkStatuses = await masto.v1.timelines.home.list({
             limit: debug ? 10 : 40,

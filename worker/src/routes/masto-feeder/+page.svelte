@@ -1,4 +1,5 @@
 <script lang="ts">
+    import {resolve} from "$app/paths";
     import {APP_NAME} from "$lib/constants";
     import Layout from "$lib/components/Layout.svelte";
 
@@ -9,7 +10,7 @@
     {#snippet intro()}
     
             <p>
-                This <a href="/">{APP_NAME}</a> tool lets you subscribe to your
+                This <a href={resolve("/")}>{APP_NAME}</a> tool lets you subscribe to your
                 Mastodon timeline and lists in a feedreader such as
                 <a href="https://netnewswire.com/">NetNewsWire</a>,
                 <a href="https://newsblur.com/">NewsBlur</a>,
@@ -26,7 +27,8 @@
     {/snippet}
 
     {#if data.session && data.user}
-        You're signed in as <a href={data.user.url}>@{data.user.username}</a>
+        You're signed in as <a href={data.user.url} rel="external"
+            >@{data.user.username}</a>
         (
         <form action="?/sign-out" method="POST" class="inline-form">
             <button>sign out</button>
@@ -34,7 +36,10 @@
         )
 
         <p>
-            Your <a href={data.timelineFeedUrl} class="feed-link"
+            Your <a
+                href={data.timelineFeedUrl}
+                class="feed-link"
+                rel="external"
                 ><b>@{data.user.username} timeline feed</b></a>
             is ready. You can subscribe to the URL in your preferred feed reader.
         </p>
@@ -49,7 +54,7 @@
                 <label>
                     Timezone:
                     <select name="time_zone">
-                        {#each Intl.supportedValuesOf("timeZone") as timezone}
+                        {#each Intl.supportedValuesOf("timeZone") as timezone (timezone)}
                             <option
                                 value={timezone}
                                 selected={timezone === data.prefs.timeZone}>

@@ -1,5 +1,5 @@
-/// <reference types="@sveltejs/adapter-cloudflare-workers" />
-/// <reference types="@cloudflare/workers-types/2023-07-01" />
+/// <reference types="@sveltejs/adapter-cloudflare/ambient" />
+/// <reference types="@cloudflare/workers-types" />
 
 import type {MastoFeederSession} from "$lib/masto-feeder/types";
 

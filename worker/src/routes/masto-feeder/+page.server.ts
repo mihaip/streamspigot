@@ -51,7 +51,7 @@ export const actions = {
             }
             instanceUrl =
                 `${parsedInstanceUrl.protocol}//${parsedInstanceUrl.hostname}`.toLowerCase();
-        } catch (e) {
+        } catch {
             return fail(400, {
                 instance_url: instanceUrl,
                 error: "Instance URL is invalid",
@@ -72,8 +72,8 @@ export const actions = {
     "update-prefs": async event => {
         const formData = await event.request.formData();
         const controller = new MastoFeederController(event);
-        let timeZone = formData.get("time_zone") as string | null;
-        let useLocalUrls = formData.get("use_local_urls") === "true";
+        const timeZone = formData.get("time_zone") as string | null;
+        const useLocalUrls = formData.get("use_local_urls") === "true";
         if (!timeZone) {
             return fail(400, {
                 timezone: timeZone,

@@ -12,10 +12,11 @@
         displayStatus: DisplayStatus;
         includeStatusJson?: boolean;
     } = $props();
-    const {status} = displayStatus;
-    const contentDisplayStatus =
-        displayStatus.reblogDisplayStatus ?? displayStatus;
-    const contentStatus = contentDisplayStatus.status;
+    let status = $derived(displayStatus.status);
+    let contentDisplayStatus = $derived(
+        displayStatus.reblogDisplayStatus ?? displayStatus
+    );
+    let contentStatus = $derived(contentDisplayStatus.status);
 </script>
 
 <div
@@ -24,7 +25,7 @@
         <div
             style="width:48px;padding:0 .5em 0 0 !important;display:table-cell;vertical-align:top">
             {#if status.reblog}
-                <a href={status.reblog.account.url}>
+                <a href={status.reblog.account.url} rel="external">
                     <img
                         src={status.reblog.account.avatar}
                         width="36"
@@ -41,7 +42,7 @@
                         class="nnw-nozoom" />
                 </a>
             {:else}
-                <a href={status.account.url}>
+                <a href={status.account.url} rel="external">
                     <img
                         src={status.account.avatar}
                         width="48"

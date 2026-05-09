@@ -1,21 +1,19 @@
 <script lang="ts">
+    import {resolve} from "$app/paths";
     import {APP_NAME} from "$lib/constants";
     import Layout from "$lib/components/Layout.svelte";
     import {onMount} from "svelte";
-    let emailNode: HTMLAnchorElement | undefined = $state();
+    let email = $state("email");
+    let emailHref = $state("mailto:");
 
     onMount(() => {
-        if (!emailNode) {
-            return;
-        }
-        var email = [
+        email = [
             109, 105, 104, 97, 105, 64, 112, 101, 114, 115, 105, 115, 116, 101,
             110, 116, 46, 105, 110, 102, 111,
         ]
             .map(i => String.fromCharCode(i))
             .join("");
-        emailNode.href = `mailto:${email}`;
-        emailNode.textContent = email;
+        emailHref = `mailto:${email}`;
     });
 </script>
 
@@ -33,7 +31,7 @@
     {/snippet}
 
     <div class="tools">
-        <a href="/masto-feeder/" class="tool even">
+        <a href={resolve("/masto-feeder")} class="tool even">
             <h2>Masto Feeder</h2>
             <p>Keep up with Mastodon posts in your favorite feed reader</p>
         </a>
@@ -74,7 +72,7 @@
         <p>
             {APP_NAME} was created by
             <a href="https://persistent.info">Mihai Parparita</a>, who can be
-            reached at <a href="mailto:" bind:this={emailNode}>email</a>.
+            reached at <a href={emailHref} rel="external">{email}</a>.
             <a href="https://github.com/mihaip/streamspigot"
                 >Source is available</a
             >.
