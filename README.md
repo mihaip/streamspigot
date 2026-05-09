@@ -1,12 +1,17 @@
-# Cloudflare Worker
+# Stream Spigot
 
-In-development replacement of the App Engine app with a Cloudflare Worker.
+Stream Spigot is a collection of tools to make consumption of real time-ish datasources more manageable. The active tool is **Masto Feeder**, which lets you read your Mastodon timeline in a feed reader.
+
+A running instance is at [www.streamspigot.com](http://www.streamspigot.com/).
+
+The implementation is a Cloudflare Worker in the [`worker/`](worker/) directory. Earlier tools (Tweet Digest, Feed Playback, Bird Feeder) and the original App Engine implementation are preserved in [`legacy/`](legacy/).
 
 ## Development
 
 Install dependencies:
 
 ```bash
+cd worker
 npm install
 ```
 
