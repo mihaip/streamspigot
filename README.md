@@ -4,9 +4,9 @@ Stream Spigot is a collection of tools to make consumption of real time-ish data
 
 A running instance is at [www.streamspigot.com](http://www.streamspigot.com/).
 
-## Development
+The implementation is a Cloudflare Worker in the [`worker/`](worker/) directory. Earlier tools (Tweet Digest, Feed Playback, Bird Feeder) and the original App Engine implementation are preserved in [`legacy/`](legacy/).
 
-The current implementation is a Cloudflare Worker in the [`worker/`](worker/) directory.
+## Development
 
 Install dependencies:
 
@@ -31,7 +31,7 @@ npm run worker-dev
 
 It will be running at [localhost:5413](http://localhost:5413/).
 
-The [main timeline handler](worker/src/routes/masto-feeder/feed/%5BfeedId%5D/timeline/+server.ts) has support for a few query parameters to help with testing:
+The [main timeline handler](https://github.com/mihaip/streamspigot/blob/main/worker/src/routes/masto-feeder/feed/%5BfeedId%5D/timeline/+server.ts#L13) has support for a few query parameters to help with testing:
 
 - `debug=true`: show fewer posts (just the 10 most recent ones) to speed up loading
 - `html=true`: return HTML instead of an Atom feed, for easier in-browser viewing
@@ -56,8 +56,4 @@ To deploy the app, assuming you've run `wrangler login` to set up Cloudflare cre
 npm run worker-deploy
 ```
 
-It will be running at [streamspigot.mihai-parparita.workers.dev](https://streamspigot.mihai-parparita.workers.dev).
-
-## Legacy
-
-Earlier tools (Tweet Digest, Feed Playback, Bird Feeder) and the original App Engine implementation are preserved in the [`legacy/`](legacy/) directory.
+It will be running at [streamspigot.mihai-parparita.workers.dev](https://streamspigot.mihai-parparita.workers.dev)
