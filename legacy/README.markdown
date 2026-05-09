@@ -1,3 +1,9 @@
+# Legacy
+
+This is the older App Engine-based implementation of Stream Spigot, preserved for reference. The active implementation is the Cloudflare Worker in the [`worker/`](../worker/) directory.
+
+---
+
 # Introduction
 
 Stream Spigot a collection of tools to make consumption of real time-ish datasources more manageable. Four tools have been built, but only Masto Feeder is still active:
