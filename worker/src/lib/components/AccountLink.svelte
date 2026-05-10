@@ -1,16 +1,15 @@
 <script lang="ts">
     import {USER_LINK_COLOR} from "$lib/constants";
-    import {displayName} from "$lib/masto-feeder/display-status";
-    import type {mastodon} from "masto";
+    import type {StatusAccount} from "$lib/status";
 
     let {
         account,
     }: {
-        account: mastodon.v1.Account;
+        account: StatusAccount;
     } = $props();
 </script>
 
-<b>{displayName(account)}</b>
+<b>{account.displayName}</b>
 <a href={account.url} rel="external" style="text-decoration:none">
     <font color={USER_LINK_COLOR}>@{account.username}</font>
 </a>

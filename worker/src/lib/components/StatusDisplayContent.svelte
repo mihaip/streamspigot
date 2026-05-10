@@ -1,16 +1,15 @@
 <script lang="ts">
-    import type {DisplayStatus} from "$lib/masto-feeder/display-status";
-    import MastodonStatus from "./MastodonStatus.svelte";
+    import type {Status} from "$lib/status";
+    import StatusDisplay from "./StatusDisplay.svelte";
 
     let {
-        displayStatus,
+        status,
     }: {
-        displayStatus: DisplayStatus;
+        status: Status;
     } = $props();
-    let status = $derived(displayStatus.status);
-    let contentAsHtml = $derived(displayStatus.contentAsHtml);
-    let cardIframe = $derived(displayStatus.cardIframe);
-    let cardImage = $derived(displayStatus.cardImage);
+    let contentAsHtml = $derived(status.contentHtml);
+    let card = $derived(status.card);
+    let cardIframe = $derived(card?.iframe);
 </script>
 
 {@html contentAsHtml}
@@ -43,34 +42,32 @@
     </table>
 {/if}
 
-{#each status.mediaAttachments as attachment (attachment.id)}
-    {@const attachmentUrl = attachment.remoteUrl ?? attachment.url}
-    {@const description = attachment.description ?? attachment.type}
+{#each status.attachments as attachment (attachment.id)}
     <p>
         {#if attachment.type === "image"}
-            <a href={attachmentUrl} rel="external"
+            <a href={attachment.url} rel="external"
                 ><img
-                    src={attachment.remoteUrl ?? attachment.previewUrl}
-                    alt={description}
+                    src={attachment.previewUrl ?? attachment.url}
+                    alt={attachment.description}
                     class="nnw-nozoom"
                     style="border: 0" /></a>
         {:else if attachment.type === "video"}
             <!-- svelte-ignore a11y_media_has_caption -->
             <video
-                src={attachmentUrl}
-                poster={attachment.previewRemoteUrl}
+                src={attachment.url}
+                poster={attachment.posterUrl}
                 autoplay
                 loop></video>
         {:else if attachment.type === "gifv"}
             <!-- svelte-ignore a11y_media_has_caption -->
             <video
-                src={attachmentUrl}
-                poster={attachment.previewRemoteUrl}
+                src={attachment.url}
+                poster={attachment.posterUrl}
                 autoplay
                 loop></video>
         {:else}
-            <a href={attachmentUrl} rel="external" style="text-decoration:none"
-                >{description}</a>
+            <a href={attachment.url} rel="external" style="text-decoration:none"
+                >{attachment.description}</a>
         {/if}
     </p>
 {/each}
@@ -84,18 +81,18 @@
             height={cardIframe.height}
             frameborder="0"></iframe>
     </div>
-{:else if status.card && status.card.title}
+{:else if card}
     <!-- Can't use flexbox or real tables due to NetNewsWire style stripping. -->
     <div style="margin-top:1em;border-radius:4px;border:solid 1px #ccc;">
         <div style="display:table;width:100%">
             <div style="display:table-row">
-                {#if cardImage}
+                {#if card.imageUrl}
                     <div
                         style="display:table-cell;vertical-align:top;width:128px;padding:2px;">
-                        <a href={status.card.url} rel="external"
+                        <a href={card.url} rel="external"
                             ><img
-                                src={cardImage}
-                                alt={status.card.title}
+                                src={card.imageUrl}
+                                alt={card.title}
                                 class="nnw-nozoom"
                                 width="128"
                                 style="border:0;border-radius:4px;overflow:hidden;max-width:none" /></a>
@@ -103,20 +100,20 @@
                 {/if}
                 <div style="display:table-cell;vertical-align:top;padding:2px;">
                     <a
-                        href={status.card.url}
+                        href={card.url}
                         rel="external"
                         style="text-decoration:none"
-                        ><b>{status.card.title}</b></a
-                    ><br />{status.card.description}
+                        ><b>{card.title}</b></a
+                    ><br />{card.description}
                 </div>
             </div>
         </div>
     </div>
 {/if}
 
-{#if displayStatus.quoteDisplayStatus}
+{#if status.quote}
     <div
         style="margin-top:1em;border-radius:4px;border:solid 1px #ccc;padding:8px;">
-        <MastodonStatus displayStatus={displayStatus.quoteDisplayStatus} />
+        <StatusDisplay status={status.quote} />
     </div>
 {/if}

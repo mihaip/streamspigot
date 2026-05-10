@@ -1,22 +1,19 @@
 <script lang="ts">
     import {BUBBLE_COLOR, BUBBLE_TEXT_COLOR} from "$lib/constants";
-    import type {DisplayStatus} from "$lib/masto-feeder/display-status";
+    import type {Status} from "$lib/status";
     import AccountLink from "./AccountLink.svelte";
-    import MastodonStatusContent from "./MastodonStatusContent.svelte";
-    import MastodonStatusFooter from "./MastodonStatusFooter.svelte";
+    import StatusDisplayContent from "./StatusDisplayContent.svelte";
+    import StatusDisplayFooter from "./StatusDisplayFooter.svelte";
 
     let {
-        displayStatus,
+        status,
         includeStatusJson = false,
     }: {
-        displayStatus: DisplayStatus;
+        status: Status;
         includeStatusJson?: boolean;
     } = $props();
-    let status = $derived(displayStatus.status);
-    let contentDisplayStatus = $derived(
-        displayStatus.reblogDisplayStatus ?? displayStatus
-    );
-    let contentStatus = $derived(contentDisplayStatus.status);
+    let repost = $derived(status.repost);
+    let contentStatus = $derived(repost?.status ?? status);
 </script>
 
 <div
@@ -24,17 +21,17 @@
     <div style="display:table-row">
         <div
             style="width:48px;padding:0 .5em 0 0 !important;display:table-cell;vertical-align:top">
-            {#if status.reblog}
-                <a href={status.reblog.account.url} rel="external">
+            {#if repost}
+                <a href={repost.status.author.url} rel="external">
                     <img
-                        src={status.reblog.account.avatar}
+                        src={repost.status.author.avatarUrl}
                         width="36"
                         height="36"
                         style="border-radius:4px;overflow:hidden;max-width:none"
                         alt=""
                         class="nnw-nozoom" />
                     <img
-                        src={status.account.avatar}
+                        src={repost.by.avatarUrl}
                         width="24"
                         height="24"
                         style="border-radius:4px;overflow:hidden;max-width:none;transform:translate(18px,-18px);box-shadow:1px 1px 6px rgba(0, 0, 0, 0.3);"
@@ -42,9 +39,9 @@
                         class="nnw-nozoom" />
                 </a>
             {:else}
-                <a href={status.account.url} rel="external">
+                <a href={status.author.url} rel="external">
                     <img
-                        src={status.account.avatar}
+                        src={status.author.avatarUrl}
                         width="48"
                         height="48"
                         style="border-radius:4px;overflow:hidden;max-width:none"
@@ -55,13 +52,13 @@
         </div>
         <div style="display:table-cell;vertical-align:top">
             <div style="padding:0 .5em">
-                {#if status.reblog}
+                {#if repost}
                     <font size="-1" style="opacity:0.5">
-                        <AccountLink account={status.account} />↺ boosted<br />
+                        <AccountLink account={repost.by} />↺ {repost.label}<br />
                     </font>
-                    <AccountLink account={status.reblog.account} />
+                    <AccountLink account={repost.status.author} />
                 {:else}
-                    <AccountLink account={status.account} />
+                    <AccountLink account={status.author} />
                 {/if}
             </div>
             <div
@@ -70,18 +67,16 @@
                     <details>
                         <summary style="cursor:pointer"
                             >{contentStatus.spoilerText}</summary>
-                        <MastodonStatusContent
-                            displayStatus={contentDisplayStatus} />
+                        <StatusDisplayContent status={contentStatus} />
                     </details>
                 {:else}
-                    <MastodonStatusContent
-                        displayStatus={contentDisplayStatus} />
+                    <StatusDisplayContent status={contentStatus} />
                 {/if}
-                <MastodonStatusFooter {displayStatus} />
+                <StatusDisplayFooter {status} />
             </div>
         </div>
     </div>
 </div>
 {#if includeStatusJson}
-    <pre>{JSON.stringify(status, null, 2)}</pre>
+    <pre>{JSON.stringify(status.debugJson ?? status, null, 2)}</pre>
 {/if}

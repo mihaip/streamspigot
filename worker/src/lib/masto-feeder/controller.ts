@@ -15,7 +15,8 @@ import {
     type MastoFeederAuthRequest,
     type MastoFeederPrefs,
 } from "./types";
-import {renderTimelineFeed, type FeedOptions} from "./feed";
+import type {FeedOptions} from "$lib/status/feed";
+import {renderTimelineFeed} from "./feed";
 
 const SCOPES = ["read:accounts", "read:follows", "read:lists", "read:statuses"];
 
