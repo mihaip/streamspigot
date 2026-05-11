@@ -32,7 +32,7 @@ export function renderTweeterFeed(
         {
             feedUrl,
             homeUrl,
-            title: `Tweeter Feeder: ${usernames.map(u => `@${u}`).join(", ")}`,
+            title: `${usernames.map(u => `@${u}`).join(", ")} Tweets`,
             updatedDate,
             authorName: `${APP_NAME} : Tweeter Feeder`,
         },
