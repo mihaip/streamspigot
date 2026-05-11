@@ -35,6 +35,10 @@
             <h2>Masto Feeder</h2>
             <p>Keep up with Mastodon posts in your favorite feed reader</p>
         </a>
+        <a href={resolve("/tweeter-feeder")} class="tool odd">
+            <h2>Tweeter Feeder</h2>
+            <p>Follow public Twitter/X accounts in your favorite feed reader</p>
+        </a>
     </div>
 
     {#snippet footer()}
@@ -132,16 +136,13 @@
         right: 60px;
     }
 
-    /*
-    TODO: uncomment when adding more tools
-     .tool.odd {
+    .tool.odd {
         float: right;
     }
 
     .tool.odd:before {
         left: 40px;
     }
-    */
 
     .tool:hover {
         background: #fff;

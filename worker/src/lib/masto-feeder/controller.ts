@@ -38,10 +38,10 @@ export class MastoFeederController {
 
     constructor(event: RequestEvent) {
         const {cookies, platform, url} = event;
-        const kv = platform?.env?.MASTOFEEDER;
+        const kv = platform?.env?.STREAMSPIGOT;
         if (!kv) {
             throw new Error(
-                "Could not find MASTOFEEDER KV namespace. Make sure you're running with wrangler"
+                "Could not find STREAMSPIGOT KV namespace. Make sure you're running with wrangler"
             );
         }
         this.#kv = new MastoFeederKV(new WorkerKV(kv));

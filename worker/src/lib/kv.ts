@@ -1,11 +1,15 @@
 export interface KV {
     get(key: string): Promise<string | null>;
-    put(key: string, value: string): Promise<void>;
+    put(key: string, value: string, options?: KVPutOptions): Promise<void>;
     delete(key: string): Promise<void>;
 
     getJSON<T>(key: string): Promise<T | null>;
-    putJSON<T>(key: string, value: T): Promise<void>;
+    putJSON<T>(key: string, value: T, options?: KVPutOptions): Promise<void>;
 }
+
+export type KVPutOptions = {
+    expirationTtl?: number;
+};
 
 export class WorkerKV implements KV {
     #kv: KVNamespace;
@@ -18,8 +22,12 @@ export class WorkerKV implements KV {
         return await this.#kv.get(key);
     }
 
-    async put(key: string, value: string): Promise<void> {
-        return await this.#kv.put(key, value);
+    async put(
+        key: string,
+        value: string,
+        options?: KVPutOptions
+    ): Promise<void> {
+        return await this.#kv.put(key, value, options);
     }
 
     async delete(key: string): Promise<void> {
@@ -30,7 +38,11 @@ export class WorkerKV implements KV {
         return await this.#kv.get(key, {type: "json"});
     }
 
-    async putJSON<T>(key: string, value: T): Promise<void> {
-        return await this.#kv.put(key, JSON.stringify(value));
+    async putJSON<T>(
+        key: string,
+        value: T,
+        options?: KVPutOptions
+    ): Promise<void> {
+        return await this.#kv.put(key, JSON.stringify(value), options);
     }
 }

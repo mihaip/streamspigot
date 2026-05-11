@@ -7,7 +7,7 @@ declare global {
     namespace App {
         interface Platform {
             env?: {
-                MASTOFEEDER: KVNamespace;
+                STREAMSPIGOT: KVNamespace;
             };
         }
         interface Locals {

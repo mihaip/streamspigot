@@ -1,6 +1,7 @@
 <script lang="ts">
     import {resolve} from "$app/paths";
     import {APP_NAME} from "$lib/constants";
+    import FeedLink from "$lib/components/FeedLink.svelte";
     import Layout from "$lib/components/Layout.svelte";
 
     let { data, form } = $props();
@@ -36,11 +37,8 @@
         )
 
         <p>
-            Your <a
-                href={data.timelineFeedUrl}
-                class="feed-link"
-                rel="external"
-                ><b>@{data.user.username} timeline feed</b></a>
+            Your <FeedLink href={data.timelineFeedUrl}
+                ><b>@{data.user.username} timeline feed</b></FeedLink>
             is ready. You can subscribe to the URL in your preferred feed reader.
         </p>
 
@@ -152,17 +150,6 @@
         padding: 0;
         color: #2db300;
         text-decoration: underline;
-    }
-
-    .feed-link {
-        padding-left: 19px;
-        background-position: center left;
-        background-repeat: no-repeat;
-        background-image: url($lib/assets/feed-icon.png);
-        background-image: image-set(
-            url($lib/assets/feed-icon.png) 1x,
-            url($lib/assets/feed-icon@2x.png) 2x
-        );
     }
 
     .error {

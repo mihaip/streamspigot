@@ -8,3 +8,7 @@ node_modules
 
 # wrangler local state when running `wrangler dev`
 .wrangler
+
+# Local secrets
+.dev.vars
+.tweeter-feeder-sessions.json

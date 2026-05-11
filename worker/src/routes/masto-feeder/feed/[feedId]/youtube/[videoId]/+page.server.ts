@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({params, platform}) => {
     }
 
     // Validate feed ID exists
-    const kv = platform?.env?.MASTOFEEDER;
+    const kv = platform?.env?.STREAMSPIGOT;
     if (!kv) {
         return error(500, "KV not available");
     }

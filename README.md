@@ -37,6 +37,55 @@ The [main timeline handler](https://github.com/mihaip/streamspigot/blob/main/wor
 - `html=true`: return HTML instead of an Atom feed, for easier in-browser viewing
 - `includeStatusJson=true`: include the full JSON of each status for introspection
 
+## Tweeter Feeder sessions
+
+Tweeter Feeder fetches public X/Twitter timelines through the same private web
+endpoints used by [Nitter](https://github.com/zedeus/nitter). It does not use
+a developer API key. Runtime credentials, cached user/timeline responses, and
+session cooldown markers are stored in the existing `STREAMSPIGOT` KV namespace
+binding under `tweeter-feeder:` keys.
+
+Sessions are stored as one JSON array at the KV key `tweeter-feeder:sessions`.
+To generate a session object manually:
+
+1. Log in to `https://x.com` as the account you want Tweeter Feeder to use.
+2. Open browser DevTools.
+3. Go to **Application** → **Storage** → **Cookies** → `https://x.com`.
+4. Copy these cookie values from the table:
+   - `auth_token`
+   - `ct0`
+   - `twid`, optional but useful. It looks like `u%3D123456`; use the number
+     after `u%3D` as the `id`.
+5. Switch to the Console and paste this snippet, replacing the placeholders
+   with the copied values:
+
+   ```js
+   copy(
+     JSON.stringify({
+       kind: "cookie",
+       username: "digest1",
+       id: "123456",
+       auth_token: "paste auth_token here",
+       ct0: "paste ct0 here",
+     }),
+   );
+   ```
+
+6. Add the copied object to the `tweeter-feeder:sessions` JSON array in KV.
+
+For local `wrangler dev`, open
+[`localhost:5413/cdn-cgi/explorer`](http://localhost:5413/cdn-cgi/explorer),
+select the `STREAMSPIGOT` KV binding, and create or update:
+
+- Key: `tweeter-feeder:sessions`
+- Value: a JSON array containing the session object from above
+
+For production, edit the same key in the Cloudflare dashboard or with Wrangler
+against the production KV namespace. Multiple accounts are supported by adding
+multiple objects to the array. The fetcher chooses sessions deterministically by
+requested username and temporarily cools down sessions that hit auth or
+rate-limit errors.
+
 ## Building
 
 To build and run a preview version:
