@@ -96,9 +96,7 @@ function renderStatus(
     status: Status,
     includeStatusJson: boolean = false
 ): string {
-    const {body: statusHtml} = render(StatusDisplay, {
-        props: {status, includeStatusJson},
-    });
+    const statusHtml = renderStatusHtml(status, includeStatusJson);
 
     return xml`<entry>
         <id>${status.id}</id>
@@ -117,7 +115,7 @@ function renderStatusJson(status: Status) {
         id: status.id,
         url: status.permalink,
         title: status.titleText,
-        content_html: status.contentHtml,
+        content_html: renderStatusHtml(status),
         date_published: status.createdAtIso,
         date_modified: status.updatedAtIso,
         authors: [
@@ -128,6 +126,16 @@ function renderStatusJson(status: Status) {
             },
         ],
     };
+}
+
+function renderStatusHtml(
+    status: Status,
+    includeStatusJson: boolean = false
+): string {
+    const {body: statusHtml} = render(StatusDisplay, {
+        props: {status, includeStatusJson},
+    });
+    return statusHtml;
 }
 
 function xml(strings: TemplateStringsArray, ...values: unknown[]): string {
