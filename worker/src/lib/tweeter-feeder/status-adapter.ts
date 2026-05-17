@@ -12,6 +12,7 @@ import type {
     StatusCard,
     StatusPoll,
 } from "$lib/status";
+import {truncate} from "$lib/strings";
 
 const TWITTER_BASE_URL = "https://twitter.com";
 
@@ -125,10 +126,6 @@ function headlineAsText(tweet: TwitterTweet): string {
 
 function plainText(tweet: TwitterTweet): string {
     return tweet.text.replace(/\s+/g, " ").trim();
-}
-
-function truncate(s: string): string {
-    return s.length < 100 ? s : `${s.slice(0, 100)}...`;
 }
 
 function contentAsHtml(tweet: TwitterTweet): string {

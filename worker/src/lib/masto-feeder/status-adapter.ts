@@ -6,6 +6,7 @@ import type {
     StatusIframe,
     StatusPoll,
 } from "$lib/status";
+import {truncate} from "$lib/strings";
 import {type mastodon} from "masto";
 import * as htmlparser2 from "htmlparser2";
 
@@ -206,10 +207,6 @@ function statusTitleText(status: mastodon.v1.Status): string {
         return attachment.type;
     }
     return "";
-}
-
-function truncate(s: string): string {
-    return s.length < 100 ? s : `${s.slice(0, 100)}…`;
 }
 
 function contentAsHtml(content: string): string {

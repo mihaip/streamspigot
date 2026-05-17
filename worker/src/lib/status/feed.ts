@@ -56,7 +56,7 @@ export function renderFeed(
                     renderStatusJson(status, includeStatusJson)
                 ),
             },
-            null,
+            jsonFeedReplacer,
             debug ? 2 : undefined
         );
     }
@@ -138,6 +138,26 @@ function renderStatusHtml(
         props: {status, includeStatusJson},
     });
     return statusHtml;
+}
+
+function jsonFeedReplacer(_key: string, value: unknown): unknown {
+    if (typeof value !== "string") {
+        return value;
+    }
+    return replaceUnpairedSurrogates(value);
+}
+
+function replaceUnpairedSurrogates(s: string): string {
+    return s.replace(/[\uD800-\uDFFF]/g, (char, index, source) => {
+        const code = char.charCodeAt(0);
+        if (code >= 0xd800 && code <= 0xdbff) {
+            const next = source.charCodeAt(index + 1);
+            return next >= 0xdc00 && next <= 0xdfff ? char : "\uFFFD";
+        }
+
+        const previous = source.charCodeAt(index - 1);
+        return previous >= 0xd800 && previous <= 0xdbff ? char : "\uFFFD";
+    });
 }
 
 function xml(strings: TemplateStringsArray, ...values: unknown[]): string {
