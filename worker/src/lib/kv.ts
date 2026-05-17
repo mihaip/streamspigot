@@ -1,3 +1,5 @@
+import type {RequestEvent} from "@sveltejs/kit";
+
 export interface KV {
     get(key: string): Promise<string | null>;
     put(key: string, value: string, options?: KVPutOptions): Promise<void>;
@@ -16,6 +18,13 @@ export class WorkerKV implements KV {
 
     constructor(kv: KVNamespace) {
         this.#kv = kv;
+    }
+
+    static fromEvent(event: RequestEvent): WorkerKV {
+        if (!event.platform) {
+            throw new Error("Cloudflare platform bindings are not available");
+        }
+        return new WorkerKV(event.platform.env.STREAMSPIGOT);
     }
 
     async get(key: string): Promise<string | null> {

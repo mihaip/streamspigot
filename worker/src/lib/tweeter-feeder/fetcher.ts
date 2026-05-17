@@ -90,9 +90,7 @@ export class TwitterFetcher {
         session: TweeterFeederSession
     ): Promise<TwitterUser> {
         if (!session.username) {
-            throw new TwitterGraphQLFetchError(
-                "Session is missing a username"
-            );
+            throw new TwitterGraphQLFetchError("Session is missing a username");
         }
 
         const user = await this.#fetchGraphQL(
@@ -146,10 +144,13 @@ export class TwitterFetcher {
                 });
                 return {...cached.value, fromStaleCache: true};
             }
-            console.error("Tweeter Feeder timeline fetch failed without cache", {
-                username: normalizedUsername,
-                error: e,
-            });
+            console.error(
+                "Tweeter Feeder timeline fetch failed without cache",
+                {
+                    username: normalizedUsername,
+                    error: e,
+                }
+            );
             throw e;
         }
     }

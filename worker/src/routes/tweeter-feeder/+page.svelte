@@ -128,13 +128,12 @@
         <div class="digest-message">
             <div class="symbol">&#8675;</div>
             <div class="inner">
-                Your <FeedLink href={feedHref} target="_blank" rel="external"
+                Your <FeedLink href={feedHref} target="_blank"
                     ><b>{feedTitle}</b></FeedLink>
                 is ready (also available as <FeedLink
                     href={jsonFeedHref}
                     feedType="json"
-                    target="_blank"
-                    rel="external">a JSON Feed</FeedLink
+                    target="_blank">a JSON Feed</FeedLink
                 >). You can subscribe to the URL in your preferred feed reader.
             </div>
         </div>

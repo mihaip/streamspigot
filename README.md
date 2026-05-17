@@ -1,6 +1,8 @@
 # Stream Spigot
 
-Stream Spigot is a collection of tools to make consumption of real time-ish datasources more manageable. The active tool is **Masto Feeder**, which lets you read your Mastodon timeline in a feed reader.
+Stream Spigot is a collection of tools to make consumption of real time-ish datasources more manageable. The active tools are:
+- **Masto Feeder**: lets you read your Mastodon timeline in a feed reader.
+- **Tweeter Feeder**: lets you generate feeds for public X/Twitter accounts.
 
 A running instance is at [www.streamspigot.com](http://www.streamspigot.com/).
 
@@ -21,20 +23,35 @@ Start the dev server:
 npm run dev
 ```
 
-It will be running at [localhost:3413](http://localhost:3413/).
+It will be running at [localhost:3413](http://localhost:3413/). This is the
+normal development loop, including SvelteKit HMR and local Cloudflare bindings.
 
-If working on things that need Cloudflare-specific functionality (e.g. KV namespaces) then you'll need to start the worker in dev mode:
+To test the built Cloudflare Worker runtime locally, use:
 
 ```bash
-npm run worker-dev
+npm run preview:worker
 ```
 
 It will be running at [localhost:5413](http://localhost:5413/).
 
+Wrangler binding types are generated into `worker-configuration.d.ts`:
+
+```bash
+npm run types:worker
+```
+
+`npm run check` verifies that those generated types are up to date before
+running Svelte and TypeScript checks. The type generation uses
+`wrangler.types.toml`, which mirrors the deployed bindings without importing
+the generated Worker build output into `svelte-check`.
+
+
+# Masto Feeder
+
 The [main timeline handler](https://github.com/mihaip/streamspigot/blob/main/worker/src/routes/masto-feeder/feed/%5BfeedId%5D/timeline/+server.ts#L13) has support for a few query parameters to help with testing:
 
 - `debug=true`: show fewer posts (just the 10 most recent ones) to speed up loading
-- `html=true`: return HTML instead of an Atom feed, for easier in-browser viewing
+- `output=html`: return HTML instead of an Atom feed, for easier in-browser viewing
 - `includeStatusJson=true`: include the full JSON of each status for introspection
 
 ## Tweeter Feeder sessions
@@ -73,7 +90,7 @@ To generate a session object manually:
 
 6. Add the copied object to the `tweeter-feeder:sessions` JSON array in KV.
 
-For local `wrangler dev`, open
+For local Worker runtime preview, run `npm run preview:worker`, then open
 [`localhost:5413/cdn-cgi/explorer`](http://localhost:5413/cdn-cgi/explorer),
 select the `STREAMSPIGOT` KV binding, and create or update:
 
@@ -91,7 +108,6 @@ rate-limit errors.
 To build and run a preview version:
 
 ```bash
-npm run build
 npm run preview
 ```
 
@@ -102,7 +118,7 @@ It will be running at [localhost:4413](http://localhost:4413/).
 To deploy the app, assuming you've run `wrangler login` to set up Cloudflare credentials:
 
 ```bash
-npm run worker-deploy
+npm run deploy
 ```
 
-It will be running at [streamspigot.mihai-parparita.workers.dev](https://streamspigot.mihai-parparita.workers.dev)
+It will be running at [streamspigot.mihai-parparita.workers.dev](https://streamspigot.mihai-parparita.workers.dev) (alternate/development route for the main `www.streamspigot.com` domain route).

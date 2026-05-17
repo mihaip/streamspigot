@@ -44,6 +44,7 @@ export default defineConfig([
             "package/",
             ".cloudflare/",
             ".wrangler/",
+            "worker-configuration.d.ts",
         ],
     },
 ]);

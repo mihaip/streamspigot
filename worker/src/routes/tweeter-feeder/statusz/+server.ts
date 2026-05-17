@@ -4,19 +4,8 @@ import {TweeterFeederKV} from "$lib/tweeter-feeder/kv";
 import type {TweeterFeederSession} from "$lib/tweeter-feeder/types";
 import type {RequestHandler} from "@sveltejs/kit";
 
-export const GET: RequestHandler = async ({platform}) => {
-    const kv = platform?.env?.STREAMSPIGOT;
-    if (!kv) {
-        return json(
-            {
-                ok: false,
-                error: "Missing STREAMSPIGOT KV binding",
-            },
-            500
-        );
-    }
-
-    const tweeterKV = new TweeterFeederKV(new WorkerKV(kv));
+export const GET: RequestHandler = async event => {
+    const tweeterKV = new TweeterFeederKV(WorkerKV.fromEvent(event));
     let sessions: TweeterFeederSession[];
     try {
         sessions = await tweeterKV.getSessions();

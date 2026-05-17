@@ -18,15 +18,8 @@ export class TweeterFeederController {
     #appHost: string;
 
     constructor(event: RequestEvent) {
-        const {platform, url} = event;
-        const kv = platform?.env?.STREAMSPIGOT;
-        if (!kv) {
-            console.error("Tweeter Feeder missing STREAMSPIGOT KV binding");
-            throw new Error(
-                "Could not find STREAMSPIGOT KV namespace. Make sure you're running with wrangler"
-            );
-        }
-        this.#kv = new TweeterFeederKV(new WorkerKV(kv));
+        const {url} = event;
+        this.#kv = new TweeterFeederKV(WorkerKV.fromEvent(event));
         this.#appProtocol = url.protocol;
         this.#appHost = url.host;
     }

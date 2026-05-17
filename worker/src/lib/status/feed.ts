@@ -112,10 +112,7 @@ function renderStatus(
     </entry>`;
 }
 
-function renderStatusJson(
-    status: Status,
-    includeStatusJson: boolean = false
-) {
+function renderStatusJson(status: Status, includeStatusJson: boolean = false) {
     return {
         id: status.id,
         url: status.permalink,

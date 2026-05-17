@@ -1,3 +1,7 @@
+# Type-generation-only Wrangler config.
+# Keep bindings in sync with wrangler.toml. This intentionally omits `main`
+# and `assets.directory` so generated types do not import build output from
+# .svelte-kit/cloudflare during `svelte-check`.
 "$schema" = "./node_modules/wrangler/config-schema.json"
 name = "streamspigot"
 account_id = "2ccb840de076261467812cbc32f8aa47"
@@ -5,10 +9,7 @@ workers_dev = true
 compatibility_date = "2024-04-13"
 compatibility_flags = ["nodejs_als"]
 
-main = ".svelte-kit/cloudflare/_worker.js"
-
 [assets]
-directory = ".svelte-kit/cloudflare"
 binding = "ASSETS"
 
 [[kv_namespaces]]

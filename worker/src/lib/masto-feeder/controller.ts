@@ -37,14 +37,8 @@ export class MastoFeederController {
     #cookies: Cookies;
 
     constructor(event: RequestEvent) {
-        const {cookies, platform, url} = event;
-        const kv = platform?.env?.STREAMSPIGOT;
-        if (!kv) {
-            throw new Error(
-                "Could not find STREAMSPIGOT KV namespace. Make sure you're running with wrangler"
-            );
-        }
-        this.#kv = new MastoFeederKV(new WorkerKV(kv));
+        const {cookies, url} = event;
+        this.#kv = new MastoFeederKV(WorkerKV.fromEvent(event));
         this.#appProtocol = url.protocol;
         this.#appHost = url.host;
         this.#cookies = cookies;

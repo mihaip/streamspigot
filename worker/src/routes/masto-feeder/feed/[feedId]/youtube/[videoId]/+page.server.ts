@@ -3,7 +3,8 @@ import {WorkerKV} from "$lib/kv";
 import {error} from "@sveltejs/kit";
 import type {PageServerLoad} from "./$types";
 
-export const load: PageServerLoad = async ({params, platform}) => {
+export const load: PageServerLoad = async event => {
+    const {params} = event;
     const {feedId, videoId} = params;
 
     // Validate video ID format (alphanumeric, dashes, underscores)
@@ -12,11 +13,7 @@ export const load: PageServerLoad = async ({params, platform}) => {
     }
 
     // Validate feed ID exists
-    const kv = platform?.env?.STREAMSPIGOT;
-    if (!kv) {
-        return error(500, "KV not available");
-    }
-    const mastoFeederKv = new MastoFeederKV(new WorkerKV(kv));
+    const mastoFeederKv = new MastoFeederKV(WorkerKV.fromEvent(event));
     const session = await mastoFeederKv.getSessionByFeedId(feedId);
     if (!session) {
         return error(404, "Unknown feed ID");

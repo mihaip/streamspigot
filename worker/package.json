@@ -5,13 +5,15 @@
     "scripts": {
         "dev": "vite dev",
         "build": "vite build",
-        "preview": "vite preview",
-        "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+        "preview": "npm run build && vite preview",
+        "preview:worker": "npm run build && wrangler dev --port 5413",
+        "deploy": "npm run build && wrangler deploy",
+        "types:worker": "wrangler types worker-configuration.d.ts --config wrangler.types.toml --env-file worker-types.env --include-runtime false",
+        "types:worker:check": "wrangler types worker-configuration.d.ts --config wrangler.types.toml --env-file worker-types.env --include-runtime false --check",
+        "check": "npm run types:worker:check && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
         "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
         "lint": "prettier --check . && eslint .",
-        "format": "prettier --write .",
-        "worker-dev": "wrangler dev",
-        "worker-deploy": "wrangler deploy"
+        "format": "prettier --write ."
     },
     "devDependencies": {
         "@cloudflare/workers-types": "^4.20260509.1",

@@ -74,12 +74,21 @@ When working with Svelte, SvelteKit, Cloudflare Workers, Wrangler, or other libr
 Run commands from `worker/` unless noted otherwise.
 
 - `npm install` installs dependencies.
-- `npm run dev` starts the SvelteKit dev server on `localhost:3413`.
-- `npm run worker-dev` starts Wrangler dev for Cloudflare-specific functionality such as KV.
-- `npm run check` runs Svelte and TypeScript checks.
+- `npm run dev` starts the canonical SvelteKit dev server on `localhost:3413`, with HMR and local Cloudflare bindings such as `STREAMSPIGOT` KV.
+- `npm run types:worker` regenerates `worker-configuration.d.ts` from Wrangler binding config.
+- `npm run check` verifies generated Worker types, then runs Svelte and TypeScript checks.
 - `npm run build` builds the app.
-- `npm run preview` previews the build on `localhost:4413`.
-- `npm run worker-deploy` deploys with Wrangler.
+- `npm run preview` builds and previews the SvelteKit output on `localhost:4413`.
+- `npm run preview:worker` builds and starts Wrangler Worker-runtime preview on `localhost:5413`.
+- `npm run deploy` builds and deploys with Wrangler.
+
+Wrangler deploy config lives in `worker/wrangler.toml` and points at
+`.svelte-kit/cloudflare/_worker.js` with static assets in
+`.svelte-kit/cloudflare`. Worker type generation uses `worker/wrangler.types.toml`,
+which mirrors the deployed bindings but intentionally omits `main` and
+`assets.directory` so `worker-configuration.d.ts` does not import generated
+build output during `svelte-check`. Keep `wrangler.toml` and
+`wrangler.types.toml` binding declarations in sync.
 
 ## Testing And Verification
 
@@ -91,11 +100,22 @@ Use the Masto Feeder timeline debug query parameters when checking feed output:
 
 For display changes, compare normal posts, boosts/reposts, content warnings, quote posts, image/video/gifv attachments, polls, link cards, YouTube embeds, and reply footer links. Atom entries should keep stable `id`, `link`, `title`, `published`, `updated`, and HTML content fields.
 
+For Worker/dev tooling changes, verify all three local paths when feasible:
+`npm run dev` on port 3413, `npm run preview` on port 4413, and
+`npm run preview:worker` on port 5413. Smoke-test `/` and the KV-backed
+`/tweeter-feeder/statusz` endpoint; `statusz` should return `ok: true` when
+local Tweeter Feeder sessions are configured.
+
 ## Code Style Notes
 
 Follow the existing TypeScript/Svelte style: strict types, 4-space indentation, double quotes, semicolons, and concise comments only where behavior is non-obvious. Preserve feed-reader-oriented inline styles in status display components unless deliberately changing rendered output.
 
 Prefer entrypoint-first file organization: put the primary exported type, component logic, or public function near the top of a file, then place child types and helper functions below it. For adapter modules, start with the main adapter function and keep provider-specific helpers underneath.
+
+Before committing code changes, run the relevant formatting and verification
+scripts from `worker/`: `npm run format`, `npm run lint`, `npm run check`, and
+`npm run build`. If a change only touches docs outside `worker/`, note that the
+Worker verification was intentionally skipped.
 
 ## Commit Message Style
 

@@ -5,20 +5,19 @@
         href,
         feedType = "atom",
         target = undefined,
-        rel = "external",
         children,
     }: {
         href: string;
         feedType?: "atom" | "json";
         target?: string;
-        rel?: string;
         children: Snippet;
     } = $props();
 
     let isJsonFeed = $derived(feedType === "json");
 </script>
 
-<a {href} {target} {rel} class:json-feed={isJsonFeed}>{@render children()}</a>
+<a {href} {target} rel="external" class:json-feed={isJsonFeed}
+    >{@render children()}</a>
 
 <style>
     a {
