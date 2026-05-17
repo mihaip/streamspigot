@@ -6,10 +6,10 @@ import type {Status} from ".";
 export function renderFeed(
     statuses: Status[],
     metadata: FeedMetadata,
-    {debug, html, includeStatusJson}: FeedOptions = {}
+    {debug, output = "atom", includeStatusJson}: FeedOptions = {}
 ): FeedOutput {
     let body;
-    if (html) {
+    if (output === "html") {
         const {body: statusesHtml} = render(StatusDisplayDebugHtml, {
             props: {statuses, includeStatusJson},
         });
@@ -32,7 +32,7 @@ export function renderFeed(
     </head>
     <body>${statusesHtml}</body>
 </html>`;
-    } else {
+    } else if (output === "atom") {
         body = xml`<?xml version="1.0"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>${metadata.feedUrl}</id>
@@ -44,11 +44,28 @@ export function renderFeed(
     ${new RawXml(statuses.map(status => renderStatus(status, includeStatusJson)).join("\n"))}
 </feed>
 `;
+    } else {
+        body = JSON.stringify(
+            {
+                version: "https://jsonfeed.org/version/1.1",
+                title: metadata.title,
+                home_page_url: metadata.homeUrl,
+                feed_url: metadata.feedUrl,
+                authors: [{name: metadata.authorName}],
+                items: statuses.map(status =>
+                    renderStatusJson(status, includeStatusJson)
+                ),
+            },
+            null,
+            debug ? 2 : undefined
+        );
     }
 
     let contentType;
-    if (html) {
+    if (output === "html") {
         contentType = "text/html";
+    } else if (output === "json") {
+        contentType = "application/feed+json";
     } else if (debug) {
         // text/xml is pretty-printed and thus easier to see
         contentType = "text/xml";
@@ -69,9 +86,11 @@ export type FeedMetadata = {
 
 export type FeedOptions = {
     debug?: boolean;
-    html?: boolean;
+    output?: FeedOutputType;
     includeStatusJson?: boolean;
 };
+
+export type FeedOutputType = "html" | "atom" | "json";
 
 export type FeedOutput = {body: string; contentType: string};
 
@@ -79,9 +98,7 @@ function renderStatus(
     status: Status,
     includeStatusJson: boolean = false
 ): string {
-    const {body: statusHtml} = render(StatusDisplay, {
-        props: {status, includeStatusJson},
-    });
+    const statusHtml = renderStatusHtml(status, includeStatusJson);
 
     return xml`<entry>
         <id>${status.id}</id>
@@ -93,6 +110,37 @@ function renderStatus(
             ${statusHtml}
         </content>
     </entry>`;
+}
+
+function renderStatusJson(
+    status: Status,
+    includeStatusJson: boolean = false
+) {
+    return {
+        id: status.id,
+        url: status.permalink,
+        title: status.headlineText,
+        content_html: renderStatusHtml(status, includeStatusJson),
+        date_published: status.createdAtIso,
+        date_modified: status.updatedAtIso,
+        authors: [
+            {
+                name: status.author.displayName,
+                url: status.author.url,
+                avatar: status.author.avatarUrl,
+            },
+        ],
+    };
+}
+
+function renderStatusHtml(
+    status: Status,
+    includeStatusJson: boolean = false
+): string {
+    const {body: statusHtml} = render(StatusDisplay, {
+        props: {status, includeStatusJson},
+    });
+    return statusHtml;
 }
 
 function xml(strings: TemplateStringsArray, ...values: unknown[]): string {

@@ -1,6 +1,6 @@
 import {error, type RequestEvent} from "@sveltejs/kit";
 import {WorkerKV} from "$lib/kv";
-import {type FeedOptions} from "$lib/status/feed";
+import {type FeedOptions, type FeedOutputType} from "$lib/status/feed";
 import {TweeterFeederKV} from "./kv";
 import {
     fetchErrorForUsername,
@@ -74,7 +74,7 @@ export class TweeterFeederController {
             usernames,
             results,
             errors,
-            this.feedUrl(usernames),
+            this.feedUrl(usernames, options.output),
             this.#baseUrl(),
             options
         );
@@ -86,8 +86,12 @@ export class TweeterFeederController {
         });
     }
 
-    feedUrl(usernames: string[]): string {
-        return `${this.#baseUrl()}/feed?usernames=${usernames.join("+")}`;
+    feedUrl(usernames: string[], output?: FeedOutputType): string {
+        const url = `${this.#baseUrl()}/feed?usernames=${usernames.join("+")}`;
+        if (output && output !== "atom") {
+            return `${url}&output=${output}`;
+        }
+        return url;
     }
 
     #baseUrl(): string {

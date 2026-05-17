@@ -39,7 +39,7 @@ export function renderTweeterFeed(
         options
     );
 
-    if (options.html) {
+    if (options.output === "html") {
         output.body = injectDebugNotice(output.body, results, errors);
     }
 

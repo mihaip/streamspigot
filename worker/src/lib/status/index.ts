@@ -9,6 +9,7 @@ export type Status = {
     updatedAtIso: string;
     createdAtLabel: string;
     titleText: string;
+    headlineText: string;
     contentHtml: string;
     spoilerText?: string;
     attachments: StatusAttachment[];

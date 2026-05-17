@@ -15,7 +15,7 @@ import {
     type MastoFeederAuthRequest,
     type MastoFeederPrefs,
 } from "./types";
-import type {FeedOptions} from "$lib/status/feed";
+import type {FeedOptions, FeedOutputType} from "$lib/status/feed";
 import {renderTimelineFeed} from "./feed";
 
 const SCOPES = ["read:accounts", "read:follows", "read:lists", "read:statuses"];
@@ -215,7 +215,7 @@ export class MastoFeederController {
         const prefs = resolvePrefs(session.prefs);
         const {body, contentType} = await renderTimelineFeed(
             session,
-            this.timelineFeedUrl(session),
+            this.timelineFeedUrl(session, options.output),
             this.#baseUrl(),
             {
                 instanceUrl: session.instanceUrl,
@@ -295,8 +295,17 @@ export class MastoFeederController {
         return url.toString();
     }
 
-    timelineFeedUrl(session: MastoFeederSession): string {
-        return `${this.#baseUrl()}/feed/${session.feedId}/timeline`;
+    timelineFeedUrl(
+        session: MastoFeederSession,
+        output?: FeedOutputType
+    ): string {
+        const url = new URL(
+            `${this.#baseUrl()}/feed/${session.feedId}/timeline`
+        );
+        if (output && output !== "atom") {
+            url.searchParams.set("output", output);
+        }
+        return url.toString();
     }
 
     statusParentUrl(session: MastoFeederSession, statusId: string): string {

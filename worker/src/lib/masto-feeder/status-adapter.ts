@@ -35,6 +35,7 @@ export function toStatus(
         ).toISOString(),
         createdAtLabel: formatCreatedAt(status.createdAt, env),
         titleText: titleAsText(status),
+        headlineText: headlineAsText(status),
         contentHtml: contentAsHtml(status.content),
         spoilerText: status.spoilerText || undefined,
         attachments: status.mediaAttachments.map(toStatusAttachment),
@@ -158,6 +159,10 @@ function formatCreatedAt(createdAt: string, env: MastodonAdapterEnv): string {
 }
 
 function titleAsText(status: mastodon.v1.Status): string {
+    return `${displayName(status.account)}: ${headlineAsText(status)}`;
+}
+
+function headlineAsText(status: mastodon.v1.Status): string {
     let titleText: string;
 
     if (status.reblog) {
@@ -179,7 +184,7 @@ function titleAsText(status: mastodon.v1.Status): string {
         }
     }
 
-    return `${displayName(status.account)}: ${titleText}`;
+    return titleText;
 }
 
 function statusTitleText(status: mastodon.v1.Status): string {
