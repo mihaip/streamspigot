@@ -137,7 +137,7 @@ function renderStatusHtml(
     const {body: statusHtml} = render(StatusDisplay, {
         props: {status, includeStatusJson},
     });
-    return statusHtml;
+    return stripSvelteMarkers(statusHtml);
 }
 
 function jsonFeedReplacer(_key: string, value: unknown): unknown {
@@ -158,6 +158,10 @@ function replaceUnpairedSurrogates(s: string): string {
         const previous = source.charCodeAt(index - 1);
         return previous >= 0xd800 && previous <= 0xdbff ? char : "\uFFFD";
     });
+}
+
+function stripSvelteMarkers(s: string): string {
+    return s.replace(/<!--(?:\[[\d-]*|\])-->|<!---->/g, "");
 }
 
 function xml(strings: TemplateStringsArray, ...values: unknown[]): string {
