@@ -24,6 +24,7 @@ export async function load(event) {
         user,
         prefs,
         timelineFeedUrl: controller.timelineFeedUrl(session),
+        timelineJsonFeedUrl: controller.timelineFeedUrl(session, "json"),
     };
 }
 

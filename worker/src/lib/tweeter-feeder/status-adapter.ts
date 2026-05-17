@@ -32,6 +32,7 @@ export function toStatus(tweet: TwitterTweet, env: TwitterAdapterEnv): Status {
         updatedAtIso: new Date(tweet.createdAt).toISOString(),
         createdAtLabel: formatCreatedAt(tweet.createdAt, env),
         titleText: titleAsText(tweet),
+        headlineText: headlineAsText(tweet),
         contentHtml: contentAsHtml(tweet),
         attachments: tweet.media.map(toStatusAttachment),
         poll: tweet.poll ? toStatusPoll(tweet.poll) : null,
@@ -108,6 +109,10 @@ function formatCreatedAt(createdAt: string, env: TwitterAdapterEnv): string {
 }
 
 function titleAsText(tweet: TwitterTweet): string {
+    return `${tweet.author.username}: ${headlineAsText(tweet)}`;
+}
+
+function headlineAsText(tweet: TwitterTweet): string {
     const contentTweet = tweet.retweet ?? tweet;
     const prefix = tweet.retweet
         ? `RT @${tweet.retweet.author.username}: `
@@ -115,9 +120,7 @@ function titleAsText(tweet: TwitterTweet): string {
     const quoteSuffix = tweet.quote
         ? ` (quoting @${tweet.quote.author.username})`
         : "";
-    return `${tweet.author.username}: ${truncate(
-        `${prefix}${plainText(contentTweet)}${quoteSuffix}`
-    )}`;
+    return truncate(`${prefix}${plainText(contentTweet)}${quoteSuffix}`);
 }
 
 function plainText(tweet: TwitterTweet): string {

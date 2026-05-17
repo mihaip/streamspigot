@@ -39,7 +39,10 @@
         <p>
             Your <FeedLink href={data.timelineFeedUrl}
                 ><b>@{data.user.username} timeline feed</b></FeedLink>
-            is ready. You can subscribe to the URL in your preferred feed reader.
+            is ready (also available as <FeedLink
+                href={data.timelineJsonFeedUrl}
+                feedType="json">a JSON Feed</FeedLink
+            >). You can subscribe to the URL in your preferred feed reader.
         </p>
 
         {#if form?.error}

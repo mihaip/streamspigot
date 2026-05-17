@@ -18,9 +18,8 @@
     let usernames = $derived(dedupe(rawUsernames.map(u => u.toLowerCase())));
     let hasUsernames = $derived(usernames.length > 0);
     let hasErrors = $derived(invalidUsernames.length > 0);
-    let feedHref = $derived(
-        `${resolve("/tweeter-feeder/feed")}?usernames=${usernames.join("+")}`
-    );
+    let feedHref = $derived(feedUrl(usernames));
+    let jsonFeedHref = $derived(feedUrl(usernames, "json"));
     let feedTitle = $derived(
         `${usernames.map(username => `@${username}`).join(", ")} feed`
     );
@@ -54,6 +53,15 @@
             }
         }
         return result;
+    }
+
+    function feedUrl(usernames: string[], output?: "json"): string {
+        const url =
+            `${resolve("/tweeter-feeder/feed")}?usernames=${usernames.join("+")}`;
+        if (output) {
+            return `${url}&output=${output}`;
+        }
+        return url;
     }
 </script>
 
@@ -120,12 +128,14 @@
         <div class="digest-message">
             <div class="symbol">&#8675;</div>
             <div class="inner">
-                Your <FeedLink
-                    href={feedHref}
+                Your <FeedLink href={feedHref} target="_blank" rel="external"
+                    ><b>{feedTitle}</b></FeedLink>
+                is ready (also available as <FeedLink
+                    href={jsonFeedHref}
+                    feedType="json"
                     target="_blank"
-                    rel="external"><b>{feedTitle}</b></FeedLink>
-                is ready. You can subscribe to the URL in your preferred feed
-                reader.
+                    rel="external">a JSON Feed</FeedLink
+                >). You can subscribe to the URL in your preferred feed reader.
             </div>
         </div>
     {:else}

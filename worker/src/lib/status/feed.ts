@@ -52,7 +52,9 @@ export function renderFeed(
                 home_page_url: metadata.homeUrl,
                 feed_url: metadata.feedUrl,
                 authors: [{name: metadata.authorName}],
-                items: statuses.map(status => renderStatusJson(status)),
+                items: statuses.map(status =>
+                    renderStatusJson(status, includeStatusJson)
+                ),
             },
             null,
             debug ? 2 : undefined
@@ -110,12 +112,15 @@ function renderStatus(
     </entry>`;
 }
 
-function renderStatusJson(status: Status) {
+function renderStatusJson(
+    status: Status,
+    includeStatusJson: boolean = false
+) {
     return {
         id: status.id,
         url: status.permalink,
-        title: status.titleText,
-        content_html: renderStatusHtml(status),
+        title: status.headlineText,
+        content_html: renderStatusHtml(status, includeStatusJson),
         date_published: status.createdAtIso,
         date_modified: status.updatedAtIso,
         authors: [
