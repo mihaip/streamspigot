@@ -1,3 +1,4 @@
+import {jsonResponse} from "$lib/feeder/response";
 import {WorkerKV} from "$lib/kv";
 import {errorToMessage, TwitterFetcher} from "$lib/tweeter-feeder/fetcher";
 import {TweeterFeederKV} from "$lib/tweeter-feeder/kv";
@@ -10,12 +11,12 @@ export const GET: RequestHandler = async event => {
     try {
         sessions = await tweeterKV.getSessions();
     } catch (e) {
-        return json(
+        return jsonResponse(
             {
                 ok: false,
                 error: errorToMessage(e),
             },
-            500
+            {status: 500}
         );
     }
 
@@ -25,14 +26,14 @@ export const GET: RequestHandler = async event => {
         checks.push(await checkSession(fetcher, sessions[i], i + 1));
     }
     const ok = checks.length > 0 && checks.every(check => check.ok);
-    return json(
+    return jsonResponse(
         {
             ok,
             checkedAtIso: new Date().toISOString(),
             sessionCount: sessions.length,
             checks,
         },
-        ok ? 200 : 500
+        {status: ok ? 200 : 500}
     );
 };
 
@@ -92,12 +93,3 @@ type SessionCheck = {
     profileUrl?: string;
     error?: string;
 };
-
-function json(value: unknown, status: number): Response {
-    return new Response(`${JSON.stringify(value, null, 2)}\n`, {
-        status,
-        headers: {
-            "Content-Type": "application/json; charset=utf-8",
-        },
-    });
-}

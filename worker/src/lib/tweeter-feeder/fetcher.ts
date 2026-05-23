@@ -1,3 +1,4 @@
+import {errorMessage} from "$lib/feeder/log";
 import type {CachedValue, TweeterFeederKV} from "./kv";
 import type {
     TweeterFeederSession,
@@ -140,7 +141,7 @@ export class TwitterFetcher {
                     username: normalizedUsername,
                     ageSeconds: cacheAgeSeconds(cached),
                     tweetCount: cached.value.tweets.length,
-                    error: e,
+                    message: errorToMessage(e),
                 });
                 return {...cached.value, fromStaleCache: true};
             }
@@ -148,7 +149,7 @@ export class TwitterFetcher {
                 "Tweeter Feeder timeline fetch failed without cache",
                 {
                     username: normalizedUsername,
-                    error: e,
+                    message: errorToMessage(e),
                 }
             );
             throw e;
@@ -234,7 +235,7 @@ export class TwitterFetcher {
                         e instanceof TwitterGraphQLFetchError
                             ? e.cooldownSession
                             : false,
-                    error: e,
+                    message: errorToMessage(e),
                 });
                 if (
                     e instanceof TwitterGraphQLFetchError &&
@@ -252,13 +253,13 @@ export class TwitterFetcher {
         if (lastError instanceof Error) {
             console.error("All Tweeter Feeder session attempts failed", {
                 key,
-                error: lastError,
+                message: errorToMessage(lastError),
             });
             throw lastError;
         }
         console.error("All Tweeter Feeder session attempts failed", {
             key,
-            error: lastError,
+            message: errorToMessage(lastError),
         });
         throw new TwitterGraphQLFetchError("Twitter/X fetch failed");
     }
@@ -309,7 +310,7 @@ export class TwitterFetcher {
                 endpoint,
                 elapsedMs,
                 timedOut: abortController.signal.aborted,
-                error: e,
+                message: errorToMessage(e),
             });
             throw new TwitterGraphQLFetchError(
                 abortController.signal.aborted
@@ -421,17 +422,7 @@ export function fetchErrorForUsername(
 }
 
 export function errorToMessage(error: unknown): string {
-    if (error instanceof Error) {
-        return error.message;
-    }
-    if (typeof error === "string") {
-        return error;
-    }
-    try {
-        return JSON.stringify(error);
-    } catch {
-        return String(error);
-    }
+    return errorMessage(error);
 }
 
 class TwitterGraphQLFetchError extends Error {

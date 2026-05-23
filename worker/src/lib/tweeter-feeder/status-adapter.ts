@@ -12,6 +12,7 @@ import type {
     StatusCard,
     StatusPoll,
 } from "$lib/status";
+import {escapeHtml, escapeHtmlAttribute} from "$lib/html";
 import {truncate} from "$lib/strings";
 
 const TWITTER_BASE_URL = "https://twitter.com";
@@ -238,19 +239,11 @@ function linkHtml(
     {softBreakSlashes = false}: {softBreakSlashes?: boolean} = {}
 ): string {
     const labelHtml = escapeHtml(label);
-    return `<a href="${escapeAttribute(url)}" rel="external">${
+    return `<a href="${escapeHtmlAttribute(url)}" rel="external">${
         softBreakSlashes ? labelHtml.replaceAll("/", "/&#8203;") : labelHtml
     }</a>`;
 }
 
 function stripHtml(html: string): string {
     return html.replace(/<[^>]*>/g, "").trim();
-}
-
-function escapeHtml(s: string): string {
-    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function escapeAttribute(s: string): string {
-    return escapeHtml(s).replace(/"/g, "&quot;");
 }

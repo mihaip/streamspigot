@@ -22,7 +22,7 @@ export const GET: RequestHandler = async event => {
             return error(e.status, message);
         }
         const message = errorToMessage(e);
-        console.error("Tweeter Feeder request failed", {message, error: e});
+        console.error("Tweeter Feeder request failed", {message});
         return error(500, message);
     }
 };
