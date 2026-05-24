@@ -28,6 +28,25 @@ export function errorMessage(error: unknown): string {
     }
 }
 
+export function errorSummary(error: unknown): ErrorSummary {
+    if (error instanceof Error) {
+        return {
+            name: error.name,
+            message: errorMessage(error),
+            code: errorField(error, "code"),
+            status: errorField(error, "status"),
+            stackFirstLine: sanitizeLogString(error.stack?.split("\n")[0]),
+            cause:
+                "cause" in error && error.cause
+                    ? errorSummary(error.cause)
+                    : undefined,
+        };
+    }
+    return {
+        message: errorMessage(error),
+    };
+}
+
 export function sanitizeLogString(
     value: string | null | undefined
 ): string | undefined {
@@ -42,4 +61,21 @@ export function sanitizeLogString(
     return value
         ?.replace(queryParamPattern, "$1[redacted]")
         .replace(keyValuePattern, "$1=[redacted]");
+}
+
+type ErrorSummary = {
+    name?: string;
+    message: string;
+    code?: string;
+    status?: string;
+    stackFirstLine?: string;
+    cause?: ErrorSummary;
+};
+
+function errorField(error: Error, field: string): string | undefined {
+    const value = (error as unknown as Record<string, unknown>)[field];
+    if (value === undefined || value === null) {
+        return undefined;
+    }
+    return sanitizeLogString(String(value));
 }

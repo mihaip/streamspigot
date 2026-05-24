@@ -93,20 +93,27 @@ export class SkyFeederKV {
         };
     }
 
-    oauthSessionStore() {
+    oauthSessionStore(context: string) {
         return {
             set: async (
                 did: string,
                 value: NodeSavedSession
             ): Promise<void> => {
+                logOAuthSession(context, "set", did, value);
                 await this.#kv.putJSON(this.#oauthSessionKey(did), value);
             },
             get: async (did: string): Promise<NodeSavedSession | undefined> => {
-                return (
+                const value =
                     (await this.#kv.getJSON<NodeSavedSession>(
                         this.#oauthSessionKey(did)
-                    )) ?? undefined
+                    )) ?? undefined;
+                logOAuthSession(
+                    context,
+                    value ? "get:hit" : "get:miss",
+                    did,
+                    value
                 );
+                return value;
             },
             // Refresh tokens are single-use, and feeds may be fetched by
             // multiple Worker isolates at once. The ATProto client asks the
@@ -114,7 +121,13 @@ export class SkyFeederKV {
             // cannot do a compare-and-delete, so a losing isolate can delete a
             // newer token set written by a winning isolate. Keep the session
             // and let future requests observe the latest KV value.
-            del: async (): Promise<void> => {},
+            del: async (did: string): Promise<void> => {
+                console.info("sky-feeder:oauth-session", {
+                    context,
+                    step: "del:ignored",
+                    did,
+                });
+            },
         };
     }
 
@@ -137,4 +150,69 @@ export class SkyFeederKV {
     #oauthSessionKey(did: string): string {
         return `${PREFIX}:oauth_session:${did}`;
     }
+}
+
+function logOAuthSession(
+    context: string,
+    step: string,
+    did: string,
+    session: NodeSavedSession | undefined
+): void {
+    console.info("sky-feeder:oauth-session", {
+        context,
+        step,
+        did,
+        session: session ? oauthSessionSummary(session) : null,
+    });
+}
+
+function oauthSessionSummary(session: NodeSavedSession) {
+    const expiresAt = tokenExpiryDate(session.tokenSet.expires_at);
+    return {
+        topLevelKeys: Object.keys(session).sort(),
+        tokenSet: {
+            aud: session.tokenSet.aud,
+            sub: session.tokenSet.sub,
+            iss: session.tokenSet.iss,
+            scope: session.tokenSet.scope,
+            expires_at: session.tokenSet.expires_at,
+            expiresAtIso: expiresAt?.toISOString(),
+            secondsUntilExpiry: expiresAt
+                ? Math.round((expiresAt.getTime() - Date.now()) / 1000)
+                : undefined,
+            hasAccessToken: Boolean(session.tokenSet.access_token),
+            hasRefreshToken: Boolean(session.tokenSet.refresh_token),
+        },
+        hasDpopJwk: Boolean(
+            "dpopJwk" in session &&
+            (session as unknown as {dpopJwk?: unknown}).dpopJwk
+        ),
+        hasDpopKey: Boolean(
+            "dpopKey" in session &&
+            (session as unknown as {dpopKey?: unknown}).dpopKey
+        ),
+        authMethod: {
+            method: session.authMethod.method,
+            kid:
+                "kid" in session.authMethod
+                    ? (session.authMethod as {kid?: string}).kid
+                    : undefined,
+        },
+    };
+}
+
+function tokenExpiryDate(expiresAt: unknown): Date | undefined {
+    if (typeof expiresAt === "number" && Number.isFinite(expiresAt)) {
+        return new Date(expiresAt * 1000);
+    }
+    if (typeof expiresAt === "string") {
+        const numericExpiresAt = Number(expiresAt);
+        const date = Number.isFinite(numericExpiresAt)
+            ? new Date(numericExpiresAt * 1000)
+            : new Date(expiresAt);
+        if (Number.isFinite(date.getTime())) {
+            return date;
+        }
+    }
+    return undefined;
 }

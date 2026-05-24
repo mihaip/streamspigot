@@ -4,7 +4,7 @@ import {
     type Redirect,
     type RequestEvent,
 } from "@sveltejs/kit";
-import {errorMessage, sanitizeLogString} from "$lib/feeder/log";
+import {errorMessage, errorSummary, sanitizeLogString} from "$lib/feeder/log";
 import {feedOutputResponse, jsonResponse} from "$lib/feeder/response";
 import {resolveFeederPrefs} from "$lib/feeder/prefs";
 import {WorkerKV} from "$lib/kv";
@@ -53,7 +53,7 @@ export class SkyFeederController {
     }
 
     async getProfile(session: SkyFeederSession) {
-        const agent = await this.#getAgent(session.did);
+        const agent = await this.#getAgent(session.did, "profile");
         const profile = await agent.getProfile({actor: session.did});
         return profile.data;
     }
@@ -61,7 +61,7 @@ export class SkyFeederController {
     async handleSignIn(handle: string): Promise<Redirect> {
         let authUrl: URL;
         try {
-            const oauthClient = await this.#getOAuthClient();
+            const oauthClient = await this.#getOAuthClient("sign-in");
             authUrl = await oauthClient.authorize(handle, {
                 scope: OAUTH_SCOPE,
                 state: crypto.randomUUID(),
@@ -79,7 +79,7 @@ export class SkyFeederController {
 
     async handleSignInCallback(params: URLSearchParams): Promise<Response> {
         try {
-            const oauthClient = await this.#getOAuthClient();
+            const oauthClient = await this.#getOAuthClient("callback");
             const {session: oauthSession} = await oauthClient.callback(params);
 
             const agent = await createSkyAgent(oauthClient, oauthSession.did);
@@ -155,7 +155,21 @@ export class SkyFeederController {
 
         const prefs = resolveFeederPrefs(session.prefs);
         try {
-            const agent = await this.#getAgent(session.did);
+            console.info("sky-feeder:feed-auth", {
+                step: "restore:start",
+                did: session.did,
+                handle: session.handle,
+                appHost: this.#appHost,
+                appProtocol: this.#appProtocol,
+            });
+            const agent = await this.#getAgent(session.did, "feed");
+            console.info("sky-feeder:feed-auth", {
+                step: "restore:success",
+                did: session.did,
+                handle: session.handle,
+                appHost: this.#appHost,
+                appProtocol: this.#appProtocol,
+            });
             return feedOutputResponse(
                 await renderTimelineFeed(
                     agent,
@@ -173,7 +187,10 @@ export class SkyFeederController {
                 console.error("Sky Feeder feed authorization failed", {
                     did: session.did,
                     handle: session.handle,
+                    appHost: this.#appHost,
+                    appProtocol: this.#appProtocol,
                     message: errorMessage(error),
+                    error: errorSummary(error),
                 });
                 return options.output === "json"
                     ? jsonResponse({message}, {status: 401})
@@ -204,15 +221,15 @@ export class SkyFeederController {
         return url.toString();
     }
 
-    async #getAgent(did: string) {
-        return createSkyAgent(await this.#getOAuthClient(), did);
+    async #getAgent(did: string, context: string) {
+        return createSkyAgent(await this.#getOAuthClient(context), did);
     }
 
-    async #getOAuthClient() {
+    async #getOAuthClient(context: string) {
         return createSkyOAuthClient({
             baseUrl: this.#baseUrl(),
             stateStore: this.#kv.oauthStateStore(),
-            sessionStore: this.#kv.oauthSessionStore(),
+            sessionStore: this.#kv.oauthSessionStore(context),
             privateJwk: parsePrivateJwk(this.#privateJwk),
         });
     }
