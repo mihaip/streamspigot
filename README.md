@@ -5,7 +5,7 @@ Stream Spigot is a collection of tools to make consumption of real time-ish data
 - **Tweeter Feeder**: lets you generate feeds for public X/Twitter accounts.
 - **Sky Feeder**: lets you read your Bluesky timeline in a feed reader.
 
-A running instance is at [www.streamspigot.com](http://www.streamspigot.com/).
+You can run it yourself, but there is also a canonical hosted at [streamspigot.com](https://streamspigot.com/).
 
 The implementation is a Cloudflare Worker in the [`worker/`](worker/) directory. Earlier tools (Tweet Digest, Feed Playback, Bird Feeder) and the original App Engine implementation are preserved in [`legacy/`](legacy/).
 
@@ -149,4 +149,4 @@ To deploy the app, assuming you've run `wrangler login` to set up Cloudflare cre
 npm run deploy
 ```
 
-It will be running at [streamspigot.mihai-parparita.workers.dev](https://streamspigot.mihai-parparita.workers.dev) (alternate/development route for the main `www.streamspigot.com` domain route).
+It will be running at [streamspigot.mihai-parparita.workers.dev](https://streamspigot.mihai-parparita.workers.dev) (alternate/development route for the main `streamspigot.com` domain route).
