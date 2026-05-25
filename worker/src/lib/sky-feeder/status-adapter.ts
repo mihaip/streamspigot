@@ -242,7 +242,7 @@ function facetAsHtml(text: string, facet: AppBskyRichtextFacet.Main): string {
 
     let href: string | null = null;
     if (AppBskyRichtextFacet.isLink(feature)) {
-        href = safeFacetHref(feature.uri);
+        href = safeHttpUrl(feature.uri);
     } else if (AppBskyRichtextFacet.isMention(feature)) {
         href = `${BLUESKY_APP_URL}/profile/${feature.did}`;
     } else if (AppBskyRichtextFacet.isTag(feature)) {
@@ -254,7 +254,7 @@ function facetAsHtml(text: string, facet: AppBskyRichtextFacet.Main): string {
         : escapeHtml(text);
 }
 
-function safeFacetHref(uri: string): string | null {
+function safeHttpUrl(uri: string): string | null {
     try {
         const url = new URL(uri);
         return url.protocol === "http:" || url.protocol === "https:"
@@ -321,8 +321,12 @@ function cardFromEmbeds(
 ): StatusCard | null {
     for (const embed of embeds) {
         if (AppBskyEmbedExternal.isView(embed)) {
+            const url = safeHttpUrl(embed.external.uri);
+            if (!url) {
+                continue;
+            }
             return {
-                url: embed.external.uri,
+                url,
                 title: embed.external.title,
                 description: embed.external.description,
                 imageUrl: embed.external.thumb,

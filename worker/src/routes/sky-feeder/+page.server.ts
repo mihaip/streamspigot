@@ -10,9 +10,12 @@ import {fail} from "@sveltejs/kit";
 const SUPPORTED_TIME_ZONES = new Set(Intl.supportedValuesOf("timeZone"));
 
 export async function load(event) {
+    const authError = authErrorMessage(
+        event.url.searchParams.get("auth_error")
+    );
     const {session} = await event.parent();
     if (!session) {
-        return;
+        return authError ? {authError} : undefined;
     }
 
     const controller = new SkyFeederController(event);
@@ -33,6 +36,7 @@ export async function load(event) {
     const prefs = resolvePrefs(session.prefs);
 
     return {
+        authError,
         profile,
         prefs,
         timelineFeedUrl: controller.timelineFeedUrl(session),
@@ -80,7 +84,8 @@ export const actions = {
     },
     "update-prefs": async event => {
         const formData = await event.request.formData();
-        const timeZone = formData.get("time_zone") as string | null;
+        const rawTimeZone = formData.get("time_zone");
+        const timeZone = typeof rawTimeZone === "string" ? rawTimeZone : null;
         if (!timeZone) {
             return fail(400, {
                 timezone: timeZone,
@@ -126,4 +131,11 @@ function errorCauseHasCode(error: unknown, code: string): boolean {
         current = "cause" in current ? current.cause : undefined;
     }
     return false;
+}
+
+function authErrorMessage(code: string | null): string | undefined {
+    if (code === "sign_in_failed") {
+        return "Bluesky sign-in was not completed. Try signing in again.";
+    }
+    return undefined;
 }

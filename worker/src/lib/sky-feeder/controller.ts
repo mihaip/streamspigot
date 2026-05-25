@@ -78,22 +78,32 @@ export class SkyFeederController {
     }
 
     async handleSignInCallback(params: URLSearchParams): Promise<Response> {
+        const oauthClient = await this.#getOAuthClient("callback");
+        let did: string;
         try {
-            const oauthClient = await this.#getOAuthClient("callback");
             const {session: oauthSession} = await oauthClient.callback(params);
+            did = oauthSession.did;
+        } catch (error) {
+            console.error("Sky Feeder sign-in callback failed", {
+                oauthError: sanitizeLogString(params.get("error")),
+                message: errorMessage(error),
+            });
+            return redirect(302, "/sky-feeder?auth_error=sign_in_failed");
+        }
 
-            const agent = await createSkyAgent(oauthClient, oauthSession.did);
-            const profile = await agent.getProfile({actor: oauthSession.did});
+        try {
+            const agent = await createSkyAgent(oauthClient, did);
+            const profile = await agent.getProfile({actor: did});
             const handle = profile.data.handle;
 
-            let session = await this.#kv.getSessionByDid(oauthSession.did);
+            let session = await this.#kv.getSessionByDid(did);
             if (session) {
                 session = await this.#kv.updateSessionProfile(session, handle);
             } else {
                 session = {
                     sessionId: crypto.randomUUID(),
                     feedId: crypto.randomUUID(),
-                    did: oauthSession.did,
+                    did,
                     handle,
                 };
                 await this.#kv.putSession(session);
@@ -105,8 +115,7 @@ export class SkyFeederController {
                 SESSION_COOKIE_OPTIONS
             );
         } catch (error) {
-            console.error("Sky Feeder sign-in callback failed", {
-                oauthError: sanitizeLogString(params.get("error")),
+            console.error("Sky Feeder sign-in session setup failed", {
                 message: errorMessage(error),
             });
             throw error;
