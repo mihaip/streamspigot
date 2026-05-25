@@ -4,7 +4,7 @@
 
 Stream Spigot is a collection of tools for consuming real time-ish data sources at a manageable pace. The active application is the Cloudflare/SvelteKit worker in `worker/`. The old App Engine implementation and retired tools live in `legacy/` for reference only.
 
-Masto Feeder signs in with Mastodon, reads the user's timeline, and renders it as an Atom feed or debug HTML. Tweeter Feeder reads public Twitter/X timelines through private web endpoints and renders them through the same shared feed/status pipeline.
+Masto Feeder signs in with Mastodon, reads the user's timeline, and renders it as an Atom feed or debug HTML. Sky Feeder signs in with Bluesky through AT Protocol OAuth, reads the user's home timeline, and renders it as Atom, JSON Feed, or debug HTML. Tweeter Feeder reads public Twitter/X timelines through private web endpoints and renders them through the same shared feed/status pipeline.
 
 ## Active Architecture
 
@@ -15,6 +15,11 @@ Masto Feeder signs in with Mastodon, reads the user's timeline, and renders it a
 - Tweeter Feeder request handling is centralized in `worker/src/lib/tweeter-feeder/controller.ts`.
 - `worker/src/lib/tweeter-feeder/fetcher.ts` handles Twitter/X auth, private GraphQL fetches, response parsing, session cooldowns, and caching.
 - `worker/src/lib/tweeter-feeder/status-adapter.ts` converts parsed Twitter/X tweets into provider-neutral `Status` objects.
+- Sky Feeder request handling is centralized in `worker/src/lib/sky-feeder/controller.ts`.
+- `worker/src/lib/sky-feeder/oauth.ts` builds the AT Protocol OAuth client, exposes client metadata/JWKS data, and restores OAuth sessions.
+- `worker/src/lib/sky-feeder/feed.ts` fetches the Bluesky home timeline with `@atproto/api`.
+- `worker/src/lib/sky-feeder/status-adapter.ts` converts Bluesky feed posts, reposts, quotes, images, videos, and external cards into provider-neutral `Status` objects.
+- Small shared feeder helpers live in `worker/src/lib/feeder`.
 - `worker/src/lib/status/feed.ts` renders normalized statuses as Atom or debug HTML with `svelte/server`.
 - Shared feed-reader-friendly status UI lives in `worker/src/lib/components`, centered on `StatusDisplay.svelte` and related `StatusDisplay*` components.
 - Provider-neutral status types live in `worker/src/lib/status`.
@@ -48,13 +53,45 @@ or parsing breaks, compare the current web-client request with `fetcher.ts`,
 check that `ct0` is complete and matches in both cookie and header, and consult
 the Nitter repo for the closest known handling of current Twitter/X behavior.
 
+## Sky Feeder Bluesky Data Loading
+
+Sky Feeder uses AT Protocol OAuth rather than app passwords. It depends on
+`@atproto/api` and `@atproto/oauth-client-node`; keep `nodejs_compat` enabled
+in both Wrangler configs. The deployed Worker also needs the
+`ATPROTO_OAUTH_PRIVATE_JWK` secret. Generate it from `worker/` with
+`npm run gen:atproto-key`, then store the generated JSON object with
+`wrangler secret put ATPROTO_OAUTH_PRIVATE_JWK`.
+
+AT Protocol discoverable OAuth client IDs must be HTTPS URLs that are not
+loopback hosts and can be fetched by the Bluesky/ATProto OAuth server. Local
+HTTP is enough to smoke-test `/sky-feeder`,
+`/sky-feeder/oauth-client-metadata.json`, and `/sky-feeder/jwks.json`, but a
+complete Bluesky sign-in requires the deployed HTTPS Worker URL or a public
+HTTPS tunnel such as Tailscale Funnel pointed at the local Vite dev server.
+
+Sky Feeder data is stored in KV under `sky-feeder:` keys. OAuth state entries
+expire quickly; OAuth sessions are keyed by DID; Stream Spigot UI/feed sessions
+have their own random `sessionId` and `feedId`. Do not revoke the OAuth session
+on UI sign-out, because the randomly generated feed URL should continue to
+work.
+
+The high-level fetch flow is:
+
+1. Normalize the entered Bluesky handle and start AT Protocol OAuth.
+2. Store the OAuth callback session by DID, then create or update the Sky Feeder session and random feed ID.
+3. Restore the OAuth session for feed requests and call `agent.getTimeline`.
+4. Page through recent timeline results until the 12-hour window is exhausted, or one page in debug mode.
+5. Convert `app.bsky.feed.defs#feedViewPost` objects to the shared `Status` shape before rendering with the common Atom/JSON/debug HTML renderer.
+
 ## Status Display Pattern
 
 Provider API objects must stop at adapter boundaries. Shared Svelte display components should render normalized display objects and must not import Mastodon, Bluesky, Twitter/X, or other provider SDK types.
 
 For Masto Feeder, `worker/src/lib/masto-feeder/status-adapter.ts` is the Mastodon adapter. It converts `masto` statuses into generic `Status` objects and keeps Mastodon-specific behavior there, including local URL generation, content/title cleanup, quote handling, YouTube iframe extraction, SkyBridge image filtering, reply parent URLs, and debug JSON.
 
-Future Bluesky or Twitter/X tools should add provider-specific fetch/auth code and adapters that produce the same `Status` shape. They should reuse the shared display components rather than forking Mastodon-specific markup.
+For Sky Feeder, `worker/src/lib/sky-feeder/status-adapter.ts` is the Bluesky adapter. Keep AT Protocol record/view objects out of shared Svelte components. Map rich text facets to HTML, reposts to `StatusRepost`, quote embeds to nested `Status`, media embeds to attachments, and external embeds to cards at the adapter boundary.
+
+Future provider tools should add provider-specific fetch/auth code and adapters that produce the same `Status` shape. They should reuse the shared display components rather than forking provider-specific markup.
 
 Use plain serializable status data for the shared contract. Avoid presenter classes in the shared status layer unless there is a concrete need that cannot be handled by adapter-side normalization.
 
@@ -75,6 +112,7 @@ Run commands from `worker/` unless noted otherwise.
 
 - `npm install` installs dependencies.
 - `npm run dev` starts the canonical SvelteKit dev server on `localhost:3413`, with HMR and local Cloudflare bindings such as `STREAMSPIGOT` KV.
+- `npm run gen:atproto-key` generates a private JWK JSON object for the `ATPROTO_OAUTH_PRIVATE_JWK` secret used by Sky Feeder OAuth.
 - `npm run types:worker` regenerates `worker-configuration.d.ts` from Wrangler binding config.
 - `npm run check` verifies generated Worker types, then runs Svelte and TypeScript checks.
 - `npm run build` builds the app.
@@ -104,7 +142,11 @@ For Worker/dev tooling changes, verify all three local paths when feasible:
 `npm run dev` on port 3413, `npm run preview` on port 4413, and
 `npm run preview:worker` on port 5413. Smoke-test `/` and the KV-backed
 `/tweeter-feeder/statusz` endpoint; `statusz` should return `ok: true` when
-local Tweeter Feeder sessions are configured.
+local Tweeter Feeder sessions are configured. For Sky Feeder, also smoke-test
+`/sky-feeder`, `/sky-feeder/oauth-client-metadata.json`, and
+`/sky-feeder/jwks.json` with a local `ATPROTO_OAUTH_PRIVATE_JWK` value.
+End-to-end Bluesky OAuth requires non-loopback HTTPS, for example through
+Tailscale Funnel.
 
 ## Code Style Notes
 

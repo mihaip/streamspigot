@@ -7,6 +7,7 @@ import {
     type RequestEvent,
 } from "@sveltejs/kit";
 import {createOAuthAPIClient, createRestAPIClient} from "$lib/masto";
+import {errorMessage, sanitizeLogString} from "$lib/feeder/log";
 import {MastoFeederKV} from "./kv";
 import {WorkerKV} from "../kv";
 import {
@@ -17,6 +18,8 @@ import {
 } from "./types";
 import type {FeedOptions, FeedOutputType} from "$lib/status/feed";
 import {renderTimelineFeed} from "./feed";
+import {feedOutputResponse} from "$lib/feeder/response";
+import {DEFAULT_TIME_ZONE} from "$lib/feeder/prefs";
 
 const SCOPES = ["read:accounts", "read:follows", "read:lists", "read:statuses"];
 
@@ -53,8 +56,18 @@ export class MastoFeederController {
     }
 
     async handleSignIn(instanceUrl: string): Promise<Redirect> {
-        const app = await this.#getOrCreateApp(instanceUrl);
-        const authRequest = await this.#createAuthRequest(instanceUrl);
+        let app: MastoFeederApp;
+        let authRequest: MastoFeederAuthRequest;
+        try {
+            app = await this.#getOrCreateApp(instanceUrl);
+            authRequest = await this.#createAuthRequest(instanceUrl);
+        } catch (error) {
+            console.error("Masto Feeder sign-in failed", {
+                instanceUrl: sanitizeLogString(instanceUrl),
+                message: errorMessage(error),
+            });
+            throw error;
+        }
 
         this.#cookies.set(
             AUTH_REQUEST_COOKIE_NAME,
@@ -98,44 +111,58 @@ export class MastoFeederController {
             return error(400, `Unknown app ${instanceUrl}`);
         }
 
-        const oauthMasto = createOAuthAPIClient({url: instanceUrl});
+        try {
+            const oauthMasto = createOAuthAPIClient({url: instanceUrl});
 
-        const {accessToken} = await oauthMasto.token.create({
-            grantType: "authorization_code",
-            clientId: app.clientId,
-            clientSecret: app.clientSecret,
-            redirectUri: this.#redirectUrl(),
-            scope: SCOPES.join(" "),
-            code,
-        });
+            const {accessToken} = await oauthMasto.token.create({
+                grantType: "authorization_code",
+                clientId: app.clientId,
+                clientSecret: app.clientSecret,
+                redirectUri: this.#redirectUrl(),
+                scope: SCOPES.join(" "),
+                code,
+            });
 
-        const apiMasto = createRestAPIClient({url: instanceUrl, accessToken});
-
-        const credentials = await apiMasto.v1.accounts.verifyCredentials();
-        const mastodonId = credentials.id;
-
-        let session = await this.#kv.getSessionByMastodonId(
-            instanceUrl,
-            mastodonId
-        );
-        if (session) {
-            session = await this.#kv.updateSessionToken(session, accessToken);
-        } else {
-            session = {
-                sessionId: crypto.randomUUID(),
-                feedId: crypto.randomUUID(),
-                mastodonId,
-                instanceUrl,
+            const apiMasto = createRestAPIClient({
+                url: instanceUrl,
                 accessToken,
-            };
-            await this.#kv.putSession(session);
-        }
+            });
 
-        this.#cookies.set(
-            SESSION_COOKIE_NAME,
-            session.sessionId,
-            SESSION_COOKIE_OPTIONS
-        );
+            const credentials = await apiMasto.v1.accounts.verifyCredentials();
+            const mastodonId = credentials.id;
+
+            let session = await this.#kv.getSessionByMastodonId(
+                instanceUrl,
+                mastodonId
+            );
+            if (session) {
+                session = await this.#kv.updateSessionToken(
+                    session,
+                    accessToken
+                );
+            } else {
+                session = {
+                    sessionId: crypto.randomUUID(),
+                    feedId: crypto.randomUUID(),
+                    mastodonId,
+                    instanceUrl,
+                    accessToken,
+                };
+                await this.#kv.putSession(session);
+            }
+
+            this.#cookies.set(
+                SESSION_COOKIE_NAME,
+                session.sessionId,
+                SESSION_COOKIE_OPTIONS
+            );
+        } catch (error) {
+            console.error("Masto Feeder sign-in callback failed", {
+                instanceUrl: sanitizeLogString(instanceUrl),
+                message: errorMessage(error),
+            });
+            throw error;
+        }
 
         return redirect(302, "/masto-feeder");
     }
@@ -207,31 +234,27 @@ export class MastoFeederController {
             return error(404, "Unknown feed ID");
         }
         const prefs = resolvePrefs(session.prefs);
-        const {body, contentType} = await renderTimelineFeed(
-            session,
-            this.timelineFeedUrl(session, options.output),
-            this.#baseUrl(),
-            {
-                instanceUrl: session.instanceUrl,
-                timeZone: prefs.timeZone,
-                useLocalUrls: prefs.useLocalUrls,
-                statusParentUrlGenerator: this.statusParentUrl.bind(
-                    this,
-                    session
-                ),
-                youtubeEmbedUrlGenerator: this.youtubeEmbedUrl.bind(
-                    this,
-                    session
-                ),
-            },
-            options
+        return feedOutputResponse(
+            await renderTimelineFeed(
+                session,
+                this.timelineFeedUrl(session, options.output),
+                this.#baseUrl(),
+                {
+                    instanceUrl: session.instanceUrl,
+                    timeZone: prefs.timeZone,
+                    useLocalUrls: prefs.useLocalUrls,
+                    statusParentUrlGenerator: this.statusParentUrl.bind(
+                        this,
+                        session
+                    ),
+                    youtubeEmbedUrlGenerator: this.youtubeEmbedUrl.bind(
+                        this,
+                        session
+                    ),
+                },
+                options
+            )
         );
-        const encodedBody = new TextEncoder().encode(body);
-        return new Response(encodedBody, {
-            headers: {
-                "Content-Type": `${contentType}; charset=utf-8`,
-            },
-        });
     }
 
     async #getOrCreateApp(instanceUrl: string): Promise<MastoFeederApp> {
@@ -323,7 +346,7 @@ export function resolvePrefs(
     prefs: MastoFeederPrefs | undefined
 ): Required<MastoFeederPrefs> {
     return {
-        timeZone: prefs?.timeZone ?? "America/Los_Angeles",
+        timeZone: prefs?.timeZone ?? DEFAULT_TIME_ZONE,
         useLocalUrls: prefs?.useLocalUrls ?? false,
     };
 }

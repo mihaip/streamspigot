@@ -1,4 +1,5 @@
 import {APP_NAME} from "$lib/constants";
+import {escapeHtml} from "$lib/html";
 import {renderFeed, type FeedOptions, type FeedOutput} from "$lib/status/feed";
 import type {TwitterFetchError, TwitterTimelineResult} from "./types";
 import {toStatus} from "./status-adapter";
@@ -74,8 +75,4 @@ function injectDebugNotice(
         notices.join(" ")
     )}</div>`;
     return body.replace("<body>", `<body>${noticeHtml}`);
-}
-
-function escapeHtml(s: string): string {
-    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }

@@ -1,0 +1,170 @@
+<script lang="ts">
+    import {resolve} from "$app/paths";
+    import {APP_NAME} from "$lib/constants";
+    import FeedLink from "$lib/components/FeedLink.svelte";
+    import Layout from "$lib/components/Layout.svelte";
+
+    let {data, form} = $props();
+</script>
+
+<Layout title="Sky Feeder">
+    {#snippet intro()}
+        <p>
+            This <a href={resolve("/")}>{APP_NAME}</a> tool lets you subscribe to
+            your Bluesky timeline in a feed reader such as
+            <a href="https://netnewswire.com/">NetNewsWire</a>,
+            <a href="https://newsblur.com/">NewsBlur</a>,
+            <a href="https://reederapp.com/">Reeder</a> or
+            <a href="https://feedly.com/">Feedly</a>.
+        </p>
+
+        <p>
+            By signing in with your Bluesky account, you enable Sky Feeder to
+            generate feeds under "secret" URLs that contain posts from accounts
+            you follow.
+        </p>
+    {/snippet}
+
+    {#if data.session && data.profile}
+        You're signed in as <a
+            href={`https://bsky.app/profile/${data.profile.handle}`}
+            rel="external">@{data.profile.handle}</a>
+        (
+        <form action="?/sign-out" method="POST" class="inline-form">
+            <button>sign out</button>
+        </form>
+        )
+
+        <p>
+            Your <FeedLink href={data.timelineFeedUrl}
+                ><b>@{data.profile.handle} Bluesky timeline feed</b></FeedLink>
+            is ready (also available as <FeedLink
+                href={data.timelineJsonFeedUrl}
+                feedType="json">a JSON Feed</FeedLink
+            >). You can subscribe to the URL in your preferred feed reader.
+        </p>
+
+        {#if form?.error}
+            <p class="error">{form.error}</p>
+        {/if}
+
+        <form action="?/update-prefs" method="POST" class="prefs">
+            <fieldset>
+                <legend>Preferences</legend>
+                <label>
+                    Timezone:
+                    <select name="time_zone">
+                        {#each Intl.supportedValuesOf("timeZone") as timezone (timezone)}
+                            <option
+                                value={timezone}
+                                selected={timezone === data.prefs.timeZone}>
+                                {timezone}
+                            </option>
+                        {/each}
+                    </select>
+                    <div class="description">
+                        The timezone to use when formatting dates in the feed.
+                    </div>
+                </label>
+                <div class="buttons">
+                    <input type="submit" value="Update" />
+                </div>
+            </fieldset>
+        </form>
+    {:else}
+        <div class="sign-in">
+            <p>
+                To get started, sign in with Bluesky to allow Sky Feeder access
+                to your timeline.
+            </p>
+
+            {#if data.authError}
+                <p class="error">{data.authError}</p>
+            {/if}
+
+            {#if form?.error}
+                <p class="error">{form.error}</p>
+            {/if}
+
+            <form action="?/sign-in" method="POST" class="sign-in">
+                <input
+                    type="text"
+                    name="handle"
+                    value={form?.handle ?? ""}
+                    placeholder="your-handle.bsky.social"
+                    required
+                    size="30" />
+                <input type="submit" value="Sign In" />
+            </form>
+        </div>
+    {/if}
+
+    {#snippet footer()}
+        Feeds are exported under randomly-generated URLs. Though they should not
+        be guessable, they may end up "leaking" if accidentally sent to someone.
+
+        {#if data.session}
+            If that happens, you may wish to <form
+                action="?/reset-feed-id"
+                method="POST"
+                class="inline-form">
+                <button>reset</button>
+            </form>
+            your feed URLs.
+        {/if}
+    {/snippet}
+</Layout>
+
+<style>
+    .sign-in {
+        margin: 0 2em;
+    }
+
+    .sign-in form {
+        display: flex;
+        justify-content: center;
+    }
+
+    .sign-in form input[type="submit"] {
+        margin-left: 0.5em;
+    }
+
+    .inline-form {
+        display: inline;
+    }
+
+    .inline-form button {
+        -webkit-appearance: none;
+        appearance: none;
+        border: none;
+        background: none;
+        padding: 0;
+        color: #2db300;
+        text-decoration: underline;
+    }
+
+    .error {
+        background: #fdd;
+        padding: 0.5em;
+    }
+
+    .prefs {
+        margin: 1em 0;
+    }
+
+    .prefs fieldset {
+        border: solid 1px #00000066;
+        display: flex;
+        flex-direction: column;
+        gap: 1em;
+    }
+
+    .prefs .description {
+        color: #666;
+    }
+
+    .prefs .buttons {
+        display: flex;
+        justify-content: flex-end;
+    }
+</style>

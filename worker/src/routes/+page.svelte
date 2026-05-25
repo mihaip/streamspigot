@@ -35,7 +35,11 @@
             <h2>Masto Feeder</h2>
             <p>Keep up with Mastodon posts in your favorite feed reader</p>
         </a>
-        <a href={resolve("/tweeter-feeder")} class="tool odd">
+        <a href={resolve("/sky-feeder")} class="tool odd">
+            <h2>Sky Feeder</h2>
+            <p>Keep up with Bluesky posts in your favorite feed reader</p>
+        </a>
+        <a href={resolve("/tweeter-feeder")} class="tool even">
             <h2>Tweeter Feeder</h2>
             <p>Follow public Twitter/X accounts in your favorite feed reader</p>
         </a>

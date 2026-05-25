@@ -3,8 +3,9 @@
 Stream Spigot is a collection of tools to make consumption of real time-ish datasources more manageable. The active tools are:
 - **Masto Feeder**: lets you read your Mastodon timeline in a feed reader.
 - **Tweeter Feeder**: lets you generate feeds for public X/Twitter accounts.
+- **Sky Feeder**: lets you read your Bluesky timeline in a feed reader.
 
-A running instance is at [www.streamspigot.com](http://www.streamspigot.com/).
+You can run it yourself, but there is also a canonical hosted at [streamspigot.com](https://streamspigot.com/).
 
 The implementation is a Cloudflare Worker in the [`worker/`](worker/) directory. Earlier tools (Tweet Digest, Feed Playback, Bird Feeder) and the original App Engine implementation are preserved in [`legacy/`](legacy/).
 
@@ -45,6 +46,33 @@ running Svelte and TypeScript checks. The type generation uses
 `wrangler.types.toml`, which mirrors the deployed bindings without importing
 the generated Worker build output into `svelte-check`.
 
+## Sky Feeder
+
+Sky Feeder signs in with Bluesky through AT Protocol OAuth, stores OAuth and
+feed sessions in the existing `STREAMSPIGOT` KV namespace, and renders the home
+timeline through the shared Atom/JSON Feed status renderer. It uses
+`@atproto/api` and `@atproto/oauth-client-node`, so the Worker config enables
+`nodejs_compat`.
+
+Before using Sky Feeder in a deployed environment, generate an OAuth signing key
+and store it as a Wrangler secret:
+
+```bash
+cd worker
+npm run gen:atproto-key
+wrangler secret put ATPROTO_OAUTH_PRIVATE_JWK
+```
+
+Paste the generated JSON object as the secret value. The public key is exposed
+automatically from `/sky-feeder/jwks.json`, and OAuth client metadata is exposed
+from `/sky-feeder/oauth-client-metadata.json`.
+
+AT Protocol discoverable OAuth client IDs must be HTTPS URLs that are not
+loopback hosts and can be fetched by the Bluesky/ATProto OAuth server. Local
+HTTP is enough to smoke-test `/sky-feeder`, the metadata route, and the JWKS
+route, but real Bluesky sign-in requires the deployed HTTPS Worker URL or a
+public HTTPS tunnel such as Tailscale Funnel pointed at the local Vite dev
+server.
 
 # Masto Feeder
 
@@ -121,4 +149,4 @@ To deploy the app, assuming you've run `wrangler login` to set up Cloudflare cre
 npm run deploy
 ```
 
-It will be running at [streamspigot.mihai-parparita.workers.dev](https://streamspigot.mihai-parparita.workers.dev) (alternate/development route for the main `www.streamspigot.com` domain route).
+It will be running at [streamspigot.mihai-parparita.workers.dev](https://streamspigot.mihai-parparita.workers.dev) (alternate/development route for the main `streamspigot.com` domain route).

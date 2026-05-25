@@ -8,6 +8,7 @@
         "preview": "npm run build && vite preview",
         "preview:worker": "npm run build && wrangler dev --port 5413",
         "deploy": "npm run build && wrangler deploy",
+        "gen:atproto-key": "node scripts/gen-atproto-key.mjs",
         "types:worker": "wrangler types worker-configuration.d.ts --config wrangler.types.toml --env-file worker-types.env --include-runtime false",
         "types:worker:check": "wrangler types worker-configuration.d.ts --config wrangler.types.toml --env-file worker-types.env --include-runtime false --check",
         "check": "npm run types:worker:check && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -37,7 +38,7 @@
         "wrangler": "^4.90.0"
     },
     "engines": {
-        "node": "^20.19.0 || ^22.13.0 || >=24"
+        "node": "^22.13.0 || >=24"
     },
     "type": "module",
     "prettier": {
@@ -51,6 +52,12 @@
         "arrowParens": "avoid"
     },
     "dependencies": {
+        "@atproto-labs/did-resolver": "^0.3.0",
+        "@atproto-labs/handle-resolver": "^0.4.0",
+        "@atproto/api": "^0.20.5",
+        "@atproto/did": "^0.4.0",
+        "@atproto/oauth-client-node": "^0.4.0",
+        "@atproto/syntax": "^0.6.1",
         "htmlparser2": "^10.0.0",
         "lite-youtube-embed": "^0.3.4",
         "masto": "^7.5.0"
