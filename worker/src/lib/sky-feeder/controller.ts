@@ -260,6 +260,7 @@ export function isOAuthSessionUnavailable(error: unknown): boolean {
         message === "The session was deleted by another process" ||
         message === "The session was revoked" ||
         message === "Invalid refresh token" ||
-        message === "No refresh token available"
+        message === "No refresh token available" ||
+        message === "Token was not issued to this client"
     );
 }

@@ -7,6 +7,7 @@ import type {SkyFeederPrefs, SkyFeederSession} from "./types";
 
 const PREFIX = "sky-feeder";
 const OAUTH_STATE_TTL_SECONDS = 60 * 60;
+const OAUTH_TOKEN_FINGERPRINT_BYTES = 12;
 
 export class SkyFeederKV {
     #kv: KV;
@@ -99,19 +100,45 @@ export class SkyFeederKV {
                 did: string,
                 value: NodeSavedSession
             ): Promise<void> => {
-                logOAuthSession(context, "set", did, value);
+                const meta = {
+                    ...(await oauthSessionMeta(value)),
+                    storedAt: new Date().toISOString(),
+                };
                 await this.#kv.putJSON(this.#oauthSessionKey(did), value);
+                try {
+                    await this.#kv.putJSON(
+                        this.#oauthSessionMetaKey(did),
+                        meta
+                    );
+                } catch (error) {
+                    console.error("sky-feeder:oauth-session", {
+                        context,
+                        step: "set:meta-failed",
+                        did,
+                        message:
+                            error instanceof Error
+                                ? error.message
+                                : String(error),
+                    });
+                }
+                logOAuthSession(context, "set", did, value, meta);
             },
             get: async (did: string): Promise<NodeSavedSession | undefined> => {
                 const value =
                     (await this.#kv.getJSON<NodeSavedSession>(
                         this.#oauthSessionKey(did)
                     )) ?? undefined;
+                const meta = value
+                    ? await this.#kv.getJSON<OAuthSessionMeta>(
+                          this.#oauthSessionMetaKey(did)
+                      )
+                    : null;
                 logOAuthSession(
                     context,
                     value ? "get:hit" : "get:miss",
                     did,
-                    value
+                    value,
+                    meta ?? undefined
                 );
                 return value;
             },
@@ -150,26 +177,40 @@ export class SkyFeederKV {
     #oauthSessionKey(did: string): string {
         return `${PREFIX}:oauth_session:${did}`;
     }
+
+    #oauthSessionMetaKey(did: string): string {
+        return `${PREFIX}:oauth_session_meta:${did}`;
+    }
 }
+
+type OAuthSessionMeta = {
+    storedAt?: string;
+    refreshTokenFingerprint?: string;
+};
 
 function logOAuthSession(
     context: string,
     step: string,
     did: string,
-    session: NodeSavedSession | undefined
+    session: NodeSavedSession | undefined,
+    meta: OAuthSessionMeta | undefined
 ): void {
     console.info("sky-feeder:oauth-session", {
         context,
         step,
         did,
-        session: session ? oauthSessionSummary(session) : null,
+        session: session ? oauthSessionSummary(session, meta) : null,
     });
 }
 
-function oauthSessionSummary(session: NodeSavedSession) {
+function oauthSessionSummary(
+    session: NodeSavedSession,
+    meta: OAuthSessionMeta | undefined
+) {
     const expiresAt = tokenExpiryDate(session.tokenSet.expires_at);
     return {
         topLevelKeys: Object.keys(session).sort(),
+        storedAt: meta?.storedAt,
         tokenSet: {
             aud: session.tokenSet.aud,
             sub: session.tokenSet.sub,
@@ -182,6 +223,7 @@ function oauthSessionSummary(session: NodeSavedSession) {
                 : undefined,
             hasAccessToken: Boolean(session.tokenSet.access_token),
             hasRefreshToken: Boolean(session.tokenSet.refresh_token),
+            refreshTokenFingerprint: meta?.refreshTokenFingerprint,
         },
         hasDpopJwk: Boolean(
             "dpopJwk" in session &&
@@ -199,6 +241,32 @@ function oauthSessionSummary(session: NodeSavedSession) {
                     : undefined,
         },
     };
+}
+
+async function oauthSessionMeta(
+    session: NodeSavedSession
+): Promise<OAuthSessionMeta> {
+    return {
+        refreshTokenFingerprint: await tokenFingerprint(
+            session.tokenSet.refresh_token
+        ),
+    };
+}
+
+async function tokenFingerprint(
+    token: string | undefined
+): Promise<string | undefined> {
+    if (!token) {
+        return undefined;
+    }
+    const digest = await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(token)
+    );
+    return Array.from(new Uint8Array(digest))
+        .slice(0, OAUTH_TOKEN_FINGERPRINT_BYTES)
+        .map(byte => byte.toString(16).padStart(2, "0"))
+        .join("");
 }
 
 function tokenExpiryDate(expiresAt: unknown): Date | undefined {
