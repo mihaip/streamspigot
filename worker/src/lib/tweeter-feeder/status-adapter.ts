@@ -12,7 +12,7 @@ import type {
     StatusCard,
     StatusPoll,
 } from "$lib/status";
-import {escapeHtml, escapeHtmlAttribute} from "$lib/html";
+import {escapeHtml, escapeHtmlAttribute, unescapeHtml} from "$lib/html";
 import {truncate} from "$lib/strings";
 
 const TWITTER_BASE_URL = "https://twitter.com";
@@ -126,7 +126,7 @@ function headlineAsText(tweet: TwitterTweet): string {
 }
 
 function plainText(tweet: TwitterTweet): string {
-    return tweet.text.replace(/\s+/g, " ").trim();
+    return unescapeHtml(tweet.text).replace(/\s+/g, " ").trim();
 }
 
 function contentAsHtml(tweet: TwitterTweet): string {
@@ -166,14 +166,16 @@ function textWithEntitiesAsHtml(
         if (entity.start < cursor || entity.start > chars.length) {
             continue;
         }
-        result += escapeHtml(chars.slice(cursor, entity.start).join(""));
+        // We intentionally don't HTML escape tweet text (it's already escaped
+        // in the API response).
+        result += chars.slice(cursor, entity.start).join("");
         result += entityAsHtml(
             chars.slice(entity.start, entity.end).join(""),
             entity
         );
         cursor = entity.end;
     }
-    result += escapeHtml(chars.slice(cursor).join(""));
+    result += chars.slice(cursor).join("");
     return result.replace(/\n/g, "<br />");
 }
 
