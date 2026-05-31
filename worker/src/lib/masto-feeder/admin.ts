@@ -16,8 +16,8 @@ const MASTO_FEEDER_SCOPES = [
     "read:statuses",
 ];
 const APP_RECORD_REDIRECT_URI_CANDIDATES = [
-    "https://streamspigot.com/masto-feeder/sign-in-callback",
     "https://www.streamspigot.com/masto-feeder/sign-in-callback",
+    "https://streamspigot.com/masto-feeder/sign-in-callback",
 ];
 const USER_AGENT = "Masto-Feeder; (+https://www.streamspigot.com/masto-feeder)";
 
