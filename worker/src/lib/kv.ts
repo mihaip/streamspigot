@@ -4,10 +4,30 @@ export interface KV {
     get(key: string): Promise<string | null>;
     put(key: string, value: string, options?: KVPutOptions): Promise<void>;
     delete(key: string): Promise<void>;
+    list(options?: KVListOptions): Promise<KVListResult>;
 
     getJSON<T>(key: string): Promise<T | null>;
+    getJSONBatch<T>(keys: string[]): Promise<Map<string, T | null>>;
     putJSON<T>(key: string, value: T, options?: KVPutOptions): Promise<void>;
 }
+
+export type KVListOptions = {
+    prefix?: string;
+    cursor?: string;
+    limit?: number;
+};
+
+export type KVListResult = {
+    keys: KVListKey[];
+    listComplete: boolean;
+    cursor?: string;
+};
+
+export type KVListKey = {
+    name: string;
+    expiration?: number;
+    metadata?: unknown;
+};
 
 export type KVPutOptions = {
     expirationTtl?: number;
@@ -43,8 +63,21 @@ export class WorkerKV implements KV {
         return await this.#kv.delete(key);
     }
 
+    async list(options?: KVListOptions): Promise<KVListResult> {
+        const result = await this.#kv.list(options);
+        return {
+            keys: result.keys,
+            listComplete: result.list_complete,
+            cursor: "cursor" in result ? result.cursor : undefined,
+        };
+    }
+
     async getJSON<T>(key: string): Promise<T | null> {
         return await this.#kv.get(key, {type: "json"});
+    }
+
+    async getJSONBatch<T>(keys: string[]): Promise<Map<string, T | null>> {
+        return await this.#kv.get<T>(keys, "json");
     }
 
     async putJSON<T>(
