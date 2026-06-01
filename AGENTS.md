@@ -74,6 +74,8 @@ expire quickly; OAuth sessions are keyed by DID; Stream Spigot UI/feed sessions
 have their own random `sessionId` and `feedId`. Do not revoke the OAuth session
 on UI sign-out, because the randomly generated feed URL should continue to
 work.
+The `SkyOAuthLock` Durable Object serializes AT Protocol OAuth refreshes per DID
+so concurrent feed requests do not replay the same refresh token.
 
 The high-level fetch flow is:
 

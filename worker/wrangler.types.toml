@@ -16,6 +16,14 @@ binding = "ASSETS"
 binding = "STREAMSPIGOT"
 id = "0d58678cdea94a018dc79669f6bc9a76"
 
+[[durable_objects.bindings]]
+name = "SKY_OAUTH_LOCK"
+class_name = "SkyOAuthLock"
+
+[[migrations]]
+tag = "sky-oauth-lock-v1"
+new_sqlite_classes = ["SkyOAuthLock"]
+
 [observability]
 enabled = true
 head_sampling_rate = 1

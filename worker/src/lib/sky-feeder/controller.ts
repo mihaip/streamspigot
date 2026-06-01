@@ -4,6 +4,8 @@ import {
     type Redirect,
     type RequestEvent,
 } from "@sveltejs/kit";
+import {dev} from "$app/environment";
+import {requestLocalLock} from "@atproto/oauth-client-node";
 import {errorMessage, errorSummary, sanitizeLogString} from "$lib/feeder/log";
 import {feedOutputResponse, jsonResponse} from "$lib/feeder/response";
 import {resolveFeederPrefs} from "$lib/feeder/prefs";
@@ -17,6 +19,7 @@ import {
     skyClientMetadata,
     skyJwks,
 } from "./oauth";
+import {createSkyOAuthRequestLock} from "./oauth-lock";
 import {renderTimelineFeed} from "./feed";
 import type {FeedOutputType, FeedOptions} from "$lib/status/feed";
 import type {SkyFeederPrefs, SkyFeederSession} from "./types";
@@ -26,22 +29,29 @@ const SESSION_COOKIE_OPTIONS = {
     path: "/sky-feeder",
 };
 
+let warnedAboutDevLocalLock = false;
+
+type SkyFeederEnv = Env & {
+    ATPROTO_OAUTH_PRIVATE_JWK?: string;
+};
+
 export class SkyFeederController {
     #kv: SkyFeederKV;
     #appProtocol: string;
     #appHost: string;
     #cookies: Cookies;
     #privateJwk: string | undefined;
+    #oauthLockNamespace: DurableObjectNamespace | undefined;
 
     constructor(event: RequestEvent) {
         const {cookies, platform, url} = event;
+        const env = platform?.env as SkyFeederEnv | undefined;
         this.#kv = new SkyFeederKV(WorkerKV.fromEvent(event));
         this.#appProtocol = url.protocol;
         this.#appHost = url.host;
         this.#cookies = cookies;
-        this.#privateJwk = (
-            platform?.env as {ATPROTO_OAUTH_PRIVATE_JWK?: string} | undefined
-        )?.ATPROTO_OAUTH_PRIVATE_JWK;
+        this.#privateJwk = env?.ATPROTO_OAUTH_PRIVATE_JWK;
+        this.#oauthLockNamespace = env?.SKY_OAUTH_LOCK;
     }
 
     async getSession(): Promise<SkyFeederSession | null> {
@@ -235,11 +245,31 @@ export class SkyFeederController {
     }
 
     async #getOAuthClient(context: string) {
+        const requestLock = dev
+            ? requestLocalLock
+            : this.#oauthLockNamespace
+              ? createSkyOAuthRequestLock(this.#oauthLockNamespace)
+              : undefined;
+
+        if (dev && !warnedAboutDevLocalLock) {
+            warnedAboutDevLocalLock = true;
+            console.warn("sky-feeder:oauth-lock", {
+                step: "dev:local-lock",
+                message:
+                    "SvelteKit dev uses requestLocalLock; preview and deploy use the Durable Object lock.",
+            });
+        }
+
+        if (!requestLock) {
+            throw new Error("SKY_OAUTH_LOCK is not configured");
+        }
+
         return createSkyOAuthClient({
             baseUrl: this.#baseUrl(),
             stateStore: this.#kv.oauthStateStore(),
             sessionStore: this.#kv.oauthSessionStore(context),
             privateJwk: parsePrivateJwk(this.#privateJwk),
+            requestLock,
         });
     }
 

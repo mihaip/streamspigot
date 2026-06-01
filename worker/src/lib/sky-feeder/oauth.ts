@@ -22,7 +22,7 @@ import {
     JoseKey,
     NodeOAuthClient,
     type OAuthClientMetadataInput,
-    requestLocalLock,
+    type RuntimeLock,
     type NodeSavedSessionStore,
     type NodeSavedStateStore,
 } from "@atproto/oauth-client-node";
@@ -41,6 +41,7 @@ export async function createSkyOAuthClient({
     stateStore,
     sessionStore,
     privateJwk,
+    requestLock,
 }: SkyOAuthClientOptions): Promise<NodeOAuthClient> {
     const keyId =
         typeof privateJwk.kid === "string" ? privateJwk.kid : "default";
@@ -52,7 +53,7 @@ export async function createSkyOAuthClient({
         sessionStore,
         responseMode: "query",
         allowHttp: baseUrl.startsWith("http://"),
-        requestLock: requestLocalLock,
+        requestLock,
         handleResolver: createWorkerHandleResolver(),
         didResolver: createWorkerDidResolver(),
         fetch: oauthFetch,
@@ -96,6 +97,7 @@ export type SkyOAuthClientOptions = {
     stateStore: NodeSavedStateStore;
     sessionStore: NodeSavedSessionStore;
     privateJwk: Record<string, unknown>;
+    requestLock: RuntimeLock;
 };
 
 export function parsePrivateJwk(
