@@ -57,7 +57,10 @@
                 <a
                     href="http://googlereader.blogspot.com/2013/07/a-final-farewell.html"
                     >Google Reader was shut down</a
-                >.
+                >. For something similar, you can try
+                <a href="https://refeed.to/">ReFeed</a>,
+                <a href="https://backfeed.app/">Backfeed</a>
+                or <a href="https://recastthis.com/">Recast</a>.
             </li>
             <li>
                 <b>Tweet Digest</b>: Allowed you to read Twitter updates in
