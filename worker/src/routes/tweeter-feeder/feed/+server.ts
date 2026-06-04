@@ -8,6 +8,7 @@ export const GET: RequestHandler = async event => {
     const debug = searchParams.get("debug") === "true";
     const output = parseOutput(searchParams);
     const includeStatusJson = searchParams.get("includeStatusJson") === "true";
+    const excludeRetweets = searchParams.get("excludeRetweets") === "true";
 
     try {
         const controller = new TweeterFeederController(event);
@@ -15,6 +16,7 @@ export const GET: RequestHandler = async event => {
             debug,
             output,
             includeStatusJson,
+            excludeRetweets,
         });
     } catch (e) {
         if (isHttpError(e)) {

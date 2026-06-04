@@ -1,6 +1,6 @@
 import {error, type RequestEvent} from "@sveltejs/kit";
 import {WorkerKV} from "$lib/kv";
-import {type FeedOptions, type FeedOutputType} from "$lib/status/feed";
+import {type FeedOutputType} from "$lib/status/feed";
 import {TweeterFeederKV} from "./kv";
 import {
     fetchErrorForUsername,
@@ -8,7 +8,7 @@ import {
     parseUsernames,
 } from "./fetcher";
 import {TwitterFetcher} from "./fetcher";
-import {renderTweeterFeed} from "./feed";
+import {renderTweeterFeed, type TweeterFeedOptions} from "./feed";
 
 const MAX_USERNAMES = 10;
 
@@ -26,7 +26,7 @@ export class TweeterFeederController {
 
     async handleFeed(
         usernamesParam: string | null,
-        options: FeedOptions
+        options: TweeterFeedOptions
     ): Promise<Response> {
         const usernames = parseUsernames(usernamesParam);
         const validationError = validateUsernames(usernames);
@@ -41,7 +41,11 @@ export class TweeterFeederController {
         const errors = [];
         for (const username of usernames) {
             try {
-                results.push(await fetcher.fetchTimeline(username, count));
+                results.push(
+                    await fetcher.fetchTimeline(username, count, {
+                        excludeRetweets: options.excludeRetweets,
+                    })
+                );
             } catch (e) {
                 const fetchError = fetchErrorForUsername(username, e);
                 console.warn("Tweeter Feeder username fetch failed", {
@@ -67,7 +71,7 @@ export class TweeterFeederController {
             usernames,
             results,
             errors,
-            this.feedUrl(usernames, options.output),
+            this.feedUrl(usernames, options),
             this.#baseUrl(),
             options
         );
@@ -79,18 +83,28 @@ export class TweeterFeederController {
         });
     }
 
-    feedUrl(usernames: string[], output?: FeedOutputType): string {
-        const url = `${this.#baseUrl()}/feed?usernames=${usernames.join("+")}`;
-        if (output && output !== "atom") {
-            return `${url}&output=${output}`;
+    feedUrl(usernames: string[], options: TweeterFeedUrlOptions = {}): string {
+        const params = new URLSearchParams({
+            usernames: usernames.join("+"),
+        });
+        if (options.excludeRetweets) {
+            params.set("excludeRetweets", "true");
         }
-        return url;
+        if (options.output && options.output !== "atom") {
+            params.set("output", options.output);
+        }
+        return `${this.#baseUrl()}/feed?${params}`;
     }
 
     #baseUrl(): string {
         return `${this.#appProtocol}//${this.#appHost}/tweeter-feeder`;
     }
 }
+
+type TweeterFeedUrlOptions = {
+    output?: FeedOutputType;
+    excludeRetweets?: boolean;
+};
 
 function validateUsernames(usernames: string[]): string | null {
     if (usernames.length === 0) {

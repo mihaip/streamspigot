@@ -12,10 +12,11 @@ export function renderTweeterFeed(
     errors: TwitterFetchError[],
     feedUrl: string,
     homeUrl: string,
-    options: FeedOptions = {}
+    options: TweeterFeedOptions = {}
 ): FeedOutput {
     const tweets = results
         .flatMap(result => result.tweets)
+        .filter(tweet => !options.excludeRetweets || !tweet.retweet)
         .sort(
             (a, b) =>
                 new Date(b.createdAt).getTime() -
@@ -46,6 +47,10 @@ export function renderTweeterFeed(
 
     return output;
 }
+
+export type TweeterFeedOptions = FeedOptions & {
+    excludeRetweets?: boolean;
+};
 
 function injectDebugNotice(
     body: string,

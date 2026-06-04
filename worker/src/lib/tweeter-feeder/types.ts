@@ -93,6 +93,10 @@ export type TwitterTimelineResult = {
     fromStaleCache: boolean;
 };
 
+export type TwitterTimelineOptions = {
+    excludeRetweets?: boolean;
+};
+
 export type TwitterFetchError = {
     username: string;
     message: string;

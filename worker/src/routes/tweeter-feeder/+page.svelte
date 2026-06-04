@@ -8,6 +8,7 @@
     const MAX_USERNAMES = 10;
 
     let rows = $state([""]);
+    let excludeRetweets = $state(false);
 
     let rawUsernames = $derived(
         rows.map(row => row.trim().replace(/^@/, "")).filter(Boolean)
@@ -56,12 +57,14 @@
     }
 
     function feedUrl(usernames: string[], output?: "json"): string {
-        const url =
-            `${resolve("/tweeter-feeder/feed")}?usernames=${usernames.join("+")}`;
-        if (output) {
-            return `${url}&output=${output}`;
+        const params = [`usernames=${usernames.join("+")}`];
+        if (excludeRetweets) {
+            params.push("excludeRetweets=true");
         }
-        return url;
+        if (output) {
+            params.push(`output=${output}`);
+        }
+        return `${resolve("/tweeter-feeder/feed")}?${params.join("&")}`;
     }
 </script>
 
@@ -112,6 +115,13 @@
                     </div>
                 {/each}
             </div>
+        </fieldset>
+        <fieldset class="options">
+            <legend>Options</legend>
+            <label>
+                <input type="checkbox" bind:checked={excludeRetweets} />
+                Exclude retweets
+            </label>
         </fieldset>
     </div>
 
@@ -167,7 +177,7 @@
     }
 
     .setup {
-        display: flex;
+        display: grid;
         justify-content: center;
     }
 
@@ -188,6 +198,17 @@
     .row {
         margin: 0.2em 0;
         white-space: nowrap;
+    }
+
+    .options {
+        margin-top: 0.8em;
+        text-align: left;
+    }
+
+    .options label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4em;
     }
 
     input.error {

@@ -7,6 +7,7 @@ import type {
     TwitterFetchError,
     TwitterMedia,
     TwitterPoll,
+    TwitterTimelineOptions,
     TwitterTimelineResult,
     TwitterTweet,
     TwitterUser,
@@ -26,6 +27,7 @@ const TIMELINE_CACHE_TTL_SECONDS = 24 * 60 * 60;
 const SESSION_COOLDOWN_SECONDS = 15 * 60;
 const GRAPHQL_TIMEOUT_MS = 15_000;
 const GRAPHQL_RESPONSE_CACHE_VERSION = 1;
+const MAX_TIMELINE_PAGES = 5;
 
 // Public web bearer token used by x.com browser GraphQL requests.
 const X_BEARER_TOKEN =
@@ -116,17 +118,66 @@ export class TwitterFetcher {
 
     async fetchTimeline(
         username: string,
-        count: number
+        count: number,
+        options: TwitterTimelineOptions = {}
     ): Promise<TwitterTimelineResult> {
         const normalizedUsername = normalizeUsername(username);
         const user = await this.#fetchUser(normalizedUsername);
-        const {json, fromStaleCache} = await this.#fetchTimelineFromX(
-            user,
-            count
+        const tweets: TwitterTweet[] = [];
+        const seenTweetIds = new Set<string>();
+        const seenCursors = new Set<string>();
+        let fromStaleCache = false;
+        let cursor: string | null = null;
+        let pageCount = 0;
+
+        do {
+            let response: CachedGraphQLResponse;
+            try {
+                response = await this.#fetchTimelineFromX(user, count, cursor);
+            } catch (e) {
+                if (pageCount === 0) {
+                    throw e;
+                }
+                console.warn("Tweeter Feeder additional timeline page failed", {
+                    username: normalizedUsername,
+                    pageCount,
+                    message: errorToMessage(e),
+                });
+                break;
+            }
+
+            const page = parseGraphTimeline(response.json);
+            fromStaleCache = fromStaleCache || response.fromStaleCache;
+
+            for (const tweet of page.tweets) {
+                if (seenTweetIds.has(tweet.id)) {
+                    continue;
+                }
+                seenTweetIds.add(tweet.id);
+                if (options.excludeRetweets && tweet.retweet) {
+                    continue;
+                }
+                tweets.push(tweet);
+            }
+
+            cursor = page.bottomCursor;
+            if (cursor && seenCursors.has(cursor)) {
+                break;
+            }
+            if (cursor) {
+                seenCursors.add(cursor);
+            }
+            pageCount += 1;
+        } while (
+            options.excludeRetweets &&
+            tweets.length < count &&
+            cursor &&
+            pageCount < MAX_TIMELINE_PAGES
         );
+
         return {
             username: normalizedUsername,
-            tweets: parseGraphTimeline(json),
+            tweets: tweets.slice(0, count),
             fromStaleCache,
         };
     }
@@ -160,7 +211,8 @@ export class TwitterFetcher {
 
     async #fetchTimelineFromX(
         user: TwitterUser,
-        count: number
+        count: number,
+        cursor: string | null = null
     ): Promise<CachedGraphQLResponse> {
         return await this.#fetchCachedGraphQLWithSessions(
             user.username,
@@ -171,6 +223,7 @@ export class TwitterFetcher {
                 includePromotedContent: true,
                 withQuickPromoteEligibilityTweetFields: true,
                 withVoice: true,
+                ...(cursor ? {cursor} : {}),
             },
             {
                 freshSeconds: TIMELINE_FRESH_SECONDS,
@@ -551,10 +604,11 @@ function parseGraphUser(json: unknown): TwitterUser | null {
     return userResult ? parseUserResult(userResult) : null;
 }
 
-function parseGraphTimeline(json: unknown): TwitterTweet[] {
+function parseGraphTimeline(json: unknown): TwitterTimelinePage {
     const tweets: TwitterTweet[] = [];
     const seenTweetIds = new Set<string>();
-    for (const entry of findTimelineEntries(json)) {
+    const entries = findTimelineEntries(json);
+    for (const entry of entries) {
         for (const itemContent of findTimelineItemContents(entry)) {
             const result = getObjectAt(itemContent, [
                 "tweet_results",
@@ -567,8 +621,16 @@ function parseGraphTimeline(json: unknown): TwitterTweet[] {
             }
         }
     }
-    return tweets;
+    return {
+        tweets,
+        bottomCursor: findTimelineCursor(entries, "Bottom"),
+    };
 }
+
+type TwitterTimelinePage = {
+    tweets: TwitterTweet[];
+    bottomCursor: string | null;
+};
 
 function parseUserResult(result: JsonObject): TwitterUser | null {
     const legacy =
@@ -697,6 +759,30 @@ function findTimelineEntries(json: unknown): JsonObject[] {
         }
     });
     return result;
+}
+
+function findTimelineCursor(
+    entries: JsonObject[],
+    cursorType: "Bottom" | "Top"
+): string | null {
+    const expectedCursorType = cursorType.toLowerCase();
+    for (const entry of entries) {
+        const content = getObject(entry.content);
+        const actualCursorType = getString(content?.cursorType)?.toLowerCase();
+        const entryId = getString(entry.entryId)?.toLowerCase() ?? "";
+        if (
+            actualCursorType !== expectedCursorType &&
+            !entryId.includes(`cursor-${expectedCursorType}`)
+        ) {
+            continue;
+        }
+
+        const value = getString(content?.value);
+        if (value) {
+            return value;
+        }
+    }
+    return null;
 }
 
 function findTimelineItemContents(entry: JsonObject): JsonObject[] {
