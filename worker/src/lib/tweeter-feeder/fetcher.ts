@@ -802,6 +802,11 @@ function parseApiMedia(media: unknown): TwitterMedia[] {
 }
 
 function parseCard(tweetResult: JsonObject): TwitterCard | null {
+    const articleCard = parseArticleCard(tweetResult);
+    if (articleCard) {
+        return articleCard;
+    }
+
     const card = getObject(getObject(tweetResult.card)?.legacy);
     if (!card) {
         return null;
@@ -823,6 +828,54 @@ function parseCard(tweetResult: JsonObject): TwitterCard | null {
             getBindingImageUrl(card, "summary_photo_image_large") ??
             getBindingImageUrl(card, "player_image_large"),
     };
+}
+
+function parseArticleCard(tweetResult: JsonObject): TwitterCard | null {
+    const article = getObjectAt(tweetResult, [
+        "article",
+        "article_results",
+        "result",
+    ]);
+    if (!article) {
+        return null;
+    }
+
+    const title = getString(article.title)?.trim();
+    const articleId = getString(article.rest_id);
+    if (!title || !articleId) {
+        return null;
+    }
+
+    return {
+        title,
+        url: articleUrl(tweetResult, articleId),
+        description: getString(article.preview_text),
+        imageUrl: getString(
+            getObjectAt(article, ["cover_media", "media_info"])
+                ?.original_img_url
+        ),
+    };
+}
+
+function articleUrl(tweetResult: JsonObject, articleId: string): string {
+    const legacyEntities = getObject(getObject(tweetResult.legacy)?.entities);
+    const articleEntityUrl = getArray(legacyEntities?.urls)
+        .flatMap(parseUrlEntity)
+        .find(entity => articleUrlMatchesId(entity.expandedUrl, articleId));
+    return (
+        articleEntityUrl?.expandedUrl ?? `https://x.com/i/article/${articleId}`
+    );
+}
+
+function articleUrlMatchesId(value: string | undefined, articleId: string) {
+    if (!value) {
+        return false;
+    }
+    try {
+        return new URL(value).pathname === `/i/article/${articleId}`;
+    } catch {
+        return false;
+    }
 }
 
 function parsePoll(tweetResult: JsonObject): TwitterPoll | null {

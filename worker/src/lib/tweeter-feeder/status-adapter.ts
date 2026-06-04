@@ -133,11 +133,15 @@ function contentAsHtml(tweet: TwitterTweet): string {
     if (tweet.retweet) {
         return "";
     }
-    return textWithEntitiesAsHtml(
-        displayText(tweet),
-        tweet.entities,
-        tweet.displayTextRange?.[0] ?? 0
-    );
+    const text = displayText(tweet);
+    const offset = tweet.displayTextRange?.[0] ?? 0;
+    if (
+        tweet.card &&
+        isOnlyCardUrl(text, tweet.entities, offset, tweet.card.url)
+    ) {
+        return "";
+    }
+    return textWithEntitiesAsHtml(text, tweet.entities, offset);
 }
 
 function displayText(tweet: TwitterTweet): string {
@@ -216,6 +220,44 @@ function normalizeEntityRange<T extends {start: number; end: number}>(
         start: entity.start - offset,
         end: entity.end - offset,
     };
+}
+
+function isOnlyCardUrl(
+    text: string,
+    entities: TwitterEntities | undefined,
+    offset: number,
+    cardUrl: string
+): boolean {
+    const chars = Array.from(text);
+    const urls = allEntities(entities, offset).filter(
+        entity => entity.type === "url"
+    );
+    return urls.some(
+        entity =>
+            entity.start === 0 &&
+            entity.end === chars.length &&
+            urlsMatch(cardUrl, entity.expandedUrl ?? entity.url)
+    );
+}
+
+function urlsMatch(a: string, b: string): boolean {
+    const normalizedA = normalizeComparableUrl(a);
+    const normalizedB = normalizeComparableUrl(b);
+    return normalizedA !== null && normalizedA === normalizedB;
+}
+
+function normalizeComparableUrl(value: string): string | null {
+    try {
+        const url = new URL(value);
+        let hostname = url.hostname.toLowerCase();
+        if (hostname === "twitter.com") {
+            hostname = "x.com";
+        }
+        const pathname = url.pathname.replace(/\/$/, "");
+        return `${hostname}${pathname}${url.search}`;
+    } catch {
+        return null;
+    }
 }
 
 function entityAsHtml(text: string, entity: RenderEntity): string {
