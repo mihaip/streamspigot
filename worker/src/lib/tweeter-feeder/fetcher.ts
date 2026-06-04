@@ -25,7 +25,7 @@ const TIMELINE_FRESH_SECONDS = 10 * 60;
 const TIMELINE_CACHE_TTL_SECONDS = 24 * 60 * 60;
 const SESSION_COOLDOWN_SECONDS = 15 * 60;
 const GRAPHQL_TIMEOUT_MS = 15_000;
-const CACHE_SCHEMA_VERSION = 2;
+const GRAPHQL_RESPONSE_CACHE_VERSION = 1;
 
 // Public web bearer token used by x.com browser GraphQL requests.
 const X_BEARER_TOKEN =
@@ -94,13 +94,18 @@ export class TwitterFetcher {
             throw new TwitterGraphQLFetchError("Session is missing a username");
         }
 
-        const user = await this.#fetchGraphQL(
+        const {json} = await this.#fetchCachedGraphQLForSession(
             session,
             USER_BY_SCREEN_NAME_QUERY,
             {
                 screen_name: session.username,
+            },
+            {
+                freshSeconds: 0,
+                ttlSeconds: 0,
             }
-        ).then(parseGraphUser);
+        );
+        const user = parseGraphUser(json);
         if (!user?.id) {
             throw new TwitterGraphQLFetchError(
                 `Could not find @${session.username}`
@@ -114,60 +119,31 @@ export class TwitterFetcher {
         count: number
     ): Promise<TwitterTimelineResult> {
         const normalizedUsername = normalizeUsername(username);
-        const cacheKey = `v${CACHE_SCHEMA_VERSION}:timeline:${normalizedUsername}:${count}`;
-        const cached =
-            await this.#kv.getCachedJSON<TwitterTimelineResult>(cacheKey);
-        if (cached && cacheAgeSeconds(cached) < TIMELINE_FRESH_SECONDS) {
-            return cached.value;
-        }
-
-        try {
-            const user = await this.#fetchUser(normalizedUsername);
-            const tweets = await this.#fetchTimelineFromX(user, count);
-            const result: TwitterTimelineResult = {
-                username: normalizedUsername,
-                tweets,
-                fromStaleCache: false,
-            };
-            await this.#kv.putCachedJSON(
-                cacheKey,
-                result,
-                TIMELINE_CACHE_TTL_SECONDS
-            );
-            return result;
-        } catch (e) {
-            if (cached) {
-                console.warn("Using stale Tweeter Feeder timeline cache", {
-                    username: normalizedUsername,
-                    ageSeconds: cacheAgeSeconds(cached),
-                    tweetCount: cached.value.tweets.length,
-                    message: errorToMessage(e),
-                });
-                return {...cached.value, fromStaleCache: true};
-            }
-            console.error(
-                "Tweeter Feeder timeline fetch failed without cache",
-                {
-                    username: normalizedUsername,
-                    message: errorToMessage(e),
-                }
-            );
-            throw e;
-        }
+        const user = await this.#fetchUser(normalizedUsername);
+        const {json, fromStaleCache} = await this.#fetchTimelineFromX(
+            user,
+            count
+        );
+        return {
+            username: normalizedUsername,
+            tweets: parseGraphTimeline(json),
+            fromStaleCache,
+        };
     }
 
     async #fetchUser(username: string): Promise<TwitterUser> {
-        const cacheKey = `v${CACHE_SCHEMA_VERSION}:user:${username}`;
-        const cached = await this.#kv.getCachedJSON<TwitterUser>(cacheKey);
-        if (cached) {
-            return cached.value;
-        }
-
-        const user = await this.#fetchWithSessions(username, session =>
-            this.#fetchGraphQL(session, USER_BY_SCREEN_NAME_QUERY, {
+        const {json} = await this.#fetchCachedGraphQLWithSessions(
+            username,
+            USER_BY_SCREEN_NAME_QUERY,
+            {
                 screen_name: username,
-            })
-        ).then(parseGraphUser);
+            },
+            {
+                freshSeconds: USER_CACHE_TTL_SECONDS,
+                ttlSeconds: USER_CACHE_TTL_SECONDS,
+            }
+        );
+        const user = parseGraphUser(json);
 
         if (!user?.id) {
             throw new TwitterGraphQLFetchError(`Could not find @${username}`);
@@ -179,25 +155,104 @@ export class TwitterFetcher {
             throw new TwitterGraphQLFetchError(`@${username} is suspended`);
         }
 
-        await this.#kv.putCachedJSON(cacheKey, user, USER_CACHE_TTL_SECONDS);
         return user;
     }
 
     async #fetchTimelineFromX(
         user: TwitterUser,
         count: number
-    ): Promise<TwitterTweet[]> {
-        const json = await this.#fetchWithSessions(user.username, session =>
-            this.#fetchGraphQL(session, USER_TWEETS_QUERY, {
+    ): Promise<CachedGraphQLResponse> {
+        return await this.#fetchCachedGraphQLWithSessions(
+            user.username,
+            USER_TWEETS_QUERY,
+            {
                 userId: user.id,
                 count,
                 includePromotedContent: true,
                 withQuickPromoteEligibilityTweetFields: true,
                 withVoice: true,
-            })
+            },
+            {
+                freshSeconds: TIMELINE_FRESH_SECONDS,
+                ttlSeconds: TIMELINE_CACHE_TTL_SECONDS,
+                allowStaleOnError: true,
+            }
         );
-        const tweets = parseGraphTimeline(json);
-        return tweets;
+    }
+
+    async #fetchCachedGraphQLWithSessions(
+        sessionKey: string,
+        endpoint: string,
+        variables: Record<string, unknown>,
+        cacheOptions: GraphQLCacheOptions
+    ): Promise<CachedGraphQLResponse> {
+        return await this.#fetchCachedGraphQL(
+            endpoint,
+            variables,
+            cacheOptions,
+            () =>
+                this.#fetchWithSessions(sessionKey, session =>
+                    this.#fetchGraphQL(session, endpoint, variables)
+                ),
+            sessionKey
+        );
+    }
+
+    async #fetchCachedGraphQLForSession(
+        session: TweeterFeederSession,
+        endpoint: string,
+        variables: Record<string, unknown>,
+        cacheOptions: GraphQLCacheOptions
+    ): Promise<CachedGraphQLResponse> {
+        return await this.#fetchCachedGraphQL(
+            endpoint,
+            variables,
+            cacheOptions,
+            () => this.#fetchGraphQL(session, endpoint, variables),
+            sessionLabel(session)
+        );
+    }
+
+    async #fetchCachedGraphQL(
+        endpoint: string,
+        variables: Record<string, unknown>,
+        cacheOptions: GraphQLCacheOptions,
+        fetchJSON: () => Promise<unknown>,
+        logKey: string
+    ): Promise<CachedGraphQLResponse> {
+        const cacheEnabled = cacheOptions.ttlSeconds > 0;
+        const cacheKey = cacheEnabled
+            ? await rawGraphQLCacheKey(endpoint, variables)
+            : null;
+        const cached = cacheKey
+            ? await this.#kv.getCachedJSON<unknown>(cacheKey)
+            : null;
+        if (cached && cacheAgeSeconds(cached) < cacheOptions.freshSeconds) {
+            return {json: cached.value, fromStaleCache: false};
+        }
+
+        try {
+            const json = await fetchJSON();
+            if (cacheKey) {
+                await this.#kv.putCachedJSON(
+                    cacheKey,
+                    json,
+                    cacheOptions.ttlSeconds
+                );
+            }
+            return {json, fromStaleCache: false};
+        } catch (e) {
+            if (cached && cacheOptions.allowStaleOnError) {
+                console.warn("Using stale Tweeter Feeder GraphQL cache", {
+                    endpoint,
+                    key: logKey,
+                    ageSeconds: cacheAgeSeconds(cached),
+                    message: errorToMessage(e),
+                });
+                return {json: cached.value, fromStaleCache: true};
+            }
+            throw e;
+        }
     }
 
     async #fetchWithSessions<T>(
@@ -398,6 +453,27 @@ export function parseUsernames(value: string | null): string[] {
 
 export function isValidTwitterUsername(username: string): boolean {
     return /^[a-zA-Z0-9_]{1,15}$/.test(username);
+}
+
+async function rawGraphQLCacheKey(
+    endpoint: string,
+    variables: Record<string, unknown>
+): Promise<string> {
+    const operation = endpoint.split("/").pop() ?? "request";
+    const requestData = JSON.stringify({
+        endpoint,
+        variables,
+        features: GRAPHQL_FEATURES,
+        fieldToggles: GRAPHQL_FIELD_TOGGLES,
+    });
+    const hashBuffer = await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(requestData)
+    );
+    const hash = Array.from(new Uint8Array(hashBuffer))
+        .map(byte => byte.toString(16).padStart(2, "0"))
+        .join("");
+    return `raw-graphql:v${GRAPHQL_RESPONSE_CACHE_VERSION}:${operation}:${hash}`;
 }
 
 function orderedSessionsForKey(
@@ -1001,6 +1077,17 @@ function twitterErrorsNeedCooldown(errors: unknown[]): boolean {
 }
 
 type JsonObject = Record<string, unknown>;
+
+type GraphQLCacheOptions = {
+    freshSeconds: number;
+    ttlSeconds: number;
+    allowStaleOnError?: boolean;
+};
+
+type CachedGraphQLResponse = {
+    json: unknown;
+    fromStaleCache: boolean;
+};
 
 function getObject(value: unknown): JsonObject | null {
     return value && typeof value === "object" && !Array.isArray(value)
