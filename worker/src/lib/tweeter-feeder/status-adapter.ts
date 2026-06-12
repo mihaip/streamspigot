@@ -122,25 +122,25 @@ function headlineAsText(tweet: TwitterTweet): string {
     const quoteSuffix = tweet.quote
         ? ` (quoting @${tweet.quote.author.username})`
         : "";
-    return truncate(`${prefix}${plainText(contentTweet)}${quoteSuffix}`);
+    return truncate(`${prefix}${headlineContent(contentTweet)}${quoteSuffix}`);
 }
 
-function plainText(tweet: TwitterTweet): string {
-    return unescapeHtml(tweet.text).replace(/\s+/g, " ").trim();
+function headlineContent(tweet: TwitterTweet): string {
+    const text = isOnlyCardUrlTweet(tweet) ? tweet.card?.title : tweet.text;
+    return unescapeHtml(text ?? "")
+        .replace(/\s+/g, " ")
+        .trim();
 }
 
 function contentAsHtml(tweet: TwitterTweet): string {
     if (tweet.retweet) {
         return "";
     }
-    const text = displayText(tweet);
-    const offset = tweet.displayTextRange?.[0] ?? 0;
-    if (
-        tweet.card &&
-        isOnlyCardUrl(text, tweet.entities, offset, tweet.card.url)
-    ) {
+    if (isOnlyCardUrlTweet(tweet)) {
         return "";
     }
+    const text = displayText(tweet);
+    const offset = tweet.displayTextRange?.[0] ?? 0;
     return textWithEntitiesAsHtml(text, tweet.entities, offset);
 }
 
@@ -237,6 +237,18 @@ function isOnlyCardUrl(
             entity.start === 0 &&
             entity.end === chars.length &&
             urlsMatch(cardUrl, entity.expandedUrl ?? entity.url)
+    );
+}
+
+function isOnlyCardUrlTweet(tweet: TwitterTweet): boolean {
+    return Boolean(
+        tweet.card &&
+        isOnlyCardUrl(
+            displayText(tweet),
+            tweet.entities,
+            tweet.displayTextRange?.[0] ?? 0,
+            tweet.card.url
+        )
     );
 }
 
