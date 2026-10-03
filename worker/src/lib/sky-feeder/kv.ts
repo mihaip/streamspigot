@@ -8,6 +8,7 @@ import type {SkyFeederPrefs, SkyFeederSession} from "./types";
 const PREFIX = "sky-feeder";
 const OAUTH_STATE_TTL_SECONDS = 60 * 60;
 const OAUTH_TOKEN_FINGERPRINT_BYTES = 12;
+const FEED_ERROR_STATE_TTL_SECONDS = 30 * 24 * 60 * 60;
 
 export class SkyFeederKV {
     #kv: KV;
@@ -72,6 +73,35 @@ export class SkyFeederKV {
         session.prefs = prefs;
         await this.#kv.putJSON(this.#sessionKey(session.sessionId), session);
         return session;
+    }
+
+    async putFeedErrorState(
+        feedId: string,
+        event: SkyFeedErrorEvent
+    ): Promise<SkyFeedErrorState> {
+        const previous = await this.#kv.getJSON<SkyFeedErrorState>(
+            this.#feedErrorStateKey(feedId)
+        );
+        const now = new Date().toISOString();
+        const matches =
+            previous?.kind === event.kind &&
+            previous.signature === event.signature;
+        const state: SkyFeedErrorState = {
+            kind: event.kind,
+            signature: event.signature,
+            count: matches ? previous.count + 1 : 1,
+            firstSeenAt: matches ? previous.firstSeenAt : now,
+            lastSeenAt: now,
+            lastMessage: event.message,
+        };
+        await this.#kv.putJSON(this.#feedErrorStateKey(feedId), state, {
+            expirationTtl: FEED_ERROR_STATE_TTL_SECONDS,
+        });
+        return state;
+    }
+
+    async clearFeedErrorState(feedId: string): Promise<void> {
+        await this.#kv.delete(this.#feedErrorStateKey(feedId));
     }
 
     oauthStateStore() {
@@ -158,6 +188,21 @@ export class SkyFeederKV {
         };
     }
 
+    async getOAuthSessionHashMaterial(
+        did: string
+    ): Promise<SkyOAuthSessionHashMaterial | null> {
+        const session = await this.#kv.getJSON<NodeSavedSession>(
+            this.#oauthSessionKey(did)
+        );
+        if (!session) {
+            return null;
+        }
+        const meta = await this.#kv.getJSON<OAuthSessionMeta>(
+            this.#oauthSessionMetaKey(did)
+        );
+        return oauthSessionHashMaterial(session, meta ?? undefined);
+    }
+
     #sessionKey(id: string): string {
         return `${PREFIX}:session:${id}`;
     }
@@ -168,6 +213,10 @@ export class SkyFeederKV {
 
     #sessionDidKey(did: string): string {
         return `${PREFIX}:session_did:${did}`;
+    }
+
+    #feedErrorStateKey(feedId: string): string {
+        return `${PREFIX}:feed_error_state:${feedId}`;
     }
 
     #oauthStateKey(id: string): string {
@@ -186,6 +235,42 @@ export class SkyFeederKV {
 type OAuthSessionMeta = {
     storedAt?: string;
     refreshTokenFingerprint?: string;
+};
+
+export type SkyOAuthSessionHashMaterial = {
+    storedAt?: string;
+    tokenSet: {
+        aud?: unknown;
+        sub?: unknown;
+        iss?: unknown;
+        scope?: unknown;
+        expires_at?: unknown;
+        accessTokenFingerprint?: string;
+        refreshTokenFingerprint?: string;
+    };
+    hasDpopJwk: boolean;
+    hasDpopKey: boolean;
+    authMethod: {
+        method?: unknown;
+        kid?: unknown;
+    };
+};
+
+export type SkyFeedErrorKind = "auth" | "error";
+
+export type SkyFeedErrorState = {
+    kind: SkyFeedErrorKind;
+    signature: string;
+    count: number;
+    firstSeenAt: string;
+    lastSeenAt: string;
+    lastMessage: string;
+};
+
+type SkyFeedErrorEvent = {
+    kind: SkyFeedErrorKind;
+    signature: string;
+    message: string;
 };
 
 function logOAuthSession(
@@ -250,6 +335,43 @@ async function oauthSessionMeta(
         refreshTokenFingerprint: await tokenFingerprint(
             session.tokenSet.refresh_token
         ),
+    };
+}
+
+async function oauthSessionHashMaterial(
+    session: NodeSavedSession,
+    meta: OAuthSessionMeta | undefined
+): Promise<SkyOAuthSessionHashMaterial> {
+    return {
+        storedAt: meta?.storedAt,
+        tokenSet: {
+            aud: session.tokenSet.aud,
+            sub: session.tokenSet.sub,
+            iss: session.tokenSet.iss,
+            scope: session.tokenSet.scope,
+            expires_at: session.tokenSet.expires_at,
+            accessTokenFingerprint: await tokenFingerprint(
+                session.tokenSet.access_token
+            ),
+            refreshTokenFingerprint:
+                meta?.refreshTokenFingerprint ??
+                (await tokenFingerprint(session.tokenSet.refresh_token)),
+        },
+        hasDpopJwk: Boolean(
+            "dpopJwk" in session &&
+            (session as unknown as {dpopJwk?: unknown}).dpopJwk
+        ),
+        hasDpopKey: Boolean(
+            "dpopKey" in session &&
+            (session as unknown as {dpopKey?: unknown}).dpopKey
+        ),
+        authMethod: {
+            method: session.authMethod.method,
+            kid:
+                "kid" in session.authMethod
+                    ? (session.authMethod as {kid?: unknown}).kid
+                    : undefined,
+        },
     };
 }
 
