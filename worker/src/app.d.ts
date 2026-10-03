@@ -9,6 +9,9 @@ declare global {
     namespace App {
         interface Platform {
             env: Env;
+            ctx: ExecutionContext;
+            /** @deprecated Use `ctx` instead */
+            context: ExecutionContext;
         }
         interface Locals {
             mastoFeederSession?: MastoFeederSession;

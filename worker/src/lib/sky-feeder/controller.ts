@@ -52,6 +52,7 @@ export class SkyFeederController {
     #cookies: Cookies;
     #privateJwk: string | undefined;
     #oauthLockNamespace: DurableObjectNamespace | undefined;
+    #executionContext: ExecutionContext | undefined;
 
     constructor(event: RequestEvent) {
         const {cookies, platform, url} = event;
@@ -62,6 +63,7 @@ export class SkyFeederController {
         this.#cookies = cookies;
         this.#privateJwk = env?.ATPROTO_OAUTH_PRIVATE_JWK;
         this.#oauthLockNamespace = env?.SKY_OAUTH_LOCK;
+        this.#executionContext = platform?.ctx ?? platform?.context;
     }
 
     async getSession(): Promise<SkyFeederSession | null> {
@@ -191,7 +193,10 @@ export class SkyFeederController {
                 appHost: this.#appHost,
                 appProtocol: this.#appProtocol,
             });
-            const agent = await this.#getAgent(session.did, "feed");
+            const agentPromise = this.#getAgent(session.did, "feed");
+            // Persist rotated single-use tokens even if the client disconnects.
+            this.#executionContext?.waitUntil(agentPromise.catch(() => {}));
+            const agent = await agentPromise;
             console.info("sky-feeder:feed-auth", {
                 step: "restore:success",
                 did: session.did,
