@@ -1,4 +1,5 @@
 import {
+    error,
     redirect,
     type Cookies,
     type Redirect,
@@ -9,18 +10,20 @@ import {requestLocalLock} from "@atproto/oauth-client-node";
 import {errorMessage, errorSummary, sanitizeLogString} from "$lib/feeder/log";
 import {feedOutputResponse, jsonResponse} from "$lib/feeder/response";
 import {resolveFeederPrefs} from "$lib/feeder/prefs";
+import {searchFeedUrl, searchQueryError} from "$lib/feeder/search";
 import {WorkerKV} from "$lib/kv";
 import {SkyFeederKV, type SkyFeedErrorState} from "./kv";
 import {
     createSkyAgent,
     createSkyOAuthClient,
+    hasSearchScope,
     OAUTH_SCOPE,
     parsePrivateJwk,
     skyClientMetadata,
     skyJwks,
 } from "./oauth";
 import {createSkyOAuthRequestLock} from "./oauth-lock";
-import {renderTimelineFeed} from "./feed";
+import {renderSearchFeed, renderTimelineFeed} from "./feed";
 import {
     renderTimelineErrorFeed,
     timelineErrorSignature,
@@ -78,6 +81,18 @@ export class SkyFeederController {
         const agent = await this.#getAgent(session.did, "profile");
         const profile = await agent.getProfile({actor: session.did});
         return {handle: profile.data.handle};
+    }
+
+    async canSearch(session: SkyFeederSession): Promise<boolean> {
+        return hasSearchScope(await this.#kv.getOAuthScopes(session.did));
+    }
+
+    async handleEnableSearch(): Promise<Redirect> {
+        const session = await this.getSession();
+        if (!session) {
+            return redirect(302, "/sky-feeder");
+        }
+        return this.handleSignIn(session.did);
     }
 
     async handleSignIn(handle: string): Promise<Redirect> {
@@ -274,6 +289,67 @@ export class SkyFeederController {
         }
     }
 
+    async handleSearchFeed(
+        feedId: string,
+        query: string,
+        options: FeedOptions
+    ): Promise<Response> {
+        const session = await this.#kv.getSessionByFeedId(feedId);
+        if (!session) {
+            return error(404, "Unknown feed ID");
+        }
+        const validationError = searchQueryError(query);
+        if (validationError) {
+            return error(400, validationError);
+        }
+        if (!(await this.canSearch(session))) {
+            return error(403, "Enable search from the Sky Feeder page first.");
+        }
+
+        const prefs = resolveFeederPrefs(session.prefs);
+        try {
+            const agentPromise = this.#getAgent(session.did, "search-feed");
+            // Persist rotated single-use tokens even if the client disconnects.
+            this.#executionContext?.waitUntil(agentPromise.catch(() => {}));
+            const agent = await agentPromise;
+            return feedOutputResponse(
+                await renderSearchFeed(
+                    agent,
+                    query,
+                    this.searchFeedUrl(session, query, options.output),
+                    `${this.#baseUrl()}?${new URLSearchParams({q: query})}`,
+                    {timeZone: prefs.timeZone},
+                    options
+                )
+            );
+        } catch (cause) {
+            const details = errorSummary(cause);
+            console.error("Sky Feeder search request failed", {
+                message: errorMessage(cause),
+            });
+            if (
+                isOAuthSessionUnavailable(cause) ||
+                details.status === "401" ||
+                details.status === "403"
+            ) {
+                return error(
+                    403,
+                    "Sign in again from the Sky Feeder page to restore search access."
+                );
+            }
+            if (details.code === "BadQueryString" || details.status === "400") {
+                return error(
+                    400,
+                    "Bluesky could not understand this search query."
+                );
+            }
+            return new Response("Bluesky search is temporarily unavailable.", {
+                status: 503,
+                headers: {"Retry-After": "300"},
+            });
+        }
+    }
+
     async handleOAuthClientMetadata(): Promise<Response> {
         return jsonResponse(skyClientMetadata(this.#baseUrl()));
     }
@@ -293,6 +369,18 @@ export class SkyFeederController {
             url.searchParams.set("output", output);
         }
         return url.toString();
+    }
+
+    searchFeedBaseUrl(session: SkyFeederSession): string {
+        return `${this.#baseUrl()}/feed/${session.feedId}/search`;
+    }
+
+    searchFeedUrl(
+        session: SkyFeederSession,
+        query: string,
+        output?: FeedOutputType
+    ): string {
+        return searchFeedUrl(this.searchFeedBaseUrl(session), query, output);
     }
 
     async #getAgent(did: string, context: string) {

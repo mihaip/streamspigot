@@ -3,6 +3,29 @@ import {renderFeed, type FeedOptions, type FeedOutput} from "$lib/status/feed";
 import {AppBskyFeedDefs, type Agent} from "@atproto/api";
 import type {SkyFeederSession} from "./types";
 import {toStatus, type BlueskyAdapterEnv} from "./status-adapter";
+import {fetchSearchStatuses} from "./search";
+
+export async function renderSearchFeed(
+    agent: Agent,
+    query: string,
+    feedUrl: string,
+    homeUrl: string,
+    env: BlueskyAdapterEnv,
+    options: FeedOptions = {}
+): Promise<FeedOutput> {
+    const statuses = await fetchSearchStatuses(agent, query, env, options);
+    return renderFeed(
+        statuses,
+        {
+            feedUrl,
+            homeUrl,
+            title: `Bluesky search: ${query}`,
+            updatedDate: new Date(),
+            authorName: `${APP_NAME} : Sky Feeder`,
+        },
+        options
+    );
+}
 
 export async function renderTimelineFeed(
     agent: Agent,

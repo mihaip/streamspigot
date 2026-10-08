@@ -9,10 +9,12 @@
 
     let {
         feedBaseUrl,
+        canSearch,
         query = "",
         help,
     }: {
         feedBaseUrl: string;
+        canSearch: boolean;
         query?: string;
         help?: Snippet;
     } = $props();
@@ -32,22 +34,26 @@
     }
 </script>
 
-<p>
+<div class="intro">
     You can also
-    {#if expanded}
+    {#if !canSearch}
+        <form action="?/enable-search" method="POST" class="inline-form">
+            <button class="setup-link">set up feeds</button>
+        </form>
+    {:else if expanded}
         set up feeds
     {:else}
         <button
             type="button"
-            class="reveal"
+            class="setup-link"
             aria-expanded="false"
             aria-controls="search-setup"
             onclick={revealSearch}>set up feeds</button>
     {/if}
     for search results.
-</p>
+</div>
 
-{#if expanded}
+{#if canSearch && expanded}
     <div id="search-setup" class="setup">
         <input
             id="search-query"
@@ -76,7 +82,15 @@
 {/if}
 
 <style>
-    .reveal {
+    .intro {
+        margin: 1em 0;
+    }
+
+    .inline-form {
+        display: inline;
+    }
+
+    .setup-link {
         appearance: none;
         border: none;
         background: none;

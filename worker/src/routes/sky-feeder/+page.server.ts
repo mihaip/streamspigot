@@ -41,10 +41,17 @@ export async function load(event) {
         prefs,
         timelineFeedUrl: controller.timelineFeedUrl(session),
         timelineJsonFeedUrl: controller.timelineFeedUrl(session, "json"),
+        canSearch: await controller.canSearch(session),
+        searchFeedBaseUrl: controller.searchFeedBaseUrl(session),
+        searchQuery: event.url.searchParams.get("q") ?? "",
     };
 }
 
 export const actions = {
+    "enable-search": async event => {
+        const controller = new SkyFeederController(event);
+        return controller.handleEnableSearch();
+    },
     "sign-in": async event => {
         const formData = await event.request.formData();
         const rawHandle = formData.get("handle");

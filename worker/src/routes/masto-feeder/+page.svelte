@@ -50,25 +50,15 @@
         {/if}
 
         <section class="search-feeds">
-            {#if data.canSearch}
-                <SearchFeedSetup
-                    feedBaseUrl={data.searchFeedBaseUrl}
-                    query={data.searchQuery}>
-                    {#snippet help()}
-                        Use keywords, <code>"a phrase"</code>,
-                        <code>#hashtags</code>, or <code>-excluded</code> words.
-                    {/snippet}
-                </SearchFeedSetup>
-            {:else}
-                <p>You can also set up feeds for search results.</p>
-                <p>
-                    Approve an additional read permission to create search
-                    feeds. Your existing feed URLs will stay the same.
-                </p>
-                <form action="?/enable-search" method="POST">
-                    <button>Enable search</button>
-                </form>
-            {/if}
+            <SearchFeedSetup
+                canSearch={data.canSearch}
+                feedBaseUrl={data.searchFeedBaseUrl}
+                query={data.searchQuery}>
+                {#snippet help()}
+                    Use keywords, <code>"a phrase"</code>,
+                    <code>#hashtags</code>, or <code>-excluded</code> words.
+                {/snippet}
+            </SearchFeedSetup>
         </section>
 
         <form action="?/update-prefs" method="POST" class="prefs">

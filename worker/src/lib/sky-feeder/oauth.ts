@@ -29,12 +29,36 @@ import {
 import {resolveTxt} from "node:dns/promises";
 
 const BSKY_APPVIEW_AUDIENCE = "did:web:api.bsky.app#bsky_appview";
+const SEARCH_METHOD = "app.bsky.feed.searchPosts";
+
+export const SEARCH_SCOPE = bskyAppViewScope(SEARCH_METHOD);
 
 export const OAUTH_SCOPE = [
     "atproto",
     bskyAppViewScope("app.bsky.actor.getProfile"),
     bskyAppViewScope("app.bsky.feed.getTimeline"),
+    SEARCH_SCOPE,
 ].join(" ");
+
+export function hasSearchScope(scopes: string | undefined): boolean {
+    return (scopes ?? "").split(/\s+/).some(scope => {
+        if (scope === "transition:generic") {
+            return true;
+        }
+        const [resource, params] = scope.split("?");
+        const parameters = new URLSearchParams(params);
+        const methods = resource.startsWith("rpc:")
+            ? [decodeURIComponent(resource.slice(4))]
+            : resource === "rpc"
+              ? parameters.getAll("lxm")
+              : [];
+        const audience = parameters.get("aud");
+        return (
+            (methods.includes(SEARCH_METHOD) || methods.includes("*")) &&
+            (audience === BSKY_APPVIEW_AUDIENCE || audience === "*")
+        );
+    });
+}
 
 export async function createSkyOAuthClient({
     baseUrl,

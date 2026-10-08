@@ -37,6 +37,13 @@ export class SkyFeederKV {
         return await this.getSessionById(sessionId);
     }
 
+    async getOAuthScopes(did: string): Promise<string | undefined> {
+        const session = await this.#kv.getJSON<NodeSavedSession>(
+            this.#oauthSessionKey(did)
+        );
+        return session?.tokenSet.scope;
+    }
+
     async putSession(session: SkyFeederSession): Promise<void> {
         await this.#kv.put(
             this.#sessionFeedIdKey(session.feedId),

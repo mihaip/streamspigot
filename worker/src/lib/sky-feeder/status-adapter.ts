@@ -63,7 +63,7 @@ export function toStatus(
     };
 }
 
-function toStatusFromPost(
+export function toStatusFromPost(
     post: AppBskyFeedDefs.PostView,
     env: BlueskyAdapterEnv
 ): Status {
@@ -93,7 +93,7 @@ function toStatusFromPost(
         quote,
         repost: null,
         applicationName: null,
-        parentUrl: null,
+        parentUrl: record?.reply ? postUrl(record.reply.parent.uri) : null,
         debugJson: post,
     };
 }
@@ -153,6 +153,7 @@ type BlueskyPostRecord = {
     createdAt: string;
     facets?: AppBskyRichtextFacet.Main[];
     labels?: AppBskyFeedPost.Main["labels"];
+    reply?: AppBskyFeedPost.Main["reply"];
 };
 
 function asPostRecord(record: unknown): BlueskyPostRecord | null {
@@ -171,7 +172,7 @@ function asPostRecord(record: unknown): BlueskyPostRecord | null {
     return record as BlueskyPostRecord;
 }
 
-function postUrl(uri: string, handle: string): string {
+function postUrl(uri: string, handle = uri.split("/")[2]): string {
     const rkey = uri.split("/").at(-1);
     return `${BLUESKY_APP_URL}/profile/${handle}/post/${rkey}`;
 }

@@ -3,7 +3,7 @@
 Stream Spigot is a collection of tools to make consumption of real time-ish datasources more manageable. The active tools are:
 - **Masto Feeder**: lets you read your Mastodon timeline and searches in a feed reader.
 - **Tweeter Feeder**: lets you generate feeds for public X/Twitter accounts.
-- **Sky Feeder**: lets you read your Bluesky timeline in a feed reader.
+- **Sky Feeder**: lets you read your Bluesky timeline and searches in a feed reader.
 
 You can run it yourself, but there is also a canonical hosted at [streamspigot.com](https://streamspigot.com/).
 
@@ -73,6 +73,8 @@ HTTP is enough to smoke-test `/sky-feeder`, the metadata route, and the JWKS
 route, but real Bluesky sign-in requires the deployed HTTPS Worker URL or a
 public HTTPS tunnel such as Tailscale Funnel pointed at the local Vite dev
 server.
+
+[Search feeds](https://github.com/mihaip/streamspigot/blob/main/worker/src/routes/sky-feeder/feed/%5BfeedId%5D/search/+server.ts#L6) are also available and support the `debug=true` parameter.
 
 # Masto Feeder
 

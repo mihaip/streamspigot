@@ -3,6 +3,7 @@
     import {APP_NAME} from "$lib/constants";
     import FeedLink from "$lib/components/FeedLink.svelte";
     import Layout from "$lib/components/Layout.svelte";
+    import SearchFeedSetup from "$lib/components/SearchFeedSetup.svelte";
 
     let {data, form} = $props();
 </script>
@@ -10,8 +11,8 @@
 <Layout title="Sky Feeder">
     {#snippet intro()}
         <p>
-            This <a href={resolve("/")}>{APP_NAME}</a> tool lets you subscribe to
-            your Bluesky timeline in a feed reader such as
+            This <a href={resolve("/")}>{APP_NAME}</a> tool lets you subscribe
+            to your Bluesky timeline and searches in a feed reader such as
             <a href="https://netnewswire.com/">NetNewsWire</a>,
             <a href="https://newsblur.com/">NewsBlur</a>,
             <a href="https://reederapp.com/">Reeder</a> or
@@ -47,6 +48,18 @@
         {#if form?.error}
             <p class="error">{form.error}</p>
         {/if}
+
+        <section class="search-feeds">
+            <SearchFeedSetup
+                canSearch={data.canSearch}
+                feedBaseUrl={data.searchFeedBaseUrl}
+                query={data.searchQuery}>
+                {#snippet help()}
+                    Use keywords, <code>"a phrase"</code>,
+                    <code>#hashtags</code>, or <code>from:handle</code>.
+                {/snippet}
+            </SearchFeedSetup>
+        </section>
 
         <form action="?/update-prefs" method="POST" class="prefs">
             <fieldset>
