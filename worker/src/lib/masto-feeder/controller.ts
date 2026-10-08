@@ -10,6 +10,12 @@ import {createOAuthAPIClient, createRestAPIClient} from "$lib/masto";
 import {errorMessage, sanitizeLogString} from "$lib/feeder/log";
 import {MastoFeederKV} from "./kv";
 import {WorkerKV} from "../kv";
+import {FeedErrors} from "$lib/feeder/errors";
+import {
+    renderTimelineErrorFeed,
+    timelineErrorKind,
+    MASTO_FEEDER_ERROR_PROVIDER,
+} from "./errors";
 import {
     type MastoFeederSession,
     type MastoFeederApp,
@@ -41,13 +47,16 @@ const SESSION_COOKIE_OPTIONS = {
 
 export class MastoFeederController {
     #kv: MastoFeederKV;
+    #feedErrors: FeedErrors;
     #appProtocol: string;
     #appHost: string;
     #cookies: Cookies;
 
     constructor(event: RequestEvent) {
         const {cookies, url} = event;
-        this.#kv = new MastoFeederKV(WorkerKV.fromEvent(event));
+        const kv = WorkerKV.fromEvent(event);
+        this.#kv = new MastoFeederKV(kv);
+        this.#feedErrors = new FeedErrors(kv, MASTO_FEEDER_ERROR_PROVIDER);
         this.#appProtocol = url.protocol;
         this.#appHost = url.host;
         this.#cookies = cookies;
@@ -243,15 +252,40 @@ export class MastoFeederController {
         if (!session) {
             return error(404, "Unknown feed ID");
         }
-        return feedOutputResponse(
-            await renderTimelineFeed(
+        const prefs = resolvePrefs(session.prefs);
+        try {
+            const feed = await renderTimelineFeed(
                 session,
                 this.timelineFeedUrl(session, options.output),
                 this.#baseUrl(),
                 this.#adapterEnv(session),
                 options
-            )
-        );
+            );
+            await this.#feedErrors.clear(session.feedId);
+            return feedOutputResponse(feed);
+        } catch (cause) {
+            const kind = timelineErrorKind(cause);
+            return this.#feedErrors.respond({
+                feedId: session.feedId,
+                error: cause,
+                kind,
+                options,
+                logContext: {
+                    instanceUrl: sanitizeLogString(session.instanceUrl),
+                    mastodonId: session.mastodonId,
+                },
+                renderErrorFeed: () =>
+                    renderTimelineErrorFeed({
+                        session,
+                        feedUrl: this.timelineFeedUrl(session, options.output),
+                        homeUrl: this.#baseUrl(),
+                        timeZone: prefs.timeZone,
+                        options,
+                        error: cause,
+                        kind,
+                    }),
+            });
+        }
     }
 
     async handleSearchFeed(

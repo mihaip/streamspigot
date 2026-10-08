@@ -12,7 +12,8 @@ import {feedOutputResponse, jsonResponse} from "$lib/feeder/response";
 import {resolveFeederPrefs} from "$lib/feeder/prefs";
 import {searchFeedUrl, searchQueryError} from "$lib/feeder/search";
 import {WorkerKV} from "$lib/kv";
-import {SkyFeederKV, type SkyFeedErrorState} from "./kv";
+import {SkyFeederKV} from "./kv";
+import {FeedErrors, type FeedErrorKind} from "$lib/feeder/errors";
 import {
     createSkyAgent,
     createSkyOAuthClient,
@@ -24,11 +25,7 @@ import {
 } from "./oauth";
 import {createSkyOAuthRequestLock} from "./oauth-lock";
 import {renderSearchFeed, renderTimelineFeed} from "./feed";
-import {
-    renderTimelineErrorFeed,
-    timelineErrorSignature,
-    type SkyFeederTimelineErrorKind,
-} from "./errors";
+import {renderTimelineErrorFeed, SKY_FEEDER_ERROR_PROVIDER} from "./errors";
 import type {FeedOutputType, FeedOptions} from "$lib/status/feed";
 import type {SkyFeederPrefs, SkyFeederSession} from "./types";
 
@@ -36,7 +33,6 @@ const SESSION_COOKIE_NAME = "skyfeeder-session";
 const SESSION_COOKIE_OPTIONS = {
     path: "/sky-feeder",
 };
-const GENERIC_ERROR_ITEM_THRESHOLD = 3;
 
 let warnedAboutDevLocalLock = false;
 
@@ -50,6 +46,7 @@ type SkyFeederProfile = {
 
 export class SkyFeederController {
     #kv: SkyFeederKV;
+    #feedErrors: FeedErrors;
     #appProtocol: string;
     #appHost: string;
     #cookies: Cookies;
@@ -60,7 +57,9 @@ export class SkyFeederController {
     constructor(event: RequestEvent) {
         const {cookies, platform, url} = event;
         const env = platform?.env as SkyFeederEnv | undefined;
-        this.#kv = new SkyFeederKV(WorkerKV.fromEvent(event));
+        const kv = WorkerKV.fromEvent(event);
+        this.#kv = new SkyFeederKV(kv);
+        this.#feedErrors = new FeedErrors(kv, SKY_FEEDER_ERROR_PROVIDER);
         this.#appProtocol = url.protocol;
         this.#appHost = url.host;
         this.#cookies = cookies;
@@ -227,65 +226,30 @@ export class SkyFeederController {
                 {timeZone: prefs.timeZone},
                 options
             );
-            await this.#clearTimelineErrorState(session);
+            await this.#feedErrors.clear(session.feedId);
             return feedOutputResponse(feed);
         } catch (error) {
-            if (isOAuthSessionUnavailable(error)) {
-                const errorDetails = errorSummary(error);
-                const errorState = await this.#recordTimelineErrorState(
-                    session,
-                    error,
-                    "auth"
-                );
-                console.error("Sky Feeder feed authorization failed", {
+            const kind = isOAuthSessionUnavailable(error) ? "auth" : "error";
+            return this.#feedErrors.respond({
+                feedId: session.feedId,
+                error,
+                kind,
+                options,
+                logContext: {
                     did: session.did,
                     handle: session.handle,
                     appHost: this.#appHost,
                     appProtocol: this.#appProtocol,
-                    message: errorMessage(error),
-                    error: errorDetails,
-                    errorState,
-                });
-                return feedOutputResponse(
-                    await this.#renderTimelineErrorFeed(
+                },
+                renderErrorFeed: () =>
+                    this.#renderTimelineErrorFeed(
                         session,
                         prefs,
                         options,
                         error,
-                        "auth"
-                    )
-                );
-            }
-            const errorDetails = errorSummary(error);
-            const errorState = await this.#recordTimelineErrorState(
-                session,
-                error,
-                "error"
-            );
-            console.error("Sky Feeder feed failed", {
-                did: session.did,
-                handle: session.handle,
-                appHost: this.#appHost,
-                appProtocol: this.#appProtocol,
-                message: errorMessage(error),
-                error: errorDetails,
-                errorState,
+                        kind
+                    ),
             });
-            if (errorState.count < GENERIC_ERROR_ITEM_THRESHOLD) {
-                return this.#transientTimelineErrorResponse(
-                    errorState,
-                    options
-                );
-            }
-            return feedOutputResponse(
-                await this.#renderTimelineErrorFeed(
-                    session,
-                    prefs,
-                    options,
-                    error,
-                    "error"
-                )
-            );
         }
     }
 
@@ -425,7 +389,7 @@ export class SkyFeederController {
         prefs: Required<SkyFeederPrefs>,
         options: FeedOptions,
         error: unknown,
-        kind: SkyFeederTimelineErrorKind
+        kind: FeedErrorKind
     ) {
         return renderTimelineErrorFeed({
             session,
@@ -450,81 +414,6 @@ export class SkyFeederController {
             });
             return null;
         }
-    }
-
-    async #recordTimelineErrorState(
-        session: SkyFeederSession,
-        error: unknown,
-        kind: SkyFeederTimelineErrorKind
-    ): Promise<SkyFeedErrorState> {
-        const now = new Date().toISOString();
-        const message = errorMessage(error);
-        const signature = await timelineErrorSignature(kind, error);
-        try {
-            return await this.#kv.putFeedErrorState(session.feedId, {
-                kind,
-                signature,
-                message,
-            });
-        } catch (stateError) {
-            console.error("Sky Feeder feed error state update failed", {
-                did: session.did,
-                handle: session.handle,
-                feedId: session.feedId,
-                message: errorMessage(stateError),
-                error: errorSummary(stateError),
-            });
-            return {
-                kind,
-                signature,
-                count: 1,
-                firstSeenAt: now,
-                lastSeenAt: now,
-                lastMessage: message,
-            };
-        }
-    }
-
-    async #clearTimelineErrorState(session: SkyFeederSession): Promise<void> {
-        try {
-            await this.#kv.clearFeedErrorState(session.feedId);
-        } catch (error) {
-            console.error("Sky Feeder feed error state clear failed", {
-                did: session.did,
-                handle: session.handle,
-                feedId: session.feedId,
-                message: errorMessage(error),
-                error: errorSummary(error),
-            });
-        }
-    }
-
-    #transientTimelineErrorResponse(
-        state: SkyFeedErrorState,
-        options: FeedOptions
-    ): Response {
-        const message =
-            "Sky Feeder could not update this feed. The error looks transient, so no feed item was generated yet.";
-        const headers = new Headers({
-            "Retry-After": "300",
-        });
-        if (options.output === "json") {
-            return jsonResponse(
-                {
-                    message,
-                    error: {
-                        kind: state.kind,
-                        count: state.count,
-                        threshold: GENERIC_ERROR_ITEM_THRESHOLD,
-                        firstSeenAt: state.firstSeenAt,
-                        lastSeenAt: state.lastSeenAt,
-                    },
-                },
-                {status: 503, headers}
-            );
-        }
-
-        return new Response(message, {status: 503, headers});
     }
 }
 

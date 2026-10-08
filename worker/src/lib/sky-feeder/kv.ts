@@ -8,7 +8,6 @@ import type {SkyFeederPrefs, SkyFeederSession} from "./types";
 const PREFIX = "sky-feeder";
 const OAUTH_STATE_TTL_SECONDS = 60 * 60;
 const OAUTH_TOKEN_FINGERPRINT_BYTES = 12;
-const FEED_ERROR_STATE_TTL_SECONDS = 30 * 24 * 60 * 60;
 
 export class SkyFeederKV {
     #kv: KV;
@@ -80,35 +79,6 @@ export class SkyFeederKV {
         session.prefs = prefs;
         await this.#kv.putJSON(this.#sessionKey(session.sessionId), session);
         return session;
-    }
-
-    async putFeedErrorState(
-        feedId: string,
-        event: SkyFeedErrorEvent
-    ): Promise<SkyFeedErrorState> {
-        const previous = await this.#kv.getJSON<SkyFeedErrorState>(
-            this.#feedErrorStateKey(feedId)
-        );
-        const now = new Date().toISOString();
-        const matches =
-            previous?.kind === event.kind &&
-            previous.signature === event.signature;
-        const state: SkyFeedErrorState = {
-            kind: event.kind,
-            signature: event.signature,
-            count: matches ? previous.count + 1 : 1,
-            firstSeenAt: matches ? previous.firstSeenAt : now,
-            lastSeenAt: now,
-            lastMessage: event.message,
-        };
-        await this.#kv.putJSON(this.#feedErrorStateKey(feedId), state, {
-            expirationTtl: FEED_ERROR_STATE_TTL_SECONDS,
-        });
-        return state;
-    }
-
-    async clearFeedErrorState(feedId: string): Promise<void> {
-        await this.#kv.delete(this.#feedErrorStateKey(feedId));
     }
 
     oauthStateStore() {
@@ -222,10 +192,6 @@ export class SkyFeederKV {
         return `${PREFIX}:session_did:${did}`;
     }
 
-    #feedErrorStateKey(feedId: string): string {
-        return `${PREFIX}:feed_error_state:${feedId}`;
-    }
-
     #oauthStateKey(id: string): string {
         return `${PREFIX}:oauth_state:${id}`;
     }
@@ -261,23 +227,6 @@ export type SkyOAuthSessionHashMaterial = {
         method?: unknown;
         kid?: unknown;
     };
-};
-
-export type SkyFeedErrorKind = "auth" | "error";
-
-export type SkyFeedErrorState = {
-    kind: SkyFeedErrorKind;
-    signature: string;
-    count: number;
-    firstSeenAt: string;
-    lastSeenAt: string;
-    lastMessage: string;
-};
-
-type SkyFeedErrorEvent = {
-    kind: SkyFeedErrorKind;
-    signature: string;
-    message: string;
 };
 
 function logOAuthSession(

@@ -34,7 +34,8 @@ export function errorSummary(error: unknown): ErrorSummary {
             name: error.name,
             message: errorMessage(error),
             code: errorField(error, "code"),
-            status: errorField(error, "status"),
+            status:
+                errorField(error, "status") ?? errorField(error, "statusCode"),
             stackFirstLine: sanitizeLogString(error.stack?.split("\n")[0]),
             cause:
                 "cause" in error && error.cause
