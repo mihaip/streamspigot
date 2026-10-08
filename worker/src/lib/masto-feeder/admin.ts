@@ -5,16 +5,18 @@ import {MastoFeederController} from "./controller";
 import {MastoFeederKV} from "./kv";
 import {WorkerKV} from "../kv";
 import type {MastoFeederApp, MastoFeederSession} from "./types";
+import {
+    MASTO_FEEDER_SCOPES,
+    appScopeStatus,
+    searchScopeStatus,
+    countSearchPermissions,
+    type ScopeStatus,
+    type SearchPermissionCounts,
+} from "./oauth-scopes";
 
 const ADMIN_INSTANCE_URL = "https://hachyderm.io";
 const ADMIN_USERNAME = "mihaip";
 const ADMIN_ACCT = `${ADMIN_USERNAME}@hachyderm.io`;
-const MASTO_FEEDER_SCOPES = [
-    "read:accounts",
-    "read:follows",
-    "read:lists",
-    "read:statuses",
-];
 const APP_RECORD_REDIRECT_URI_CANDIDATES = [
     "https://www.streamspigot.com/masto-feeder/sign-in-callback",
     "https://streamspigot.com/masto-feeder/sign-in-callback",
@@ -24,6 +26,7 @@ const USER_AGENT = "Masto-Feeder; (+https://www.streamspigot.com/masto-feeder)";
 export type MastoFeederAdminOverview = {
     appCount: number;
     sessionCount: number;
+    searchPermissions: SearchPermissionCounts;
     problemGroupCount: number;
     groups: MastoFeederAdminAppGroup[];
 };
@@ -32,6 +35,7 @@ export type MastoFeederAdminAppGroup = {
     canonicalInstanceUrl: string;
     appCount: number;
     sessionCount: number;
+    searchPermissions: SearchPermissionCounts;
     isProblem: boolean;
     problems: string[];
     apps: MastoFeederAdminAppRecord[];
@@ -47,6 +51,7 @@ export type MastoFeederAdminAppRecord = {
     registeredRedirectUris?: string[];
     registeredRedirectUri?: string | null;
     registeredScopes?: string[];
+    scopeStatus: ScopeStatus;
     registeredName?: string | null;
     registeredWebsite?: string | null;
     appRecordFetchedAt?: string;
@@ -80,6 +85,8 @@ export type MastoFeederAdminTokenValidationResult = {
     feedIdPrefix: string;
     storedInstanceUrl: string;
     status: "valid" | "invalid" | "error";
+    searchPermission: ScopeStatus;
+    grantedScopes?: string[];
     account?: string;
     message?: string;
 };
@@ -187,41 +194,47 @@ export async function loadMastoFeederAdminOverview(
         kv.listApps(),
         kv.listSessions(),
     ]);
-    const sessionCounts = new Map<string, number>();
-    for (const {value: session} of sessionRecords) {
+    const sessions = sessionRecords.map(record => record.value);
+    const sessionsByInstance = new Map<string, MastoFeederSession[]>();
+    const storedInstanceSessionCounts = new Map<string, number>();
+    for (const session of sessions) {
         const canonicalInstanceUrl = canonicalMastodonInstanceUrl(
             session.instanceUrl
         );
-        sessionCounts.set(
-            canonicalInstanceUrl,
-            (sessionCounts.get(canonicalInstanceUrl) ?? 0) + 1
-        );
-    }
-    const storedInstanceSessionCounts = new Map<string, number>();
-    for (const {value: session} of sessionRecords) {
+        const matching = sessionsByInstance.get(canonicalInstanceUrl) ?? [];
+        matching.push(session);
+        sessionsByInstance.set(canonicalInstanceUrl, matching);
         storedInstanceSessionCounts.set(
             session.instanceUrl,
             (storedInstanceSessionCounts.get(session.instanceUrl) ?? 0) + 1
         );
     }
-
     const groups = new Map<string, MastoFeederAdminAppGroup>();
+    for (const instanceUrl of [
+        ...appRecords.map(record => record.value.instanceUrl),
+        ...sessionsByInstance.keys(),
+    ]) {
+        const canonicalInstanceUrl = canonicalMastodonInstanceUrl(instanceUrl);
+        if (groups.has(canonicalInstanceUrl)) {
+            continue;
+        }
+        const matchingSessions =
+            sessionsByInstance.get(canonicalInstanceUrl) ?? [];
+        groups.set(canonicalInstanceUrl, {
+            canonicalInstanceUrl,
+            appCount: 0,
+            sessionCount: matchingSessions.length,
+            searchPermissions: countSearchPermissions(matchingSessions),
+            isProblem: false,
+            problems: [],
+            apps: [],
+        });
+    }
     for (const {key, value: app} of appRecords) {
         const canonicalInstanceUrl = canonicalMastodonInstanceUrl(
             app.instanceUrl
         );
-        let group = groups.get(canonicalInstanceUrl);
-        if (!group) {
-            group = {
-                canonicalInstanceUrl,
-                appCount: 0,
-                sessionCount: sessionCounts.get(canonicalInstanceUrl) ?? 0,
-                isProblem: false,
-                problems: [],
-                apps: [],
-            };
-            groups.set(canonicalInstanceUrl, group);
-        }
+        const group = groups.get(canonicalInstanceUrl)!;
         group.apps.push(
             sanitizeAppRecord(
                 key,
@@ -252,6 +265,7 @@ export async function loadMastoFeederAdminOverview(
     return {
         appCount: appRecords.length,
         sessionCount: sessionRecords.length,
+        searchPermissions: countSearchPermissions(sessions),
         problemGroupCount: sortedGroups.filter(group => group.isProblem).length,
         groups: sortedGroups,
     };
@@ -401,17 +415,18 @@ async function loadMastoFeederAppRecordFromApp(
             ...app,
             registeredRedirectUris: appRecord.registeredRedirectUris,
             registeredRedirectUri: appRecord.registeredRedirectUri,
-            registeredScopes: appRecord.registeredScopes,
+            registeredScopes:
+                appRecord.registeredScopes ?? app.registeredScopes,
             registeredName: appRecord.registeredName,
             registeredWebsite: appRecord.registeredWebsite,
             appRecordFetchedAt: checkedAt,
             appRecordFetchRedirectUriUsed: redirectUriUsed,
             appRecordFetchError: undefined,
         };
-        await kv.putApp(updatedApp);
+        const savedApp = await saveAppMetadata(kv, app, updatedApp);
         return {
             message: `Loaded app metadata for ${app.instanceUrl}.`,
-            appRecord: sanitizeAppRecord(appKey(updatedApp), updatedApp),
+            appRecord: sanitizeAppRecord(appKey(savedApp), savedApp),
         };
     } catch (error) {
         const updatedApp: MastoFeederApp = {
@@ -419,12 +434,28 @@ async function loadMastoFeederAppRecordFromApp(
             appRecordFetchedAt: checkedAt,
             appRecordFetchError: sanitizeError(error),
         };
-        await kv.putApp(updatedApp);
+        const savedApp = await saveAppMetadata(kv, app, updatedApp);
         return {
             message: `Could not load app metadata for ${app.instanceUrl}: ${updatedApp.appRecordFetchError}`,
-            appRecord: sanitizeAppRecord(appKey(updatedApp), updatedApp),
+            appRecord: sanitizeAppRecord(appKey(savedApp), savedApp),
         };
     }
+}
+
+async function saveAppMetadata(
+    kv: MastoFeederKV,
+    originalApp: MastoFeederApp,
+    updatedApp: MastoFeederApp
+): Promise<MastoFeederApp> {
+    const currentApp = await kv.getApp(originalApp.instanceUrl);
+    if (!currentApp) {
+        error(404, "App record was deleted during metadata lookup");
+    }
+    if (currentApp.clientId !== originalApp.clientId) {
+        return currentApp;
+    }
+    await kv.putApp(updatedApp);
+    return updatedApp;
 }
 
 export async function validateMastoFeederUserTokens(
@@ -501,6 +532,7 @@ function sanitizeAppRecord(
         registeredRedirectUris: app.registeredRedirectUris,
         registeredRedirectUri: app.registeredRedirectUri,
         registeredScopes: app.registeredScopes,
+        scopeStatus: appScopeStatus(app.registeredScopes),
         registeredName: app.registeredName,
         registeredWebsite: app.registeredWebsite,
         appRecordFetchedAt: app.appRecordFetchedAt,
@@ -515,6 +547,9 @@ function appKey(app: MastoFeederApp): string {
 
 function appGroupProblems(group: MastoFeederAdminAppGroup): string[] {
     const problems: string[] = [];
+    if (!group.apps.length) {
+        problems.push("sessions without a cached app registration");
+    }
     if (group.apps.length > 1) {
         problems.push("duplicate app variants");
     }
@@ -683,6 +718,8 @@ async function validateSessionToken(
         sessionIdPrefix: prefix(session.sessionId),
         feedIdPrefix: prefix(session.feedId),
         storedInstanceUrl: session.instanceUrl,
+        searchPermission: searchScopeStatus(session.scopes),
+        grantedScopes: session.scopes,
     };
     try {
         const response = await fetch(
@@ -741,6 +778,7 @@ function tokenScopeCandidates(app: MastoFeederApp): (string | null)[] {
     return dedupe([
         app.registeredScopes?.join(" ") ?? null,
         MASTO_FEEDER_SCOPES.join(" "),
+        MASTO_FEEDER_SCOPES.filter(scope => scope !== "read:search").join(" "),
         "read",
         null,
     ]);

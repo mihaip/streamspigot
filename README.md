@@ -1,7 +1,7 @@
 # Stream Spigot
 
 Stream Spigot is a collection of tools to make consumption of real time-ish datasources more manageable. The active tools are:
-- **Masto Feeder**: lets you read your Mastodon timeline in a feed reader.
+- **Masto Feeder**: lets you read your Mastodon timeline and searches in a feed reader.
 - **Tweeter Feeder**: lets you generate feeds for public X/Twitter accounts.
 - **Sky Feeder**: lets you read your Bluesky timeline in a feed reader.
 
@@ -81,6 +81,8 @@ The [main timeline handler](https://github.com/mihaip/streamspigot/blob/main/wor
 - `debug=true`: show fewer posts (just the 10 most recent ones) to speed up loading
 - `output=html`: return HTML instead of an Atom feed, for easier in-browser viewing
 - `includeStatusJson=true`: include the full JSON of each status for introspection
+
+[Search feeds](https://github.com/mihaip/streamspigot/blob/main/worker/src/routes/masto-feeder/feed/%5BfeedId%5D/search/+server.ts#L6) are also available and support the `debug=true` parameter.
 
 ## Tweeter Feeder sessions
 

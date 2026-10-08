@@ -4,6 +4,29 @@ import type {mastodon} from "masto";
 import type {MastoFeederSession} from "./types";
 import {renderFeed, type FeedOptions, type FeedOutput} from "$lib/status/feed";
 import {toStatus, type MastodonAdapterEnv} from "./status-adapter";
+import {fetchSearchStatuses} from "./search";
+
+export async function renderSearchFeed(
+    session: MastoFeederSession,
+    query: string,
+    feedUrl: string,
+    homeUrl: string,
+    env: MastodonAdapterEnv,
+    options: FeedOptions = {}
+): Promise<FeedOutput> {
+    const statuses = await fetchSearchStatuses(session, query, env, options);
+    return renderFeed(
+        statuses,
+        {
+            feedUrl,
+            homeUrl,
+            title: `Mastodon search: ${query}`,
+            updatedDate: new Date(),
+            authorName: `${APP_NAME} : Masto Feeder`,
+        },
+        options
+    );
+}
 
 export async function renderTimelineFeed(
     session: MastoFeederSession,

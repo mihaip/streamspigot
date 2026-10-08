@@ -45,7 +45,8 @@ export class MastoFeederKV {
     async putAuthRequest(authRequest: MastoFeederAuthRequest): Promise<void> {
         return await this.#kv.putJSON(
             this.#authRequestKey(authRequest.id),
-            authRequest
+            authRequest,
+            {expirationTtl: 60 * 60}
         );
     }
 
@@ -131,9 +132,11 @@ export class MastoFeederKV {
     // indexes we need to update.
     async updateSessionToken(
         session: MastoFeederSession,
-        accessToken: string
+        accessToken: string,
+        scopes?: string[]
     ): Promise<MastoFeederSession> {
         session.accessToken = accessToken;
+        session.scopes = scopes;
         await this.#kv.putJSON(this.#sessionKey(session.sessionId), session);
         return session;
     }

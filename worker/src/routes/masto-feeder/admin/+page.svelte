@@ -1,5 +1,6 @@
 <script lang="ts">
     import {enhance} from "$app/forms";
+    import {resolve} from "$app/paths";
     import Layout from "$lib/components/Layout.svelte";
     import type {SubmitFunction} from "@sveltejs/kit";
     import type {ActionData, PageData} from "./$types";
@@ -7,7 +8,6 @@
     let {data, form}: {data: PageData; form: ActionData} = $props();
 
     type AdminOverview = PageData["overview"];
-    type AdminAppRecord = AdminOverview["groups"][number]["apps"][number];
     type ValidationResult = NonNullable<ActionData>["validationResult"];
 
     let overviewOverride = $state<AdminOverview | undefined>();
@@ -40,6 +40,20 @@
 
     const formatValue = (value?: string | null) => value || "unknown";
 
+    const permissionLabel = (status: "ready" | "missing" | "unknown") =>
+        ({
+            ready: "Search permission granted",
+            missing: "Needs search authorization",
+            unknown: "Scopes unknown",
+        })[status];
+
+    const registrationLabel = (status: "ready" | "missing" | "unknown") =>
+        ({
+            ready: "Ready for search sign-ins",
+            missing: "Replacement on next sign-in",
+            unknown: "Scopes unknown; replacement on next sign-in",
+        })[status];
+
     const enhanceAdminForm: SubmitFunction = ({action, formData, cancel}) => {
         if (
             action.search.includes("delete-app-record") ||
@@ -67,27 +81,14 @@
                 localActionMessage = resultData?.message;
                 localActionError = resultData?.error;
                 if (result.type === "success") {
-                    if (resultData?.appRecord) {
-                        updateAppRecord(resultData.appRecord);
-                    }
-                    if (resultData?.appRecords) {
-                        updateAppRecords(resultData.appRecords);
+                    if (resultData?.overview) {
+                        overviewOverride = resultData.overview;
                     }
                     if (
-                        resultData?.canonicalizedAppKey &&
-                        resultData?.appRecord
+                        resultData?.deletedAppKey ||
+                        resultData?.canonicalizedAppKey
                     ) {
-                        canonicalizeAppRecord(
-                            resultData.canonicalizedAppKey,
-                            resultData.appRecord,
-                            resultData.updatedSessionCount ?? 0
-                        );
-                    }
-                    if (resultData?.deletedAppKey) {
-                        deleteAppRecord(
-                            resultData.deletedAppKey,
-                            resultData.deletedSessionCount ?? 0
-                        );
+                        localValidationResult = undefined;
                     }
                     if (resultData?.validationResult) {
                         localValidationResult = resultData.validationResult;
@@ -118,117 +119,6 @@
         }
         return action.toString();
     }
-
-    function updateAppRecord(appRecord: AdminAppRecord) {
-        const groups = overview.groups.map(group => {
-            if (!group.apps.some(app => app.key === appRecord.key)) {
-                return group;
-            }
-            const apps = group.apps.map(app =>
-                app.key === appRecord.key ? appRecord : app
-            );
-            const problems = appGroupProblems(apps);
-            return {
-                ...group,
-                apps,
-                problems,
-                isProblem: problems.length > 0,
-            };
-        });
-        overviewOverride = {
-            ...overview,
-            groups,
-            problemGroupCount: groups.filter(group => group.isProblem).length,
-        };
-    }
-
-    function updateAppRecords(appRecords: AdminAppRecord[]) {
-        for (const appRecord of appRecords) {
-            updateAppRecord(appRecord);
-        }
-    }
-
-    function deleteAppRecord(
-        deletedAppKey: string,
-        deletedSessionCount: number
-    ) {
-        const groups = overview.groups
-            .map(group => {
-                if (!group.apps.some(app => app.key === deletedAppKey)) {
-                    return group;
-                }
-                const apps = group.apps.filter(
-                    app => app.key !== deletedAppKey
-                );
-                const problems = appGroupProblems(apps);
-                return {
-                    ...group,
-                    apps,
-                    appCount: apps.length,
-                    sessionCount: group.sessionCount - deletedSessionCount,
-                    problems,
-                    isProblem: problems.length > 0,
-                };
-            })
-            .filter(group => group.apps.length > 0);
-        overviewOverride = {
-            ...overview,
-            appCount: overview.appCount - 1,
-            sessionCount: overview.sessionCount - deletedSessionCount,
-            groups,
-            problemGroupCount: groups.filter(group => group.isProblem).length,
-        };
-    }
-
-    function canonicalizeAppRecord(
-        oldAppKey: string,
-        appRecord: AdminAppRecord,
-        updatedSessionCount: number
-    ) {
-        const groups = overview.groups.map(group => {
-            if (!group.apps.some(app => app.key === oldAppKey)) {
-                return group;
-            }
-            const apps = group.apps.map(app =>
-                app.key === oldAppKey ? appRecord : app
-            );
-            const problems = appGroupProblems(apps);
-            return {
-                ...group,
-                apps,
-                problems,
-                isProblem: problems.length > 0,
-            };
-        });
-        overviewOverride = {
-            ...overview,
-            groups,
-            problemGroupCount: groups.filter(group => group.isProblem).length,
-        };
-        if (updatedSessionCount > 0) {
-            localValidationResult = undefined;
-        }
-    }
-
-    function appGroupProblems(apps: AdminAppRecord[]): string[] {
-        const problems: string[] = [];
-        if (apps.length > 1) {
-            problems.push("duplicate app variants");
-        }
-        if (apps.some(app => app.hasCanonicalDifference)) {
-            problems.push("non-canonical stored instance URL");
-        }
-        if (apps.some(app => app.hasHostnameCaseDifference)) {
-            problems.push("hostname case variant");
-        }
-        if (apps.some(app => !app.appRecordFetchedAt)) {
-            problems.push("missing cached app metadata");
-        }
-        if (apps.some(app => app.appRecordFetchError)) {
-            problems.push("app metadata fetch error");
-        }
-        return problems;
-    }
 </script>
 
 <Layout title="Masto Feeder Admin">
@@ -254,6 +144,36 @@
                 groups flagged
             </div>
         </div>
+
+        <div class="summary">
+            <div>
+                <b>{overview.searchPermissions.ready}</b>sessions with search
+                permission
+            </div>
+            <div>
+                <b>{overview.searchPermissions.missing}</b>sessions needing
+                search authorization
+            </div>
+            <div>
+                <b>{overview.searchPermissions.unknown}</b>sessions with unknown
+                scopes
+            </div>
+        </div>
+        <p class="migration-note">
+            On the next sign-in, registrations missing required scopes (or with
+            unknown scopes) are replaced automatically. Old remote registrations
+            and user tokens remain active. Each user enables search through
+            <a href={resolve("/masto-feeder")}>Search feeds</a>; their
+            existing feed URLs and preferences are preserved.
+        </p>
+        <p class="migration-note">
+            Session counts use scopes saved at authorization, not a live search
+            check. Unknown scopes need reauthorization to be recorded. The
+            cached client belongs to future sign-ins; sessions may still use
+            older registrations on the same server. Deleting an app and its
+            sessions breaks those feeds and is not required for upgrading
+            scopes.
+        </p>
 
         <form
             class="bulk-actions"
@@ -291,6 +211,12 @@
                                 1
                                     ? ""
                                     : "s"}
+                            </div>
+                            <div class="meta">
+                                Search permissions: {group.searchPermissions
+                                    .ready} granted,
+                                {group.searchPermissions.missing} need authorization,
+                                {group.searchPermissions.unknown} unknown
                             </div>
                             {#if group.problems.length}
                                 <div class="problems">
@@ -333,7 +259,7 @@
                                             {validationGroup.storedInstanceUrl}
                                         </h4>
                                         <div class="meta">
-                                            Client:
+                                            Cached client (future sign-ins):
                                             {validationGroup.clientIdPrefixes
                                                 .length
                                                 ? validationGroup.clientIdPrefixes.join(
@@ -350,6 +276,8 @@
                                                     <th>Session</th>
                                                     <th>Feed</th>
                                                     <th>Status</th>
+                                                    <th>Search permission</th>
+                                                    <th>Granted scopes</th>
                                                     <th>Account</th>
                                                     <th>Message</th>
                                                 </tr>
@@ -364,6 +292,14 @@
                                                         <td
                                                             >{result.feedIdPrefix}</td>
                                                         <td>{result.status}</td>
+                                                        <td
+                                                            >{permissionLabel(
+                                                                result.searchPermission
+                                                            )}</td>
+                                                        <td
+                                                            >{formatList(
+                                                                result.grantedScopes
+                                                            )}</td>
                                                         <td
                                                             >{result.account ??
                                                                 ""}</td>
@@ -388,7 +324,7 @@
                                     <th>Stored sessions</th>
                                     <th>Client</th>
                                     <th>Redirect URI</th>
-                                    <th>Scopes</th>
+                                    <th>Registered scopes / upgrade</th>
                                     <th>Fetched</th>
                                     <th>Action</th>
                                 </tr>
@@ -436,10 +372,18 @@
                                                 </div>
                                             {/if}
                                         </td>
-                                        <td
-                                            >{formatList(
-                                                app.registeredScopes
-                                            )}</td>
+                                        <td>
+                                            <div>
+                                                {formatList(
+                                                    app.registeredScopes
+                                                )}
+                                            </div>
+                                            <div class="meta">
+                                                {registrationLabel(
+                                                    app.scopeStatus
+                                                )}
+                                            </div>
+                                        </td>
                                         <td>
                                             <div>
                                                 {formatValue(

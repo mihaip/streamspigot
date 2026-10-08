@@ -3,7 +3,8 @@ import {
     resolvePrefs,
 } from "$lib/masto-feeder/controller";
 import {createRestAPIClient} from "$lib/masto";
-import {fail} from "@sveltejs/kit";
+import {fail, isRedirect, redirect} from "@sveltejs/kit";
+import {hasSearchScope} from "$lib/masto-feeder/oauth-scopes";
 
 export async function load(event) {
     const {session} = await event.parent();
@@ -19,10 +20,15 @@ export async function load(event) {
     });
     const user = await masto.v1.accounts.verifyCredentials();
     const prefs = resolvePrefs(session.prefs);
+    const queryParam = event.url.searchParams.get("q");
+    const searchQuery = queryParam?.trim() ?? "";
 
     return {
         user,
         prefs,
+        canSearch: hasSearchScope(session.scopes),
+        searchQuery,
+        searchFeedBaseUrl: controller.searchFeedUrl(session, ""),
         timelineFeedUrl: controller.timelineFeedUrl(session),
         timelineJsonFeedUrl: controller.timelineFeedUrl(session, "json"),
     };
@@ -61,6 +67,23 @@ export const actions = {
 
         const controller = new MastoFeederController(event);
         return controller.handleSignIn(instanceUrl);
+    },
+    "enable-search": async event => {
+        const controller = new MastoFeederController(event);
+        const session = await controller.getSession();
+        if (!session) {
+            redirect(303, "/masto-feeder");
+        }
+        try {
+            return await controller.handleSignIn(session.instanceUrl);
+        } catch (error) {
+            if (isRedirect(error)) {
+                throw error;
+            }
+            return fail(502, {
+                error: "Could not start authorization. Please try again.",
+            });
+        }
     },
     "sign-out": async event => {
         const controller = new MastoFeederController(event);

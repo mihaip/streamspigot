@@ -17,11 +17,17 @@ import {
     type MastoFeederPrefs,
 } from "./types";
 import type {FeedOptions, FeedOutputType} from "$lib/status/feed";
-import {renderTimelineFeed} from "./feed";
+import {renderSearchFeed, renderTimelineFeed} from "./feed";
 import {feedOutputResponse} from "$lib/feeder/response";
 import {DEFAULT_TIME_ZONE} from "$lib/feeder/prefs";
-
-const SCOPES = ["read:accounts", "read:follows", "read:lists", "read:statuses"];
+import {searchFeedUrl, searchQueryError} from "$lib/feeder/search";
+import {
+    MASTO_FEEDER_SCOPES as SCOPES,
+    appScopeStatus,
+    hasSearchScope,
+} from "./oauth-scopes";
+import type {MastodonAdapterEnv} from "./status-adapter";
+import {MastoHttpError} from "masto";
 
 const AUTH_REQUEST_COOKIE_NAME = "mastofeeder-auth-request";
 const AUTH_REQUEST_COOKIE_OPTIONS = {
@@ -60,7 +66,7 @@ export class MastoFeederController {
         let authRequest: MastoFeederAuthRequest;
         try {
             app = await this.#getOrCreateApp(instanceUrl);
-            authRequest = await this.#createAuthRequest(instanceUrl);
+            authRequest = await this.#createAuthRequest(app);
         } catch (error) {
             console.error("Masto Feeder sign-in failed", {
                 instanceUrl: sanitizeLogString(instanceUrl),
@@ -106,7 +112,8 @@ export class MastoFeederController {
         const {instanceUrl} = authRequest;
         await this.#kv.deleteAuthRequest(authRequestId);
 
-        const app = await this.#kv.getApp(instanceUrl);
+        // An app registration can be replaced while this authorization is pending.
+        const app = authRequest.app ?? (await this.#kv.getApp(instanceUrl));
         if (!app) {
             return error(400, `Unknown app ${instanceUrl}`);
         }
@@ -114,7 +121,7 @@ export class MastoFeederController {
         try {
             const oauthMasto = createOAuthAPIClient({url: instanceUrl});
 
-            const {accessToken} = await oauthMasto.token.create({
+            const {accessToken, scope} = await oauthMasto.token.create({
                 grantType: "authorization_code",
                 clientId: app.clientId,
                 clientSecret: app.clientSecret,
@@ -122,6 +129,7 @@ export class MastoFeederController {
                 scope: SCOPES.join(" "),
                 code,
             });
+            const scopes = scope?.split(/\s+/).filter(Boolean);
 
             const apiMasto = createRestAPIClient({
                 url: instanceUrl,
@@ -138,7 +146,8 @@ export class MastoFeederController {
             if (session) {
                 session = await this.#kv.updateSessionToken(
                     session,
-                    accessToken
+                    accessToken,
+                    scopes
                 );
             } else {
                 session = {
@@ -147,6 +156,7 @@ export class MastoFeederController {
                     mastodonId,
                     instanceUrl,
                     accessToken,
+                    scopes,
                 };
                 await this.#kv.putSession(session);
             }
@@ -164,7 +174,7 @@ export class MastoFeederController {
             throw error;
         }
 
-        return redirect(302, "/masto-feeder");
+        return redirect(303, "/masto-feeder");
     }
 
     async handleSignOut(): Promise<Redirect> {
@@ -233,33 +243,70 @@ export class MastoFeederController {
         if (!session) {
             return error(404, "Unknown feed ID");
         }
-        const prefs = resolvePrefs(session.prefs);
         return feedOutputResponse(
             await renderTimelineFeed(
                 session,
                 this.timelineFeedUrl(session, options.output),
                 this.#baseUrl(),
-                {
-                    instanceUrl: session.instanceUrl,
-                    timeZone: prefs.timeZone,
-                    useLocalUrls: prefs.useLocalUrls,
-                    statusParentUrlGenerator: this.statusParentUrl.bind(
-                        this,
-                        session
-                    ),
-                    youtubeEmbedUrlGenerator: this.youtubeEmbedUrl.bind(
-                        this,
-                        session
-                    ),
-                },
+                this.#adapterEnv(session),
                 options
             )
         );
     }
 
+    async handleSearchFeed(
+        feedId: string,
+        query: string,
+        options: FeedOptions
+    ): Promise<Response> {
+        const session = await this.#kv.getSessionByFeedId(feedId);
+        if (!session) {
+            return error(404, "Unknown feed ID");
+        }
+        this.#validateSearch(session, query);
+        try {
+            return feedOutputResponse(
+                await renderSearchFeed(
+                    session,
+                    query,
+                    this.searchFeedUrl(session, query, options.output),
+                    `${this.#baseUrl()}?${new URLSearchParams({q: query})}`,
+                    this.#adapterEnv(session),
+                    options
+                )
+            );
+        } catch (cause) {
+            rethrowSearchError(cause);
+        }
+    }
+
+    #validateSearch(session: MastoFeederSession, query: string): void {
+        const validationError = searchQueryError(query);
+        if (validationError) {
+            error(400, validationError);
+        }
+        if (!hasSearchScope(session.scopes)) {
+            error(403, "Enable search from the Masto Feeder page first.");
+        }
+    }
+
+    #adapterEnv(session: MastoFeederSession): MastodonAdapterEnv {
+        const prefs = resolvePrefs(session.prefs);
+        return {
+            instanceUrl: session.instanceUrl,
+            timeZone: prefs.timeZone,
+            useLocalUrls: prefs.useLocalUrls,
+            statusParentUrlGenerator: this.statusParentUrl.bind(this, session),
+            youtubeEmbedUrlGenerator: this.youtubeEmbedUrl.bind(this, session),
+        };
+    }
+
     async #getOrCreateApp(instanceUrl: string): Promise<MastoFeederApp> {
         const existingApp = await this.#kv.getApp(instanceUrl);
-        if (existingApp) {
+        if (
+            existingApp &&
+            appScopeStatus(existingApp.registeredScopes) === "ready"
+        ) {
             return existingApp;
         }
 
@@ -281,17 +328,19 @@ export class MastoFeederController {
             instanceUrl,
             clientId: apiApp.clientId,
             clientSecret: apiApp.clientSecret,
+            registeredScopes: apiApp.scopes ?? SCOPES,
         };
         await this.#kv.putApp(app);
         return app;
     }
 
     async #createAuthRequest(
-        instanceUrl: string
+        app: MastoFeederApp
     ): Promise<MastoFeederAuthRequest> {
         const authRequest: MastoFeederAuthRequest = {
             id: crypto.randomUUID(),
-            instanceUrl,
+            instanceUrl: app.instanceUrl,
+            app: {clientId: app.clientId, clientSecret: app.clientSecret},
         };
         await this.#kv.putAuthRequest(authRequest);
         return authRequest;
@@ -325,6 +374,18 @@ export class MastoFeederController {
         return url.toString();
     }
 
+    searchFeedUrl(
+        session: MastoFeederSession,
+        query: string,
+        output?: FeedOutputType
+    ): string {
+        return searchFeedUrl(
+            `${this.#baseUrl()}/feed/${session.feedId}/search`,
+            query,
+            output
+        );
+    }
+
     statusParentUrl(session: MastoFeederSession, statusId: string): string {
         return `${this.#baseUrl()}/feed/${session.feedId}/parent/${statusId}`;
     }
@@ -349,4 +410,25 @@ export function resolvePrefs(
         timeZone: prefs?.timeZone ?? DEFAULT_TIME_ZONE,
         useLocalUrls: prefs?.useLocalUrls ?? false,
     };
+}
+
+function rethrowSearchError(cause: unknown): never {
+    if (cause instanceof MastoHttpError) {
+        if (cause.statusCode === 401 || cause.statusCode === 403) {
+            error(
+                403,
+                "Your instance denied search access. Enable search again to reauthorize."
+            );
+        }
+        if (cause.statusCode === 400 || cause.statusCode === 422) {
+            error(
+                400,
+                "Mastodon rejected this search query. Check its syntax."
+            );
+        }
+    }
+    console.warn("Masto Feeder search request failed", {
+        message: errorMessage(cause),
+    });
+    error(502, "Could not search your instance. Please try again later.");
 }

@@ -24,11 +24,13 @@ export const actions = {
         if (typeof instanceUrl !== "string" || !instanceUrl) {
             return fail(400, {error: "Instance URL is required"});
         }
-        return await loadMastoFeederAppRecord(event, instanceUrl);
+        const result = await loadMastoFeederAppRecord(event, instanceUrl);
+        return {...result, overview: await loadMastoFeederAdminOverview(event)};
     },
     "load-missing-app-records": async event => {
         await requireMastoFeederAdmin(event);
-        return await loadMissingMastoFeederAppRecords(event);
+        const result = await loadMissingMastoFeederAppRecords(event);
+        return {...result, overview: await loadMastoFeederAdminOverview(event)};
     },
     "delete-app-record": async event => {
         await requireMastoFeederAdmin(event);
@@ -41,7 +43,7 @@ export const actions = {
         if ("error" in result) {
             return fail(400, result);
         }
-        return result;
+        return {...result, overview: await loadMastoFeederAdminOverview(event)};
     },
     "canonicalize-app-record": async event => {
         await requireMastoFeederAdmin(event);
@@ -57,7 +59,7 @@ export const actions = {
         if ("error" in result) {
             return fail(400, result);
         }
-        return result;
+        return {...result, overview: await loadMastoFeederAdminOverview(event)};
     },
     "validate-user-tokens": async event => {
         await requireMastoFeederAdmin(event);

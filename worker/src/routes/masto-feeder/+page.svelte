@@ -3,28 +3,28 @@
     import {APP_NAME} from "$lib/constants";
     import FeedLink from "$lib/components/FeedLink.svelte";
     import Layout from "$lib/components/Layout.svelte";
+    import SearchFeedSetup from "$lib/components/SearchFeedSetup.svelte";
+    import type {PageProps} from "./$types";
 
-    let { data, form } = $props();
+    let {data, form}: PageProps = $props();
 </script>
 
 <Layout title="Masto Feeder">
     {#snippet intro()}
-    
-            <p>
-                This <a href={resolve("/")}>{APP_NAME}</a> tool lets you subscribe to your
-                Mastodon timeline and lists in a feedreader such as
-                <a href="https://netnewswire.com/">NetNewsWire</a>,
-                <a href="https://newsblur.com/">NewsBlur</a>,
-                <a href="https://reederapp.com/">Reeder</a> or
-                <a href="https://feedly.com/">Feedly</a>.
-            </p>
+        <p>
+            This <a href={resolve("/")}>{APP_NAME}</a> tool lets you subscribe
+            to your Mastodon timeline and searches in a feedreader such as
+            <a href="https://netnewswire.com/">NetNewsWire</a>,
+            <a href="https://newsblur.com/">NewsBlur</a>,
+            <a href="https://reederapp.com/">Reeder</a> or
+            <a href="https://feedly.com/">Feedly</a>.
+        </p>
 
-            <p>
-                By signing in with your Mastodon account, you enable Masto Feeder to
-                generate feeds under "secret" URLs that will contain the statuses of
-                accounts that you follow.
-            </p>
-        
+        <p>
+            By signing in with your Mastodon account, you enable Masto Feeder to
+            generate feeds under "secret" URLs that will contain the statuses of
+            accounts that you follow.
+        </p>
     {/snippet}
 
     {#if data.session && data.user}
@@ -48,6 +48,28 @@
         {#if form?.error}
             <p class="error">{form.error}</p>
         {/if}
+
+        <section class="search-feeds">
+            {#if data.canSearch}
+                <SearchFeedSetup
+                    feedBaseUrl={data.searchFeedBaseUrl}
+                    query={data.searchQuery}>
+                    {#snippet help()}
+                        Use keywords, <code>"a phrase"</code>,
+                        <code>#hashtags</code>, or <code>-excluded</code> words.
+                    {/snippet}
+                </SearchFeedSetup>
+            {:else}
+                <p>You can also set up feeds for search results.</p>
+                <p>
+                    Approve an additional read permission to create search
+                    feeds. Your existing feed URLs will stay the same.
+                </p>
+                <form action="?/enable-search" method="POST">
+                    <button>Enable search</button>
+                </form>
+            {/if}
+        </section>
 
         <form action="?/update-prefs" method="POST" class="prefs">
             <fieldset>
@@ -89,7 +111,7 @@
         <div class="sign-in">
             <p>
                 To get started, sign in to your Mastodon instance to allow Masto
-                Feeder access to your timeline and lists.
+                Feeder access to your timeline and searches.
             </p>
 
             {#if form?.error}
@@ -110,20 +132,18 @@
     {/if}
 
     {#snippet footer()}
-    
-            Feeds are exported under randomly-generated URLs. Though they should not
-            be guessable, they may end up "leaking" if accidentally sent to someone.
+        Feeds are exported under randomly-generated URLs. Though they should not
+        be guessable, they may end up "leaking" if accidentally sent to someone.
 
-            {#if data.session}
-                If that happens, you may wish to <form
-                    action="?/reset-feed-id"
-                    method="POST"
-                    class="inline-form">
-                    <button>reset</button>
-                </form>
-                your feed URLs.
-            {/if}
-        
+        {#if data.session}
+            If that happens, you may wish to <form
+                action="?/reset-feed-id"
+                method="POST"
+                class="inline-form">
+                <button>reset</button>
+            </form>
+            your feed URLs.
+        {/if}
     {/snippet}
 </Layout>
 
@@ -160,7 +180,8 @@
         padding: 0.5em;
     }
 
-    .prefs {
+    .prefs,
+    .search-feeds {
         margin: 1em 0;
     }
 

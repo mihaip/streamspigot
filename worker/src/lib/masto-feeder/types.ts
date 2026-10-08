@@ -15,6 +15,7 @@ export type MastoFeederApp = {
 export type MastoFeederAuthRequest = {
     id: string;
     instanceUrl: string;
+    app?: Pick<MastoFeederApp, "clientId" | "clientSecret">;
 };
 
 export type MastoFeederSession = {
@@ -23,6 +24,7 @@ export type MastoFeederSession = {
     instanceUrl: string;
     feedId: string;
     accessToken: string;
+    scopes?: string[];
     prefs?: MastoFeederPrefs;
 };
 
