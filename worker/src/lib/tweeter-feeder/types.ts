@@ -93,6 +93,11 @@ export type TwitterTimelineResult = {
     fromStaleCache: boolean;
 };
 
+export type TwitterSearchResult = {
+    tweets: TwitterTweet[];
+    fromStaleCache: boolean;
+};
+
 export type TwitterTimelineOptions = {
     excludeRetweets?: boolean;
 };

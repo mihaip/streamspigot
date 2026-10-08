@@ -1,7 +1,12 @@
 import {APP_NAME} from "$lib/constants";
 import {escapeHtml} from "$lib/html";
+import {sortSearchStatuses} from "$lib/feeder/search";
 import {renderFeed, type FeedOptions, type FeedOutput} from "$lib/status/feed";
-import type {TwitterFetchError, TwitterTimelineResult} from "./types";
+import type {
+    TwitterFetchError,
+    TwitterSearchResult,
+    TwitterTimelineResult,
+} from "./types";
 import {toStatus} from "./status-adapter";
 
 const DEFAULT_TIME_ZONE = "America/Los_Angeles";
@@ -51,6 +56,41 @@ export function renderTweeterFeed(
 export type TweeterFeedOptions = FeedOptions & {
     excludeRetweets?: boolean;
 };
+
+export function renderSearchFeed(
+    result: TwitterSearchResult,
+    query: string,
+    limit: number,
+    feedUrl: string,
+    homeUrl: string,
+    options: FeedOptions = {}
+): FeedOutput {
+    const statuses = sortSearchStatuses(
+        result.tweets.map(tweet =>
+            toStatus(tweet, {timeZone: DEFAULT_TIME_ZONE})
+        )
+    ).slice(0, limit);
+    const output = renderFeed(
+        statuses,
+        {
+            feedUrl,
+            homeUrl,
+            title: `Twitter search: ${query}`,
+            updatedDate: statuses[0]
+                ? new Date(statuses[0].updatedAtIso)
+                : new Date(),
+            authorName: `${APP_NAME} : Tweeter Feeder`,
+        },
+        options
+    );
+    if (options.output === "html" && result.fromStaleCache) {
+        output.body = output.body.replace(
+            "<body>",
+            '<body><div style="padding:.5em;background:#fdd;margin-bottom:1em">Showing stale cached search results.</div>'
+        );
+    }
+    return output;
+}
 
 function injectDebugNotice(
     body: string,

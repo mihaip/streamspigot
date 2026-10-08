@@ -41,7 +41,7 @@
         </a>
         <a href={resolve("/tweeter-feeder")} class="tool even">
             <h2>Tweeter Feeder</h2>
-            <p>Follow public Twitter/X accounts in your favorite feed reader</p>
+            <p>Follow public Twitter accounts in your favorite feed reader</p>
         </a>
     </div>
 

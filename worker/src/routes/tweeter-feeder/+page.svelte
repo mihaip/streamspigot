@@ -3,6 +3,10 @@
     import {APP_NAME} from "$lib/constants";
     import FeedLink from "$lib/components/FeedLink.svelte";
     import Layout from "$lib/components/Layout.svelte";
+    import SearchFeedSetup from "$lib/components/SearchFeedSetup.svelte";
+    import type {PageData} from "./$types";
+
+    let {data}: {data: PageData} = $props();
 
     const TWITTER_USERNAME_RE = /^[a-zA-Z0-9_]{1,15}$/;
     const MAX_USERNAMES = 10;
@@ -72,19 +76,17 @@
     {#snippet intro()}
         <p>
             This <a href={resolve("/")}>{APP_NAME}</a> tool lets you subscribe
-            to posts from public <a href="https://twitter.com">Twitter/X</a>
-            accounts in a feed reader. Enter one or more usernames below and use
-            the generated feed URL.
+            to posts from public <a href="https://twitter.com">Twitter</a>
+            accounts and search results in a feed reader. Enter one or more usernames
+            below and use the generated feed URL.
         </p>
 
         <p>
             Tweeter Feeder does not sign in to your Twitter account. It can only
-            read public accounts, and X/Twitter access may be less reliable than
-            Mastodon because it depends on private web endpoints.
+            read public accounts, and it depends on private web endpoints, which
+            may change at any time.
         </p>
     {/snippet}
-
-    <div class="symbol">&#8675;</div>
 
     <div class="setup">
         <fieldset>
@@ -116,6 +118,25 @@
                 {/each}
             </div>
         </fieldset>
+    </div>
+
+    {#if hasErrors}
+        <p class="error-message">
+            "{invalidUsernames.join('", "')}" {invalidUsernames.length === 1
+                ? "is an invalid Twitter username"
+                : "are invalid Twitter usernames"}.
+        </p>
+    {:else if hasUsernames}
+        <p>
+            Your <FeedLink href={feedHref} target="_blank"
+                ><b>{feedTitle}</b></FeedLink>
+            is ready (also available as <FeedLink
+                href={jsonFeedHref}
+                feedType="json"
+                target="_blank">a JSON Feed</FeedLink
+            >). You can subscribe to the URL in your preferred feed reader.
+        </p>
+
         <fieldset class="options">
             <legend>Options</legend>
             <label>
@@ -123,73 +144,46 @@
                 Exclude retweets
             </label>
         </fieldset>
-    </div>
-
-    {#if hasErrors}
-        <div class="digest-message error-message">
-            <div class="symbol">&empty;</div>
-            <div class="inner">
-                "{invalidUsernames.join('", "')}" {invalidUsernames.length === 1
-                    ? "is an invalid Twitter username"
-                    : "are invalid Twitter usernames"}.
-            </div>
-        </div>
-    {:else if hasUsernames}
-        <div class="digest-message">
-            <div class="symbol">&#8675;</div>
-            <div class="inner">
-                Your <FeedLink href={feedHref} target="_blank"
-                    ><b>{feedTitle}</b></FeedLink>
-                is ready (also available as <FeedLink
-                    href={jsonFeedHref}
-                    feedType="json"
-                    target="_blank">a JSON Feed</FeedLink
-                >). You can subscribe to the URL in your preferred feed reader.
-            </div>
-        </div>
-    {:else}
-        <div class="digest-message error-message">
-            <div class="symbol">&empty;</div>
-            <div class="inner">
-                You must enter at least one Twitter username to create a feed.
-            </div>
-        </div>
     {/if}
+
+    <section class="search-feeds">
+        <SearchFeedSetup
+            feedBaseUrl={data.searchFeedBaseUrl}
+            canSearch={true}
+            query={data.searchQuery}>
+            {#snippet help()}
+                Use keywords, <code>"a phrase"</code>, <code>#hashtags</code>,
+                <code>from:username</code>, or <code>-excluded</code> words. See
+                Twitter's
+                <a
+                    href="https://docs.x.com/x-api/posts/search/integrate/operators"
+                    >search operator reference</a> for more options.
+            {/snippet}
+        </SearchFeedSetup>
+    </section>
 
     {#snippet footer()}
         <p>
             Keep in mind that feeds can only be created for public accounts.
-            Feed URLs include the selected usernames, so anyone with the URL can
-            see which accounts it follows.
+            Feed URLs include the selected usernames or search query, so anyone
+            with the URL can see what it follows.
         </p>
     {/snippet}
 </Layout>
 
 <style>
-    .symbol {
-        color: #333;
-        font-weight: bold;
-        font-size: 200%;
-        margin: 0;
-        padding: 0.1em;
-        height: 1.5em;
-        text-align: center;
-    }
-
     .setup {
         display: grid;
         justify-content: center;
     }
 
-    fieldset {
-        border-width: 1px 0 0 0;
-        border-color: #9bb9ff;
-        border-style: solid;
+    .setup fieldset {
+        border: none;
         min-width: 250px;
         text-align: center;
     }
 
-    legend {
+    .setup legend {
         color: #333;
         padding: 0 1em;
         text-align: center;
@@ -201,8 +195,11 @@
     }
 
     .options {
-        margin-top: 0.8em;
-        text-align: left;
+        margin: 1em 0;
+        border: solid 1px #00000066;
+        display: flex;
+        flex-direction: column;
+        gap: 1em;
     }
 
     .options label {
@@ -232,13 +229,8 @@
         cursor: default;
     }
 
-    .digest-message {
-        margin-top: 1em;
-        text-align: center;
+    .error-message {
+        background: #fdd;
+        padding: 0.5em;
     }
-
-    .error-message .symbol {
-        color: red;
-    }
-
 </style>

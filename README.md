@@ -135,6 +135,8 @@ multiple objects to the array. The fetcher chooses sessions deterministically by
 requested username and temporarily cools down sessions that hit auth or
 rate-limit errors.
 
+[Search feeds](https://github.com/mihaip/streamspigot/blob/main/worker/src/routes/tweeter-feeder/feed/search/+server.ts#L5) are also available and support the `debug=true` parameter.
+
 ## Building
 
 To build and run a preview version:

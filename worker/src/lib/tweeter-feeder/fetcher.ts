@@ -7,6 +7,7 @@ import type {
     TwitterFetchError,
     TwitterMedia,
     TwitterPoll,
+    TwitterSearchResult,
     TwitterTimelineOptions,
     TwitterTimelineResult,
     TwitterTweet,
@@ -17,6 +18,7 @@ import type {
 const USER_BY_SCREEN_NAME_QUERY =
     "WEoGnYB0EG1yGwamDCF6zg/UserResultByScreenNameQuery";
 const USER_TWEETS_QUERY = "lrMzG9qPQHpqJdP3AbM-bQ/UserTweets";
+const SEARCH_TIMELINE_QUERY = "hyPfJYJ_XAtDYoslQc-Rgg/SearchTimeline";
 
 const X_API_ORIGIN = "https://twitter.com";
 const X_API_BASE_URL = "https://mobile.twitter.com/i/api/graphql";
@@ -178,6 +180,49 @@ export class TwitterFetcher {
         return {
             username: normalizedUsername,
             tweets: tweets.slice(0, count),
+            fromStaleCache,
+        };
+    }
+
+    async fetchSearch(
+        query: string,
+        count: number
+    ): Promise<TwitterSearchResult> {
+        const {json, fromStaleCache} =
+            await this.#fetchCachedGraphQLWithSessions(
+                query,
+                SEARCH_TIMELINE_QUERY,
+                {
+                    rawQuery: query,
+                    count,
+                    querySource: "typed_query",
+                    product: "Latest",
+                    withGrokTranslatedBio: true,
+                    withQuickPromoteEligibilityTweetFields: false,
+                },
+                {
+                    freshSeconds: TIMELINE_FRESH_SECONDS,
+                    ttlSeconds: TIMELINE_CACHE_TTL_SECONDS,
+                    allowStaleOnError: true,
+                }
+            );
+        const instructions = getValueAt(getObject(json), [
+            "data",
+            "search_by_raw_query",
+            "search_timeline",
+            "timeline",
+            "instructions",
+        ]);
+        if (!Array.isArray(instructions)) {
+            throw new TwitterGraphQLFetchError(
+                "Twitter returned an invalid search response"
+            );
+        }
+        return {
+            tweets: parseGraphTimeline(instructions).tweets.filter(
+                tweet =>
+                    !tweet.author.protected && !tweet.retweet?.author.protected
+            ),
             fromStaleCache,
         };
     }
@@ -369,7 +414,7 @@ export class TwitterFetcher {
             key,
             message: errorToMessage(lastError),
         });
-        throw new TwitterGraphQLFetchError("Twitter/X fetch failed");
+        throw new TwitterGraphQLFetchError("Twitter fetch failed");
     }
 
     async #fetchGraphQL(
@@ -422,8 +467,8 @@ export class TwitterFetcher {
             });
             throw new TwitterGraphQLFetchError(
                 abortController.signal.aborted
-                    ? `Twitter/X request timed out after ${GRAPHQL_TIMEOUT_MS}ms`
-                    : `Twitter/X request failed: ${errorToMessage(e)}`,
+                    ? `Twitter request timed out after ${GRAPHQL_TIMEOUT_MS}ms`
+                    : `Twitter request failed: ${errorToMessage(e)}`,
                 abortController.signal.aborted
             );
         } finally {
@@ -440,7 +485,7 @@ export class TwitterFetcher {
                 bodyPrefix: body.slice(0, 240),
             });
             throw new TwitterGraphQLFetchError(
-                `Twitter/X returned HTTP ${response.status}`,
+                `Twitter returned HTTP ${response.status}`,
                 response.status === 401 ||
                     response.status === 403 ||
                     response.status === 429
@@ -451,9 +496,7 @@ export class TwitterFetcher {
         try {
             json = JSON.parse(body);
         } catch {
-            throw new TwitterGraphQLFetchError(
-                "Twitter/X returned invalid JSON"
-            );
+            throw new TwitterGraphQLFetchError("Twitter returned invalid JSON");
         }
 
         const errors = getArray(getObject(json)?.errors);
@@ -463,7 +506,7 @@ export class TwitterFetcher {
                 errors: summarizeTwitterErrors(errors),
             });
             throw new TwitterGraphQLFetchError(
-                twitterErrorMessage(errors) ?? "Twitter/X returned an error",
+                twitterErrorMessage(errors) ?? "Twitter returned an error",
                 twitterErrorsNeedCooldown(errors)
             );
         }
@@ -610,6 +653,9 @@ function parseGraphTimeline(json: unknown): TwitterTimelinePage {
     const entries = findTimelineEntries(json);
     for (const entry of entries) {
         for (const itemContent of findTimelineItemContents(entry)) {
+            if (itemContent.promotedMetadata) {
+                continue;
+            }
             const result = getObjectAt(itemContent, [
                 "tweet_results",
                 "result",

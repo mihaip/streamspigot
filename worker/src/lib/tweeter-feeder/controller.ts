@@ -1,14 +1,22 @@
 import {error, type RequestEvent} from "@sveltejs/kit";
 import {WorkerKV} from "$lib/kv";
 import {type FeedOutputType} from "$lib/status/feed";
+import type {FeedOptions} from "$lib/status/feed";
+import {feedOutputResponse} from "$lib/feeder/response";
+import {searchFeedUrl, searchQueryError} from "$lib/feeder/search";
 import {TweeterFeederKV} from "./kv";
 import {
     fetchErrorForUsername,
+    errorToMessage,
     isValidTwitterUsername,
     parseUsernames,
 } from "./fetcher";
 import {TwitterFetcher} from "./fetcher";
-import {renderTweeterFeed, type TweeterFeedOptions} from "./feed";
+import {
+    renderSearchFeed,
+    renderTweeterFeed,
+    type TweeterFeedOptions,
+} from "./feed";
 
 const MAX_USERNAMES = 10;
 
@@ -58,7 +66,7 @@ export class TweeterFeederController {
 
         const tweets = results.flatMap(result => result.tweets);
         if (tweets.length === 0 && errors.length > 0) {
-            const message = `Could not fetch Twitter/X timelines: ${errors
+            const message = `Could not fetch Twitter timelines: ${errors
                 .map(e => `@${e.username}: ${e.message}`)
                 .join("; ")}`;
             console.error("Tweeter Feeder all username fetches failed", {
@@ -81,6 +89,47 @@ export class TweeterFeederController {
                 "Content-Type": `${contentType}; charset=utf-8`,
             },
         });
+    }
+
+    async handleSearchFeed(
+        query: string,
+        options: FeedOptions
+    ): Promise<Response> {
+        const validationError = searchQueryError(query);
+        if (validationError) {
+            return error(400, validationError);
+        }
+        const limit = options.debug ? 5 : 20;
+        const fetcher = new TwitterFetcher(
+            this.#kv,
+            await this.#kv.getSessions()
+        );
+        let result;
+        try {
+            result = await fetcher.fetchSearch(query, limit);
+        } catch (e) {
+            console.warn("Tweeter Feeder search failed", {
+                message: errorToMessage(e),
+            });
+            return error(
+                502,
+                `Could not fetch Twitter search results: ${errorToMessage(e)}`
+            );
+        }
+        return feedOutputResponse(
+            renderSearchFeed(
+                result,
+                query,
+                limit,
+                searchFeedUrl(
+                    `${this.#baseUrl()}/feed/search`,
+                    query,
+                    options.output
+                ),
+                this.#baseUrl(),
+                options
+            )
+        );
     }
 
     feedUrl(usernames: string[], options: TweeterFeedUrlOptions = {}): string {
