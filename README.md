@@ -137,6 +137,8 @@ rate-limit errors.
 
 [Search feeds](https://github.com/mihaip/streamspigot/blob/main/worker/src/routes/tweeter-feeder/feed/search/+server.ts#L5) are also available and support the `debug=true` parameter.
 
+The page also offers a Subscribe shortcut for subscribing to X/Twitter profiles, posts, and searches from the iOS share sheet.
+
 ## Building
 
 To build and run a preview version:

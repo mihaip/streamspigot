@@ -12,11 +12,13 @@
         canSearch,
         query = "",
         help,
+        introSuffix,
     }: {
         feedBaseUrl: string;
         canSearch: boolean;
         query?: string;
         help?: Snippet;
+        introSuffix?: Snippet;
     } = $props();
 
     let expanded = $state(false);
@@ -50,7 +52,7 @@
             aria-controls="search-setup"
             onclick={revealSearch}>set up feeds</button>
     {/if}
-    for search results.
+    for search results{#if introSuffix}&nbsp;{@render introSuffix()}{:else}.{/if}
 </div>
 
 {#if canSearch && expanded}

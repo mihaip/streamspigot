@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {resolve} from "$app/paths";
+    import {asset, resolve} from "$app/paths";
     import {APP_NAME} from "$lib/constants";
     import FeedLink from "$lib/components/FeedLink.svelte";
     import Layout from "$lib/components/Layout.svelte";
@@ -13,6 +13,7 @@
 
     let rows = $state([""]);
     let excludeRetweets = $state(false);
+    let shortcutExpanded = $state(false);
 
     let rawUsernames = $derived(
         rows.map(row => row.trim().replace(/^@/, "")).filter(Boolean)
@@ -86,6 +87,7 @@
             read public accounts, and it depends on private web endpoints, which
             may change at any time.
         </p>
+
     {/snippet}
 
     <div class="setup">
@@ -151,6 +153,22 @@
             feedBaseUrl={data.searchFeedBaseUrl}
             canSearch={true}
             query={data.searchQuery}>
+            {#snippet introSuffix()}
+                or
+                {#if shortcutExpanded}
+                    get an iOS shortcut
+                {:else}
+                    <button
+                        type="button"
+                        class="setup-link"
+                        aria-expanded="false"
+                        aria-controls="shortcut-setup"
+                        onclick={() => (shortcutExpanded = true)}
+                        >get an iOS shortcut</button
+                    >
+                {/if}
+                to more easily subscribe.
+            {/snippet}
             {#snippet help()}
                 Use keywords, <code>"a phrase"</code>, <code>#hashtags</code>,
                 <code>from:username</code>, or <code>-excluded</code> words. See
@@ -160,6 +178,33 @@
                     >search operator reference</a> for more options.
             {/snippet}
         </SearchFeedSetup>
+
+        {#if shortcutExpanded}
+            <section
+                id="shortcut-setup"
+                class="shortcut-setup"
+                aria-label="Subscribe shortcut">
+                <p>
+                    <a
+                        href={asset("/shortcuts/Subscribe.shortcut")}
+                        download="Subscribe.shortcut"
+                        >Download the Subscribe shortcut</a
+                    > for iPhone or iPad.
+                </p>
+                <ol>
+                    <li>
+                        Open the downloaded file in Shortcuts and tap Add Shortcut.
+                    </li>
+                    <li>
+                        In X or your browser, share a profile, post, or search URL
+                        and choose Subscribe.
+                    </li>
+                    <li>
+                        Save the feed in your feed reader, such as NetNewsWire.
+                    </li>
+                </ol>
+            </section>
+        {/if}
     </section>
 
     {#snippet footer()}
@@ -227,6 +272,34 @@
     button[disabled] {
         opacity: 0.3;
         cursor: default;
+    }
+
+    .setup-link {
+        appearance: none;
+        border: none;
+        background: none;
+        padding: 0;
+        width: auto;
+        height: auto;
+        font: inherit;
+        color: #2db300;
+        text-decoration: underline;
+    }
+
+    .shortcut-setup {
+        margin: 1em 0;
+        padding: 1em;
+        background: #f6f6f6;
+    }
+
+    .shortcut-setup p {
+        margin: 0;
+    }
+
+    .shortcut-setup ol {
+        margin-bottom: 0;
+        padding-left: 1.5em;
+        line-height: 1.5em;
     }
 
     .error-message {
